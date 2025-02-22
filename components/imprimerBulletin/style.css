@@ -1,0 +1,6 @@
+.i {
+  display: flex;
+  text-align: center;
+  justify-content: space-between;
+  width: 100%;
+}

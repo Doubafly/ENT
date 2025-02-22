@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import Calendrier from "./Calendrier";
+import UserProfile from "./HeaderProfil";
 
-const RightSidebar = ({ user }) => {
+const RightSidebar = () => {
   return (
     <aside className="right-sidebar">
-      <section className="flex flex-col pb-8">
+      {/* <section className="flex flex-col pb-8">
         <div className="profile-banner" />
         <div className="profile">
           <div className="profile-img">
@@ -20,15 +22,16 @@ const RightSidebar = ({ user }) => {
             <p className="profile-email"> {user.email}</p>
           </div>
         </div>
-      </section>
-      <section className="banks">
-        <div className="flex w-full justify-between">
+      </section> */}
+      <section className="">
+        {/* <div className="flex w-full justify-between">
           <h2 className="header-2"> list....</h2>
           <Link href="/" className="flex gap-2">
-            <Image src="/icons/plus.svg" width={20} height={20} alt="plus" />
+            <Image src="/logo.ico" width={20} height={20} alt="plus" />
             <h2 className="text-14 font-semibold text-gray-600">Dou</h2>
           </Link>
-        </div>
+        </div> */}
+        <Calendrier />
       </section>
     </aside>
   );

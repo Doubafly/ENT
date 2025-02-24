@@ -1,6 +1,5 @@
-import EnseignantTable from "@/components/table/EnseignantTable";
+import EnseignantList from "@/components/list/EnseignantList";
 
-// Génération des données enseignants côté serveur
-export default function Page() {
-  return <EnseignantTable enseignants={[]} />; // Passer les enseignants au composant client
+export default function Page(){
+  return <EnseignantList/>;
 }

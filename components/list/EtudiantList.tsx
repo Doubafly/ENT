@@ -4,6 +4,7 @@
 import { useState } from "react";
 import ListCard, { User } from "@/components/card/ListCard";
 import Modal from "@/components/modal/Modal";
+import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 
 
 const etudiantsData: User[] = [
@@ -24,6 +25,7 @@ export default function EtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedEtudiant, setSelectedEtudiant] = useState<User | null>(null); // État pour gérer l'affichage du modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false); // État pour le modal d'ajout
   const itemsPerPage = 8;
 
   // Filtrage des etudiants en fonction du terme de recherche
@@ -77,7 +79,7 @@ export default function EtudiantList() {
           }}
           className="w-1/3 p-3 border rounded-lg text-xs"
         />
-        <button className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4">
+        <button onClick={() => setIsAddModalOpen(true)} className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4">
           Ajouter
         </button>
       </div>
@@ -87,15 +89,15 @@ export default function EtudiantList() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
         {currentEtudiants.map((etudiant, index) => (
   // <ListCard key={`${etudiant.email}-${index}`} item={etudiant} onEdit={() => {}} onDelete={handleDelete} />
-  <ListCard 
-  key={`${etudiant.email}-${index}`} 
-  item={etudiant} 
-  onEdit={() => {}} 
-  onDelete={handleDelete} 
-  onSelect={() => setSelectedEtudiant(etudiant)} 
-/>
+        <ListCard 
+          key={`${etudiant.email}-${index}`} 
+          item={etudiant} 
+          onEdit={() => {}} 
+          onDelete={handleDelete} 
+          onSelect={() => setSelectedEtudiant(etudiant)} 
+        />
 
-))}
+        ))}
 
         </div>
       </div>
@@ -186,6 +188,20 @@ export default function EtudiantList() {
     </div>
   </Modal>
 )}
+
+{/* Modal d'ajout d'un étudiant */}
+{isAddModalOpen && (
+  <Modal onClose={() => setIsAddModalOpen(false)}>
+    <RegisterFormEtudiant 
+      onSubmit={async (formData) => {
+        console.log("Formulaire soumis !");
+        console.log("Nouveau étudiant:", Object.fromEntries([...formData.entries()]));
+        setIsAddModalOpen(false);
+      }} 
+    />
+  </Modal>
+)}
+
 
 
     </div>

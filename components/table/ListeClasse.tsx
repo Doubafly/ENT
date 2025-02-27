@@ -284,13 +284,13 @@ export default function ClasseList() {
         <input
           type="text"
           placeholder="Rechercher une classe..."
-          className="border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+          className="border border-gray-300 p-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-64"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 shadow-md flex items-center gap-2"
+          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 shadow-md flex items-center gap-2"
         >
           <span>+</span>
           <span>Ajouter une classe</span>
@@ -298,7 +298,7 @@ export default function ClasseList() {
       </div>
 
       <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">
-        <thead className="bg-blue-500 text-white">
+        <thead className="bg-green-500 text-white">
           <tr>
             <th className="p-3 text-left">Abréviation</th>
             <th className="p-3 text-left">Nom Complet</th>
@@ -323,7 +323,7 @@ export default function ClasseList() {
                     setSelectedClassId(classe.id);
                     setShowModal(true);
                   }}
-                  className="text-blue-500 hover:text-blue-700 transition duration-200"
+                  className="text-green-500 hover:text-green-700 transition duration-200"
                   title="Voir les détails"
                 >
                   <Image
@@ -356,7 +356,7 @@ export default function ClasseList() {
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Précédent
         </button>
@@ -368,7 +368,7 @@ export default function ClasseList() {
             setCurrentPage((prev) => Math.min(prev + 1, totalPages))
           }
           disabled={currentPage === totalPages}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Suivant
         </button>
@@ -384,7 +384,7 @@ export default function ClasseList() {
             className="bg-white p-6 rounded-lg w-96 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold mb-4 text-blue-500">
+            <h2 className="text-xl font-bold mb-4 text-green-500">
               Détails de la classe
             </h2>
             <div className="space-y-4">
@@ -394,7 +394,7 @@ export default function ClasseList() {
                 </label>
                 <input
                   type="text"
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={selectedClass.abbr}
                   onChange={(e) =>
                     handleUpdateClass({
@@ -410,7 +410,7 @@ export default function ClasseList() {
                 </label>
                 <input
                   type="text"
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={selectedClass.name}
                   onChange={(e) =>
                     handleUpdateClass({
@@ -451,13 +451,13 @@ export default function ClasseList() {
                   <input
                     type="text"
                     placeholder="Ajouter un enseignant"
-                    className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                     value={newTeacher}
                     onChange={(e) => setNewTeacher(e.target.value)}
                   />
                   <button
                     onClick={handleAddTeacher}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-green-600 transition duration-200"
                   >
                     Ajouter
                   </button>
@@ -486,7 +486,7 @@ export default function ClasseList() {
             className="bg-white p-6 rounded-lg w-96 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-xl font-bold mb-4 text-blue-500">
+            <h2 className="text-xl font-bold mb-4 text-green-500">
               Ajouter une classe
             </h2>
             <div className="space-y-4">
@@ -496,7 +496,7 @@ export default function ClasseList() {
                 </label>
                 <input
                   type="text"
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={newClassAbbr}
                   onChange={(e) => setNewClassAbbr(e.target.value)}
                 />
@@ -507,7 +507,7 @@ export default function ClasseList() {
                 </label>
                 <input
                   type="text"
-                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                   value={newClassName}
                   onChange={(e) => setNewClassName(e.target.value)}
                 />
@@ -545,13 +545,13 @@ export default function ClasseList() {
                   <input
                     type="text"
                     placeholder="Ajouter un enseignant"
-                    className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-green-500"
                     value={tempTeacher}
                     onChange={(e) => setTempTeacher(e.target.value)}
                   />
                   <button
                     onClick={addTeacherToNewClass}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-green-600 transition duration-200"
                   >
                     Ajouter
                   </button>
@@ -561,7 +561,7 @@ export default function ClasseList() {
             <div className="flex justify-end mt-4">
               <button
                 onClick={handleAddClass}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-200"
               >
                 Créer la classe
               </button>

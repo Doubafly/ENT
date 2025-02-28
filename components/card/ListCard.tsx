@@ -204,8 +204,12 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
 
   return (
     <div
-      onClick={() => onSelect(item)}
-      className="w-[250px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
+    onClick={(e) => {
+      if (!isModalOpen) {
+        onSelect(item);
+      }
+    }}
+    className="w-[230px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
     >
       {/* Section avec background gris */}
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">

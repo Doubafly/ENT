@@ -26,6 +26,7 @@ export default function UserProfile({ user }) {
             </span>
           )}
         </button>
+   
       </div>
       <div>
         <p className="text-lg font-bold">

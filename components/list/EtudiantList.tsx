@@ -103,19 +103,30 @@ export default function EtudiantList() {
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-4 space-x-4">
-          <button onClick={handlePrevPage} disabled={currentPage === 1} className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 text-xs">
-            Précédent
-          </button>
-          <span className="text-lg font-semibold">
-            Page {currentPage} sur {totalPages}
-          </span>
-          <button onClick={handleNextPage} disabled={currentPage === totalPages} className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 text-xs">
-            Suivant
-          </button>
-        </div>
-      )}
+{totalPages > 1 && (
+  <div className="flex justify-between items-center mt-4 px-4">
+    <button
+      onClick={handlePrevPage}
+      disabled={currentPage === 1}
+      className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 text-xs"
+    >
+      Précédent
+    </button>
+    
+    <span className="text-lg font-semibold text-xs">
+      Page {currentPage} sur {totalPages}
+    </span>
+    
+    <button
+      onClick={handleNextPage}
+      disabled={currentPage === totalPages}
+      className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 text-xs"
+    >
+      Suivant
+    </button>
+  </div>
+)}
+
 
       {/* Modal */}
       {selectedEtudiant && (

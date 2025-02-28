@@ -117,6 +117,11 @@ export const ProfesseurLinks = [
     title: "Classe",
   },
   {
+    image: "/icons/graduation-cap.png",
+    path: "/professeur/etudiant",
+    title: "Etudiant",
+  },
+  {
     image: "/icons/promotion.png",
     path: "/professeur/annonces",
     title: "Annonces",

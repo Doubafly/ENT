@@ -136,4 +136,20 @@ export const ProfesseurLinks = [
     path: "/professeur/sujets",
     title: "Sujets",
   },
+
+  {
+    image: "/icons/user.png",
+    path: "/professeur/profil",
+    title: "Profil",
+  },
+  {
+    image: "/icons/settings.png",
+    path: "/professeur/parametre",
+    title: "parametre",
+  },
+  {
+    image: "/icons/out.png",
+    path: "/?2",
+    title: "Déconnexion",
+  },
 ];

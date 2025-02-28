@@ -1,5 +1,11 @@
+import Imprimer from "@/components/imprimerBulletin/Imprimer";
+
 const page = () => {
-  return <div>page</div>;
+  return (
+    <div>
+      <Imprimer />
+    </div>
+  );
 };
 
 export default page;

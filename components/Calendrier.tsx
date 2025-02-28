@@ -9,12 +9,20 @@ import {
   startOfWeek,
 } from "date-fns";
 import { fr } from "date-fns/locale/fr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Calendrier = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(new Date());
   const startDate = startOfWeek(startOfMonth(currentMonth));
   const endDate = endOfWeek(endOfMonth(currentMonth));
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000); // Met à jour chaque seconde
+
+    return () => clearInterval(interval); // Nettoie l'intervalle à la fin
+  }, []);
 
   const days = [];
   let day = startDate;
@@ -26,11 +34,14 @@ const Calendrier = () => {
 
   return (
     <div className="max-w-md mx-auto shadow-gray-300 p-4 rounded-lg shadow-md">
-      <h2 className="text-center text-xl font-bold mb-4">
+      <h2 className="text-center text-xl font-bold ">
         {format(currentMonth, "MMMM yyyy", { locale: fr })}
       </h2>
+      <h3 className="text-center mb-1">
+        {format(currentTime, "HH:mm:ss", { locale: fr })}
+      </h3>
       <div className="grid grid-cols-7 gap-1 text-center font-semibold">
-        {["LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM"].map((day) => (
+        {["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"].map((day) => (
           <div key={day} className="p-2">
             {day}
           </div>

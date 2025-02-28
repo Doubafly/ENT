@@ -19,10 +19,10 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="fixed top-4 right-4">
+    <div className="flex space-x-2">
       {/* Bouton Paramètres */}
       <button
-        className="flex items-center gap-2 px-2 py-2 rounded-full shadow hover:bg-gray-300"
+        className="relative p-2 rounded-full bg-white shadow"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
       >
         <Image
@@ -35,7 +35,7 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
 
       {/* Menu déroulant en dessous du bouton */}
       {isMenuOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg">
+        <div className="absolute right-8 mt-10 w-48 bg-white border rounded shadow-lg">
           <button
             className="w-full px-4 py-2 text-left hover:bg-gray-200"
             onClick={() => {

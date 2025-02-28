@@ -1,13 +1,13 @@
 "use client";
 // j'ai ransformer mon formulaire en composant pour pouvoir l'utiliser dans plusieurs pages
 import { useState } from "react";
-import { registerUser } from "@/actions/signupetudiant";
+
 type RegisterFormProps = {
   onSubmit: (formData: FormData) => Promise<void>; //  LA fonction qui est  appelée lors de la soumission
   title?: string; // Titre du formulaire a voir en bas
 };
 
-const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant" }: RegisterFormProps) => {
+const FormulaireAnnexe = ({ onSubmit, title = "Créer une Annexe" }: RegisterFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -18,12 +18,7 @@ const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant" }: Regis
 
     const formData = new FormData(event.currentTarget);
 
-    try {
-    await registerUser(formData); 
-      setSuccess("Étudiant créé avec succès !");
-    } catch (err) {
-      setError("Erreur lors de la création de l'étudiant.");
-    }
+    
   }
 
   return (
@@ -36,11 +31,11 @@ const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant" }: Regis
       <div className="flex gap-4 mt-4">
 
       <div>
-        <label className="block text-gray-700 mb-2">Nom :</label>
+        <label className="block text-gray-700 mb-2">Nom Annexe :</label>
         <input type="text" name="nom"  className="w-[260px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required />
       </div>
       <div>
-        <label className="block text-gray-700 mb-2">Prénom :</label>
+        <label className="block text-gray-700 mb-2">Addresse :</label>
         <input type="text" name="prenom"  className="w-[260px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required />
       </div>
       <div>
@@ -118,5 +113,5 @@ const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant" }: Regis
   );
 };
 
-export default RegisterFormEtudiant;
+export default FormulaireAnnexe;
  

@@ -2,9 +2,12 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { registerUser } from "@/actions/signupetudiant";
-// import RegisterFormEtudiant from "/components/formulaires/RegisterFormEtudiant";
+import BoutonParametre from "../BouttonParametre";
 import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal"; // Assure-toi d'importer le composant
+import FormulaireAnnexe from "../formulaires/FormulaireAnnexe";
+import FormulaireModule from "../formulaires/FormulaireModule";
+import ParametrePage from "@/app/(root)/admin/parametre/page";
 
 // Permet de définir le type d'un étudiant
 type EtudiantType = {
@@ -27,6 +30,9 @@ const EtudiantTable = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSur, setIsSur] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false); // État pour le modal de mise à jour
+  const [isAnnexeOpen, setIsAnnexeOpen] = useState(false);
+  const [isModuleOpen, setIsModuleOpen] = useState(false);
+  const [isParametreOpen, setIsParametreOpen] = useState(false);
   const [selectedEtudiant, setSelectedEtudiant] = useState<EtudiantType | null>(
     null
   ); // État pour l'étudiant sélectionné
@@ -38,6 +44,9 @@ const EtudiantTable = () => {
   const toggleModal = () => {
     setIsOpen(!isOpen);
   };
+ 
+ 
+
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,6 +146,13 @@ const EtudiantTable = () => {
           <button className="text-green-500 text-2xl" onClick={toggleModal}>
             +
           </button>
+          
+          <BoutonParametre
+            reglage={() => setIsParametreOpen(true)}
+            onCreateAnnexe={() => setIsAnnexeOpen(true)}
+            onCreateModule={() => setIsModuleOpen(true)}
+            onCreateAutre={() => console.log("Creer dautre chose")}
+            />
         </div>
 
         <table className="table-auto w-full">
@@ -261,6 +277,51 @@ const EtudiantTable = () => {
           onClose={() => setIsUpdateModalOpen(false)}
           onUpdate={handleUpdate}
         />
+      )}
+
+       {/* Overlay et formulaire modal pour le Annexe  avec boutton parametre*/}
+       {isAnnexeOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={() => setIsAnnexeOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FormulaireAnnexe
+              onSubmit={handleRegisterSubmit}
+              title="Inscription d'un nouvel étudiant"
+            />
+          </div>
+        </div>
+      )}
+
+       {/* Overlay et formulaire modal pour le Module avec bouton parametre */}
+       {isModuleOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={() => setIsModuleOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FormulaireModule
+              onSubmit={handleRegisterSubmit}
+              title="Inscription d'un nouvel étudiant"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Overlay et ouvrage de la page parametre avec bouton parametre */}
+      {isParametreOpen && (
+       
+            <ParametrePage
+            />
+        
+      
       )}
 
       {/* Overlay et modal de confirmation pour la suppression */}

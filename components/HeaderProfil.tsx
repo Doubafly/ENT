@@ -38,6 +38,13 @@ export default function UserProfile({ user }) {
             </span>
           )}
         </button>
+
+        <BoutonParametre
+            reglage={() => setIsParametreOpen(true)}
+            onCreateAnnexe={() => setIsAnnexeOpen(true)}
+            onCreateModule={() => setIsModuleOpen(true)}
+            onCreateAutre={() => console.log("Creer dautre chose")}
+            />
    
       </div>
       <div>

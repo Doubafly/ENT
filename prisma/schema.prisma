@@ -151,7 +151,7 @@ model utilisateurs {
   mot_de_passe   String
   id_role        Int
   sexe           utilisateurs_sexe
-  type           utilisateurs_type
+  type           utilisateurs_type 
   telephone      String?           @db.VarChar(15)
   adresse        String?
   profil         String            @unique(map: "Utilisateurs_profil_key")

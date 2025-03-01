@@ -7,7 +7,7 @@ type RegisterFormProps = {
   title?: string; // Titre du formulaire a voir en bas
 };
 
-const FormulaireAnnexe = ({
+const FormulaireRole = ({
   onSubmit,
   title = "Créer une Annexe",
 }: RegisterFormProps) => {
@@ -31,7 +31,7 @@ const FormulaireAnnexe = ({
         <div className="flex flex-col gap-1 mt-6">
           <div className="flex gap-4 mt-4">
             <div>
-              <label className="block text-gray-700 mb-2">Nom Annexe :</label>
+              <label className="block text-gray-700 mb-2">Nom :</label>
               <input
                 type="text"
                 name="nom"
@@ -44,7 +44,7 @@ const FormulaireAnnexe = ({
 
           <div className="flex gap-4 mt-4">
           <div>
-              <label className="block text-gray-700 mb-2">Addresse :</label>
+              <label className="block text-gray-700 mb-2">Description :</label>
               <input
                 type="text"
                 name="prenom"
@@ -56,7 +56,7 @@ const FormulaireAnnexe = ({
 
           <div className="flex gap-4 mt-4">
             <div>
-              <label className="block text-gray-700 mb-2">Ville :</label>
+              <label className="block text-gray-700 mb-2">Permission :</label>
               <input
                 type="text"
                 name="ville"
@@ -66,16 +66,7 @@ const FormulaireAnnexe = ({
             </div>
           </div>
 
-          <div className="flex gap-4 mt-4">
-            <div>
-              <label className="block text-gray-700 mb-2">Region :</label>
-              <input
-                type="text"
-                name="region"
-                className="w-[260px] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
-            </div>
-          </div>
+          
         </div>
         <div className="flex gap-4 mt-4">
           <button
@@ -90,4 +81,4 @@ const FormulaireAnnexe = ({
   );
 };
 
-export default FormulaireAnnexe;
+export default FormulaireRole;

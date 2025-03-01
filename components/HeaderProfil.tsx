@@ -3,12 +3,14 @@ import { useState } from "react";
 import { Bell, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import BoutonParametre from "./BouttonParametre";
+import FormulaireRole from "./formulaires/FormulaireRole";
 import FormulaireAnnexe from "./formulaires/FormulaireAnnexe";
 import FormulaireModule from "./formulaires/FormulaireModule";
 import ParametrePage from "@/app/(root)/admin/parametre/page";
 
 export default function UserProfile({ user }) {
   const [notificationCount, setNotificationCount] = useState(1);
+  const [isRoleOpen, setIsRoleOpen] = useState(false);
   const [isAnnexeOpen, setIsAnnexeOpen] = useState(false);
   const [isModuleOpen, setIsModuleOpen] = useState(false);
   const [isParametreOpen, setIsParametreOpen] = useState(false);
@@ -41,6 +43,7 @@ export default function UserProfile({ user }) {
 
         <BoutonParametre
             reglage={() => setIsParametreOpen(true)}
+            onCreateRole={() => setIsRoleOpen(true)}
             onCreateAnnexe={() => setIsAnnexeOpen(true)}
             onCreateModule={() => setIsModuleOpen(true)}
             onCreateAutre={() => console.log("Creer dautre chose")}
@@ -64,6 +67,25 @@ export default function UserProfile({ user }) {
           alt="Profil"
         />
       </div>
+        {/* Overlay et formulaire modal pour le role  avec boutton parametre*/}
+        {isRoleOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 w-full"
+          onClick={() => setIsRoleOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FormulaireRole
+              onSubmit={handleRegisterSubmit}
+              title="Creation d'un Nouveau Role"
+            />
+          </div>
+        </div>
+      )}
+
+
         {/* Overlay et formulaire modal pour le Annexe  avec boutton parametre*/}
         {isAnnexeOpen && (
         <div
@@ -76,7 +98,7 @@ export default function UserProfile({ user }) {
           >
             <FormulaireAnnexe
               onSubmit={handleRegisterSubmit}
-              title="Inscription d'un nouvel étudiant"
+              title="Creation d'une Nouvelle Annexe"
             />
           </div>
         </div>
@@ -94,7 +116,7 @@ export default function UserProfile({ user }) {
           >
             <FormulaireModule
               onSubmit={handleRegisterSubmit}
-              title="Inscription d'un nouvel étudiant"
+              title="Creation d'un Nouveau Module"
             />
           </div>
         </div>

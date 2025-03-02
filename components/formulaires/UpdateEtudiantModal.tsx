@@ -53,105 +53,108 @@ export default function UpdateEtudiantModal({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div
-        className="bg-white rounded-lg p-6 shadow-lg w-full max-w-md"
-        onClick={(e) => e.stopPropagation()} // Empêcher la fermeture du modal lors d'un clic à l'intérieur
+        className="bg-white rounded-lg p-4 shadow-lg w-full max-w-sm"
+        onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-bold mb-4">Modifier l'étudiant</h2>
-        <form onSubmit={handleSubmit}>
+        <h2 className="text-lg font-bold mb-3 text-center">
+          Modifier l'étudiant
+        </h2>
+        <form onSubmit={handleSubmit} className="text-sm">
           {/* Champ Nom */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Nom</label>
+          <div className="mb-3">
+            <label className="block font-medium">Nom</label>
             <input
               type="text"
               name="nom"
               value={formData.nom}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Champ Prénom */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Prénom</label>
+          <div className="mb-3">
+            <label className="block font-medium">Prénom</label>
             <input
               type="text"
               name="prenom"
               value={formData.prenom}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Champ Email */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Email</label>
+          <div className="mb-3">
+            <label className="block font-medium">Email</label>
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Champ Téléphone */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Téléphone</label>
+          <div className="mb-3">
+            <label className="block font-medium">Téléphone</label>
             <input
               type="text"
               name="telephone"
               value={formData.telephone}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Champ Adresse */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Adresse</label>
+          <div className="mb-3">
+            <label className="block font-medium">Adresse</label>
             <input
               type="text"
               name="adresse"
               value={formData.adresse}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Champ Filière */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Filière</label>
+          <div className="mb-3">
+            <label className="block font-medium">Filière</label>
             <input
               type="text"
               name="filiere"
               value={formData.filiere}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-3/4 mx-auto p-1 border rounded text-sm"
               required
             />
           </div>
 
           {/* Boutons Annuler et Enregistrer */}
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-gray-500 text-white px-4 py-2 rounded"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Enregistrer
-            </button>
+          <div className="flex justify-between mt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="bg-gray-500 text-white px-3 py-1 rounded text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+              >
+                Enregistrer
+              </button>
           </div>
+
         </form>
       </div>
     </div>

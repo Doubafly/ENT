@@ -16,6 +16,7 @@ export interface User {
   tel: string;
   filiere: string;
   matricule: string;
+  classe: string;
 }
 
 // Définition de l'interface des props pour le composant UserCard

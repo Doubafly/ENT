@@ -11,7 +11,7 @@ const page = () => {
     // Vérifie si le rôle est admin
     if (user.userRole === "admin") {
       router.push("/admin"); // Redirige vers la page admin
-    } else if (user.userRole === "proffesseur") {
+    } else if (user.userRole === "professeur") {
       router.push("/professeur");
     } else if (user.userRole === "etudiant") {
       router.push("/etudiant");

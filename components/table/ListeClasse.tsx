@@ -15,6 +15,7 @@ interface Classe {
 }
 const enseignantsData: User[] = [
   {
+    id: 1,
     image: "/img/profil1.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -22,9 +23,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT001",
   },
   {
+    id: 2,
     image: "/img/profil2.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -32,9 +35,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT002",
   },
   {
+    id: 3,
     image: "/img/profil3.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -42,9 +47,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT003",
   },
   {
+    id: 4,
     image: "/img/profil4.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -52,9 +59,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT004",
   },
   {
+    id: 5,
     image: "/img/profil5.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -62,9 +71,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT005",
   },
   {
+    id: 6,
     image: "/img/profil6.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -72,9 +83,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT006",
   },
   {
+    id: 7,
     image: "/img/profil6.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -82,9 +95,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT007",
   },
   {
+    id: 8,
     image: "/img/profil7.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -92,9 +107,11 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT008",
   },
   {
+    id: 9,
     image: "/img/profil8.jpg",
     nom: "Maiga",
     prenom: "Mahamoud",
@@ -102,9 +119,11 @@ const enseignantsData: User[] = [
     adresse: "Bamako, Sotuba",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT009",
   },
   {
+    id: 10,
     image: "/img/profil9.jpg",
     nom: "DIALLO",
     prenom: "Moussa",
@@ -112,12 +131,14 @@ const enseignantsData: User[] = [
     adresse: "Bamako, Mali",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT010",
   },
 ];
 
 const etudiantsData: User[] = [
   {
+    id: 11,
     image: "/img/profil7.jpg",
     nom: "Dupont",
     prenom: "Jean",
@@ -125,9 +146,11 @@ const etudiantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT011",
   },
   {
+    id: 12,
     image: "/img/profil8.jpg",
     nom: "Maiga",
     prenom: "Mahamoud",
@@ -135,9 +158,11 @@ const etudiantsData: User[] = [
     adresse: "Bamako, Sotuba",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT012",
   },
   {
+    id: 13,
     image: "/img/profil9.jpg",
     nom: "DIALLO",
     prenom: "Moussa",
@@ -145,10 +170,10 @@ const etudiantsData: User[] = [
     adresse: "Bamako, Mali",
     date: "01/01/1980",
     tel: "0123456789",
-    classe: "Mathématiques",
+    filiere: "Mathématiques",
+    matricule: "MAT013",
   },
 ];
-
 export default function ClasseList() {
   const [classes, setClasses] = useState<Classe[]>([
     {

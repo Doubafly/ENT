@@ -21,7 +21,7 @@
     "@shadcn/ui": "^0.0.4",
     "@types/bcrypt": "^5.0.2",
     "app": "file:",
-    "chart.js": "^4.4.7",
+    "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

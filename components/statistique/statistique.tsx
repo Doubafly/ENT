@@ -1,6 +1,10 @@
 import React from "react";
 import "./statistique.css";
 import { Bar } from "react-chartjs-2";
+import { Doughnut } from "react-chartjs-2";
+import { ArcElement } from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import MiniSmallIconCard from "../card/MiniIconCard";
 
 ChartJS.register(
   CategoryScale,
@@ -60,12 +65,50 @@ const options = {
   },
 };
 
-const Statistique: React.FC = () => {
+const Statistique = ({ menuStat }) => {
+  const data2 = {
+    labels: ["Hommes", "Femmes"],
+    datasets: [
+      {
+        data: [60, 40], // Remplacez par vos données dynamiques
+        backgroundColor: ["#A4D8F0", "#F7DD72"],
+        hoverBackgroundColor: ["#82C4E6", "#F5C144"],
+      },
+    ],
+  };
   return (
     <div className="statistique">
       <h2>Statistiques</h2>
       <div className="gridStat">
-        <div className="gridenf">
+        {menuStat.map((stat) => (
+          <MiniSmallIconCard
+            photoName={stat.link}
+            stats={stat.value}
+            name={stat.nom}
+          />
+        ))}
+
+        {/* <MiniSmallIconCard
+          photoName={"/icons/text-books.png"}
+          stats={"2"}
+          name={"Nombre Filiere"}
+        />
+        <MiniSmallIconCard
+          photoName={"/icons/friends.png"}
+          stats={"2"}
+          name={"Nombre etudiant"}
+        />
+        <MiniSmallIconCard
+          photoName={"/icons/teach.png"}
+          stats={"2"}
+          name={"Nombre classe"}
+        />
+        <MiniSmallIconCard
+          photoName={"/icons/Training.png"}
+          stats={"2"}
+          name={"Nombre enseignant"} 
+        />*/}
+        {/* <div className="gridenf">
           <h3 className="font-bold text-lg">Nombre Filiere</h3>
           <p id="traitCourriers" className="text-2xl">
             1
@@ -88,9 +131,17 @@ const Statistique: React.FC = () => {
           <p id="standCourriers" className="text-2xl">
             0
           </p>
+        </div> */}
+      </div>
+      <div className="flex md:flex-row flex-col">
+        <div className="bg-white rounded-2xl shadow-md p-4 md:w-1/4 flex flex-col items-center md:mr-2 md:mb-0 mb-2">
+          <h2 className="text-lg font-bold mb-2">Students</h2>
+          <Doughnut data={data} />
+        </div>
+        <div className="bg-white rounded-2xl shadow-md p-4 md:w-3/4 ml-2">
+          <Bar data={data} />
         </div>
       </div>
-      <Bar data={data} options={options} />
     </div>
   );
 };

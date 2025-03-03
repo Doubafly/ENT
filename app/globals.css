@@ -42,9 +42,29 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #7878a3;
 }
+input[type="number"] {
+  text-align: center;
+}
+
 @media (max-width: 1285px) {
   .right-sidebar {
     display: none;
+  }
+  .partiecentral {
+    margin-left: 50px;
+  }
+}
+@media (max-width: 768px) {
+  .partiecentral {
+    margin-left: 0;
+  }
+}
+@media (max-width: 700px) {
+  .home-content {
+    padding: 2px;
+  }
+  .emploie {
+    font-size: small;
   }
 }
 
@@ -115,11 +135,14 @@
   }
 
   .home-content {
-    @apply no-scrollbar flex w-full flex-1 flex-col gap-8 px-5 sm:px-8 py-7 lg:py-12 xl:max-h-screen xl:overflow-y-scroll;
+    @apply no-scrollbar flex w-full h-screen flex-1 flex-col gap-8 px-5 sm:px-8 py-7  xl:max-h-screen xl:overflow-y-scroll;
   }
 
   .home-header {
     @apply flex flex-col justify-between gap-8;
+  }
+  .partiecentral {
+    @apply flex flex-1 flex-col lg:ml-[240px] md:ml-[50px];
   }
 
   /* Right sidebar */
@@ -190,8 +213,11 @@
   }
 
   /* Sidebar */
+  /* .sidebar {
+    @apply  left-0 top-0 flex h-screen  flex-col  justify-between border-r border-gray-200 bg-white pt-8 text-white max-md:hidden sm:p-2 xl:pt-4 xl:pb-2 max-w-80 2xl:w-[240px];
+  } */
   .sidebar {
-    @apply sticky left-0 top-0 flex h-screen w-fit flex-col  justify-between border-r border-gray-200 bg-white pt-8 text-white max-md:hidden sm:p-2 xl:pt-4 xl:pb-2 max-w-80 2xl:w-[240px];
+    @apply sticky top-0 h-screen flex flex-col justify-between border-r border-gray-200 bg-white pt-8 text-white max-md:hidden sm:p-2 xl:pt-4 xl:pb-2 max-w-80 2xl:w-[240px];
   }
 
   .sidebar-logo {

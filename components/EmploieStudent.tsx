@@ -2,31 +2,22 @@
 import { Checkbox } from "@mui/material";
 import { useState } from "react";
 
-const modules = [
-  { name: "Mathématiques", completed: true },
-  { name: "Physique", completed: false },
-  { name: "Informatique", completed: true },
-  { name: "Chimie", completed: false },
-  { name: "Biologie", completed: true },
-  { name: "Philosophie", completed: false },
-];
-
 const schedule = [
   [
     "Algèbre",
-    "Physique Quantique",
+    "Physique ",
     "Programmation",
-    "Chimie Organique",
-    "Biologie Moléculaire",
-    "Philosophie Moderne",
+    "Chimie ",
+    "Biologie ",
+    "Philosophie ",
   ],
   [
     "Géométrie",
     "Mécanique",
     "Base de Données",
-    "Chimie Analytique",
+    "Chimie ",
     "Écologie",
-    "Philosophie Antique",
+    "Philosophie",
   ],
   [
     "Statistiques",
@@ -39,17 +30,17 @@ const schedule = [
 ];
 
 const EmploieStudent = () => {
-  const [checkedModules, setCheckedModules] = useState(modules);
+  // const [checkedModules, setCheckedModules] = useState(modules);
 
-  const toggleModule = (index: number) => {
-    const newModules = [...checkedModules];
-    newModules[index].completed = !newModules[index].completed;
-    setCheckedModules(newModules);
-  };
+  // const toggleModule = (index: number) => {
+  //   const newModules = [...checkedModules];
+  //   newModules[index].completed = !newModules[index].completed;
+  //   setCheckedModules(newModules);
+  // };
 
   return (
-    <div className="flex gap-2">
-      {/* Sidebar Modules */}
+    <div className="flex ">
+      {/* Sidebar Modules
       <div className="bg-white p-4 rounded-lg shadow-md border-[1px] border-gray-300">
         <h2 className="text-lg font-bold mb-4">Module</h2>
         {checkedModules.map((module, index) => (
@@ -65,15 +56,15 @@ const EmploieStudent = () => {
             />
           </div>
         ))}
-      </div>
+      </div> */}
       {/* Schedule Table */}
-      <div className="bg-white p-2 rounded-lg shadow-md border-[1px] border-gray-300">
-        <h2 className="text-lg font-bold mb-4">Emploi</h2>
-        <table className="w-full border-collapse border border-gray-300 text-center">
+      <div className="bg-white p-0 md:p-1 rounded-lg shadow-md border-[1px] border-gray-300 w-full">
+        <h2 className="md:text-lg font-bold mb-4 text-center">Emploi</h2>
+        <table className="w-full border-collapse border border-gray-300 text-center md:text-base text-sm emploie">
           <thead>
             <tr className="bg-gray-200">
               {["LUN", "MAR", "MER", "JEU", "VEN", "SAM"].map((day) => (
-                <th key={day} className="border border-gray-300 py-2">
+                <th key={day} className="border border-gray-300 md:py-2">
                   {day}
                 </th>
               ))}

@@ -26,8 +26,8 @@ export const AdminLinks = [
   },
   {
     image: "/icons/grades.png",
-    path: "/admin/result",
-    title: "Résulat",
+    path: "/admin/note",
+    title: "Note",
   },
   {
     image: "/icons/email.png",
@@ -83,7 +83,7 @@ export const EtudiantLinks = [
     title: "Messages",
   },
   {
-    image: "/icons/email.png",
+    image: "/icons/grades.png",
     path: "/etudiant/note",
     title: "Note",
   },
@@ -113,7 +113,7 @@ export const ProfesseurLinks = [
   },
   {
     image: "/icons/presentation.png",
-    path: "/professeur/classes",
+    path: "/professeur/classe",
     title: "Classe",
   },
   {
@@ -128,8 +128,8 @@ export const ProfesseurLinks = [
   },
   {
     image: "/icons/grades.png",
-    path: "/professeur/result",
-    title: "Résulat",
+    path: "/professeur/note",
+    title: "Note",
   },
   {
     image: "/icons/email.png",

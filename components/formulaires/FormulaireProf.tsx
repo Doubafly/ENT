@@ -161,7 +161,6 @@ const RegisterFormEnseignant = ({ onSubmit, title = "Créer un Enseignant", onCl
             </div>
           </div>
         </div>
-
         <div className="flex justify-center mt-4">
           <button
             type="submit"

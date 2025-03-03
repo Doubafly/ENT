@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import ListCard, { User } from "@/components/card/ListCard";
 import Modal from "@/components/modal/Modal";
 import RegisterFormEnseignant from "../formulaires/FormulaireProf";
 import Image from "next/image";
+import { useState } from "react";
 
 const enseignantsData: User[] = [
   {

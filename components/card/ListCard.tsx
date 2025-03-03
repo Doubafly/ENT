@@ -170,6 +170,9 @@ export interface User {
   adresse: string;
   date: string;
   tel: string;
+  classe: string;
+
+  
 }
 
 interface UserCardProps {

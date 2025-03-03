@@ -120,12 +120,12 @@ export default function Semesters() {
   const [selectedSemester, setSelectedSemester] = useState("Semestre1");
 
   return (
-    <div className="p-6 m-10">
+    <div className="p-6 m-8 ml-4 mb-4">
       <h1 className="text-2xl font-bold mb-4">Les Notes</h1>
       <div className="flex">
         {/* Liste des semestres */}
         <div className="w-1/4">
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {Object.keys(semestersData).map((semester) => (
               <li key={semester}>
                 <button
@@ -158,16 +158,16 @@ export default function Semesters() {
 function SemesterTable({ semesterName, data }) {
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">{semesterName}</h2>
+      <h2 className="text-xl font-bold mb-2">{semesterName}</h2>
       <div className="overflow-x-auto border rounded-lg">
         <table className="min-w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2">Module</th>
-              <th className="border border-gray-300 px-4 py-2">Note Classe</th>
-              <th className="border border-gray-300 px-4 py-2">Note Compo</th>
-              <th className="border border-gray-300 px-4 py-2">Note Matiere</th>
-              <th className="border border-gray-300 px-4 py-2">Validation</th>
+              <th className="border border-gray-300 px-2 py-2">Module</th>
+              <th className="border border-gray-300 px-2 py-2">Note Classe</th>
+              <th className="border border-gray-300 px-2 py-2">Note Compo</th>
+              <th className="border border-gray-300 px-2 py-2">Note Matiere</th>
+              <th className="border border-gray-300 px-2 py-2">Validation</th>
             </tr>
           </thead>
           <tbody>
@@ -176,19 +176,19 @@ function SemesterTable({ semesterName, data }) {
                 key={index}
                 className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
               >
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-2 py-2">
                   {row.Module}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-2 py-2">
                   {row.NoteClasse}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-2 py-2">
                   {row.NoteCompo}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-2 py-2">
                   {row.NoteMatiere}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-2 py-2">
                   {row.Validation}
                 </td>
               </tr>

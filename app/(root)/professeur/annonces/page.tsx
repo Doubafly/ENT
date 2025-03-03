@@ -1,6 +1,6 @@
 // "use client";
 
-// import Annonce from "@/components/AnnonceCard";
+// import Annonce from "@/components/annonces/AnnonceCard_2";
 // import Calendrier from "@/components/Calendrier";
 
 // export default function LesAnnonces() {
@@ -61,10 +61,11 @@
 //   );
 // }
 
+
 "use client";
 
 import React from "react";
-import AnnonceList from "@/components/annonces/Etud_AnnonceList";
+import AnnonceList from "@/components/annonces/Prof_AnnonceList";
 
 const AnnoncesPage: React.FC = () => {
   return (

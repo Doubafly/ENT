@@ -1,10 +1,10 @@
 "use client";
-import HeaderBox from "@/components/HeaderBox";
 import RightSidebar from "@/components/RightSidebar";
 import Statistique from "@/components/statistique/statistique";
 
 export default function Home() {
   const user = {
+    role: "Admin",
     firstName: "Mamadou",
     lastName: "Ba",
     email: "ba6353158@gmail.com",
@@ -12,17 +12,9 @@ export default function Home() {
   return (
     <section className="home">
       <div className="home-content">
-        <header className="home-header">
-          <HeaderBox
-            type="greeting"
-            title="Bienvenue"
-            subtext="Technolab ista le meilleure"
-            user="Douba"
-          />
-        </header>
         <Statistique />
       </div>
-      <RightSidebar user={user} />
+      <RightSidebar />
     </section>
   );
 }

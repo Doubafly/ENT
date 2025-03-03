@@ -7,26 +7,17 @@ import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 
 // Données fictives des étudiants
 const etudiantsData: User[] = [
-  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :1,classe:"ap1"},
-  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "IG", matricule: "12CV",id :2,classe:"ap1" },
-  { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "EMI", matricule: "12CV",id :3,classe:"ap1" },
-  { image: "/img/profil4.jpg", nom: "Dupont", prenom: "Jean", email: "dramane@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "GEER", matricule: "12CV",id :4,classe:"ap1" },
-  { image: "/img/profil5.jpg", nom: "Dupont", prenom: "Jean", email: "moussa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :5 ,classe:"ap1"},
-  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "IG", matricule: "12CV",id :6,classe:"ap1" },
-  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "EMI", matricule: "12CV",id :7,classe:"ap1"},
-  { image: "/img/profil7.jpg", nom: "Dupont", prenom: "Jean", email: "bourma@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "GEER", matricule: "12CV",id :8,classe:"ap1" },
-  { image: "/img/profil8.jpg", nom: "Maiga", prenom: "Mahamoud", email: "bourma@example.com", adresse: "Bamako, Sotuba", date: "01/01/1980", tel: "0123456789", filiere : "CCA", matricule: "12CV",id :9,classe:"ap1" },
-  { image: "/img/profil9.jpg", nom: "DIALLO", prenom: "Moussa", email: "bourma@example.com", adresse: "Bamako, Mali", date: "01/01/1980", tel: "0123456789", filiere : "FC", matricule: "12CV",id :10,classe:"ap1" },
-//   { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" ,classe:"ap1" , filiere : "FC", matricule: "12CV",id :10 },
-//   { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789",classe:"ap1" },
-//   { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" ,classe:"ap1"},
-//   { image: "/img/profil4.jpg", nom: "Dupont", prenom: "Jean", email: "dramane@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" ,classe:"ap1"},
-//   { image: "/img/profil5.jpg", nom: "Dupont", prenom: "Jean", email: "moussa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789",classe:"ap1" },
-//   { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" ,classe:"ap1"},
-//   { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789",classe:"ap1" },
-//   { image: "/img/profil7.jpg", nom: "Dupont", prenom: "Jean", email: "bourma@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" ,classe:"ap1"},
-//   { image: "/img/profil8.jpg", nom: "Maiga", prenom: "Mahamoud", email: "bourma@example.com", adresse: "Bamako, Sotuba", date: "01/01/1980", tel: "0123456789" ,classe:"ap1"},
-//   { image: "/img/profil9.jpg", nom: "DIALLO", prenom: "Moussa", email: "bourma@example.com", adresse: "Bamako, Mali", date: "01/01/1980", tel: "0123456789",classe:"ap1" },
+  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :1},
+  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "IG", matricule: "12CV",id :2, },
+  { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "EMI", matricule: "12CV",id :3,},
+  { image: "/img/profil4.jpg", nom: "Dupont", prenom: "Jean", email: "dramane@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "GEER", matricule: "12CV",id :4,},
+  { image: "/img/profil5.jpg", nom: "Dupont", prenom: "Jean", email: "moussa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :5 },
+  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "IG", matricule: "12CV",id :6 },
+  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "EMI", matricule: "12CV",id :7},
+  { image: "/img/profil7.jpg", nom: "Dupont", prenom: "Jean", email: "bourma@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789", filiere : "GEER", matricule: "12CV",id :8 },
+  { image: "/img/profil8.jpg", nom: "Maiga", prenom: "Mahamoud", email: "bourma@example.com", adresse: "Bamako, Sotuba", date: "01/01/1980", tel: "0123456789", filiere : "CCA", matricule: "12CV",id :9 },
+  { image: "/img/profil9.jpg", nom: "DIALLO", prenom: "Moussa", email: "bourma@example.com", adresse: "Bamako, Mali", date: "01/01/1980", tel: "0123456789", filiere : "FC", matricule: "12CV",id :10 },
+
 ];
 
 // Composant principal pour afficher la liste des étudiants
@@ -34,16 +25,28 @@ export default function EtudiantList() {
   // États pour gérer les données des étudiants, la recherche, la pagination, et l'affichage des modals
   const [etudiants, setEtudiant] = useState<User[]>(etudiantsData);
   const [searchTerm, setSearchTerm] = useState(""); // Terme de recherche pour filtrer les étudiants
+  const [classFilter, setClassFilter] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1); // Page actuelle de la liste d'étudiants
   const [selectedEtudiant, setSelectedEtudiant] = useState<User | null>(null); // Étudiant sélectionné pour afficher le modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false); // État pour le modal d'ajout
   const [showForm, setShowForm] = useState(false);  // Contrôle l'affichage du formulaire d'ajout
   const itemsPerPage = 8; // Nombre d'étudiants à afficher par page
 
-  // Filtrage des étudiants selon le terme de recherche
-  const filteredEtudiants = etudiants.filter((etudiant) =>
-    `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Récupération des classes et années uniques pour les filtres
+  const classesDisponibles = Array.from(new Set(etudiantsData.map(ent => ent.filiere)));
+  const anneesDisponibles = Array.from(new Set(etudiantsData.map(ent => ent.date)));
+
+  // Filtrage des enseignants
+  const filteredEtudiants = etudiants.filter((etudiant) => {
+    return (
+      `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) &&
+      (classFilter ? etudiant.filiere === classFilter : true) &&
+      (yearFilter ? etudiant.date === yearFilter : true)
+    );
+  });
 
   // Calcul des pages en fonction du nombre d'étudiants filtrés
   const totalPages = Math.ceil(filteredEtudiants.length / itemsPerPage);
@@ -93,9 +96,44 @@ export default function EtudiantList() {
           }}
           className="w-1/3 p-3 border rounded-lg text-xs"
         />
-        <button onClick={() => setIsAddModalOpen(true)} className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4">
-          Ajouter
-        </button>
+         {/*Filtre  Sélecteur de classe */}
+         <select
+          value={classFilter}
+          onChange={(e) => {
+            setClassFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-1/4 p-3 border rounded-lg text-xs"
+        >
+          <option value="">Filtrer par classes</option>
+          {classesDisponibles.map((filiere) => (
+            <option key={filiere} value={filiere}>
+              {filiere}
+            </option>
+          ))}
+        </select>
+
+        {/* Filtre Sélecteur d'année */}
+        <select
+          value={yearFilter}
+          onChange={(e) => {
+            setYearFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-1/4 p-3 border rounded-lg text-xs"
+        >
+          <option value="">Filtrer par années</option>
+          {anneesDisponibles.map((annee) => (
+            <option key={annee} value={annee}>
+              {annee}
+            </option>
+          ))}
+        </select>
+
+      <button onClick={() => setShowForm(true)} className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4">
+  Ajouter
+</button>
+
       </div>
 
       {/* Liste des étudiants */}

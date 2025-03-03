@@ -9,10 +9,32 @@ export default function Home() {
     lastName: "Ba",
     email: "ba6353158@gmail.com",
   };
+  const StatData = [
+    {
+      link: "/icons/text-books.png",
+      value: "2",
+      nom: "Nombre Filiere",
+    },
+    {
+      link: "/icons/friends.png",
+      value: "2",
+      nom: "Nombre etudiant",
+    },
+    {
+      link: "/icons/teach.png",
+      value: "2",
+      nom: "Nombre Module",
+    },
+    // {
+    //   link: "/icons/Training.png",
+    //   value: "2",
+    //   nom: "Nombre enseignant",
+    // },
+  ];
   return (
     <section className="home">
       <div className="home-content">
-        <Statistique />
+        <Statistique menuStat={StatData} />
       </div>
       <RightSidebar />
     </section>

@@ -7,8 +7,8 @@ import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 
 // Données fictives des étudiants
 const etudiantsData: User[] = [
-  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :1},
-  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "IG", matricule: "12CV",id :2, },
+  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :1},
+  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "IG", matricule: "12CV",id :2, },
   { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "EMI", matricule: "12CV",id :3,},
   { image: "/img/profil4.jpg", nom: "Dupont", prenom: "Jean", email: "dramane@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "GEER", matricule: "12CV",id :4,},
   { image: "/img/profil5.jpg", nom: "Dupont", prenom: "Jean", email: "moussa@example.com", adresse: "Paris, France", date: "01/01/1980", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :5 },

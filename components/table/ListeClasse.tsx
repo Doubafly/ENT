@@ -22,6 +22,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil2.jpg",
@@ -31,6 +32,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil3.jpg",
@@ -40,6 +42,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil4.jpg",
@@ -49,6 +52,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil5.jpg",
@@ -58,6 +62,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil6.jpg",
@@ -67,6 +72,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil6.jpg",
@@ -76,6 +82,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil7.jpg",
@@ -85,6 +92,7 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil8.jpg",
@@ -94,6 +102,7 @@ const enseignantsData: User[] = [
     adresse: "Bamako, Sotuba",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil9.jpg",
@@ -103,6 +112,7 @@ const enseignantsData: User[] = [
     adresse: "Bamako, Mali",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
 ];
 
@@ -115,6 +125,7 @@ const etudiantsData: User[] = [
     adresse: "Paris, France",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil8.jpg",
@@ -124,6 +135,7 @@ const etudiantsData: User[] = [
     adresse: "Bamako, Sotuba",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
   {
     image: "/img/profil9.jpg",
@@ -133,6 +145,7 @@ const etudiantsData: User[] = [
     adresse: "Bamako, Mali",
     date: "01/01/1980",
     tel: "0123456789",
+    classe: "Mathématiques",
   },
 ];
 

@@ -4,6 +4,7 @@ import ListCard, { User } from "@/components/card/ListCard";
 import Modal from "@/components/modal/Modal";
 import RegisterFormEnseignant from "../formulaires/FormulaireProf";
 import Image from "next/image";
+import { useState } from "react";
 
 const enseignantsData: User[] = [
   { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", classe: "AP" },

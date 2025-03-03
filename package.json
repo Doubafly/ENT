@@ -21,12 +21,13 @@
     "@shadcn/ui": "^0.0.4",
     "@types/bcrypt": "^5.0.2",
     "app": "file:",
-    "chart.js": "^4.4.7",
+    "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "git": "^0.1.5",
     "lucide-react": "^0.474.0",
+    "mammoth": "^1.9.0",
     "next": "^15.1.4",
     "react": "^19.0.0",
     "react-calendar": "^5.1.0",
@@ -41,13 +42,13 @@
   "devDependencies": {
     "@iconify/react": "^5.1.0",
     "@types/next": "^8.0.7",
-    "@types/node": "^20",
-    "@types/react": "^19.0.7",
+    "@types/node": "20.17.19",
+    "@types/react": "19.0.10",
     "@types/react-dom": "^19",
     "postcss": "^8",
-    "prisma": "^6.2.1",
+    "prisma": "^6.4.0",
     "shadcn-ui": "^0.9.4",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "5.7.3"
   }
 }

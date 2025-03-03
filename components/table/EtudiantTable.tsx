@@ -2,9 +2,9 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { registerUser } from "@/actions/signupetudiant";
-// import RegisterFormEtudiant from "/components/formulaires/RegisterFormEtudiant";
 import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal"; // Assure-toi d'importer le composant
+
 
 // Permet de définir le type d'un étudiant
 type EtudiantType = {
@@ -27,6 +27,9 @@ const EtudiantTable = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSur, setIsSur] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false); // État pour le modal de mise à jour
+  const [isAnnexeOpen, setIsAnnexeOpen] = useState(false);
+  const [isModuleOpen, setIsModuleOpen] = useState(false);
+  const [isParametreOpen, setIsParametreOpen] = useState(false);
   const [selectedEtudiant, setSelectedEtudiant] = useState<EtudiantType | null>(
     null
   ); // État pour l'étudiant sélectionné
@@ -38,6 +41,9 @@ const EtudiantTable = () => {
   const toggleModal = () => {
     setIsOpen(!isOpen);
   };
+ 
+ 
+
 
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,6 +143,8 @@ const EtudiantTable = () => {
           <button className="text-green-500 text-2xl" onClick={toggleModal}>
             +
           </button>
+          
+         
         </div>
 
         <table className="table-auto w-full">
@@ -262,6 +270,8 @@ const EtudiantTable = () => {
           onUpdate={handleUpdate}
         />
       )}
+
+       
 
       {/* Overlay et modal de confirmation pour la suppression */}
       {isSur && (

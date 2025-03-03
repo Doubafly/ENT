@@ -368,7 +368,7 @@ export default function EnseignantList() {
                 console.log("Nouvel enseignant:", Object.fromEntries([...formData.entries()]));
                 setShowForm(false);  // Ferme le formulaire après la soumission
             }} 
-        //     onClose={handleCloseForm}  // Passe la fonction handleCloseForm à RegisterFormEnseignant
+          onClose={handleCloseForm}  // Passe la fonction handleCloseForm à RegisterFormEnseignant
         />
     </Modal>
 )}

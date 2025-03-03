@@ -7,99 +7,151 @@ import Image from "next/image";
 import { useState } from "react";
 
 const enseignantsData: User[] = [
-  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", classe: "AP" },
-  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "2023", tel: "0123456789", classe: "AP" },
-  { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", classe: "ISR" },
-  { 
+  {
+    image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", matricule: "12CV", id: 1,
+    filiere: "ap1"
+  },
+  {
+    image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "2023", tel: "0123456789", 
+    id: 2,
+    filiere: "AP",
+    matricule: ""
+  },
+  {
+    image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", 
+    id: 3,
+    filiere: "ISR",
+    matricule: ""
+  },
+  {
     image: "/img/profil4.jpg",
-     nom: "Dupont",
-      prenom: "Jean",
-       email: "dramane@example.com", 
-       adresse: "Paris, France", 
-       date: "2023",
-        tel: "0123456789",
-     classe: "ISR" },
-     { 
-      image: "/img/profil5.jpg",
+    nom: "Dupont",
+    prenom: "Jean",
+    email: "dramane@example.com",
+    adresse: "Paris, France",
+    date: "2023",
+    tel: "0123456789",
+    id: 0,
+    filiere: "ISR",
+    matricule: ""
+  },
+     {
+       image: "/img/profil5.jpg",
        nom: "Dupont",
-        prenom: "Jean",
-         email: "dramane@example.com", 
-         adresse: "Paris, France", 
-         date: "2023",
-          tel: "0123456789",
-       classe: "ISR" },
-       { 
-        image: "/img/profil6.jpg",
+       prenom: "Jean",
+       email: "dramane@example.com",
+       adresse: "Paris, France",
+       date: "2023",
+       tel: "0123456789",
+
+       id: 0,
+       filiere: "ISR",
+       matricule: ""
+     },
+       {
+         image: "/img/profil6.jpg",
          nom: "Dupont",
-          prenom: "Jean",
-           email: "dramane@example.com", 
-           adresse: "Paris, France", 
-           date: "2023",
-            tel: "0123456789",
-         classe: "ISR" },
-         { 
-          image: "/img/profil7.jpg",
+         prenom: "Jean",
+         email: "dramane@example.com",
+         adresse: "Paris, France",
+         date: "2023",
+         tel: "0123456789",
+
+         id: 0,
+         filiere: "ISR",
+         matricule: ""
+       },
+         {
+           image: "/img/profil7.jpg",
            nom: "Dupont",
-            prenom: "Jean",
-             email: "dramane@example.com", 
-             adresse: "Paris, France", 
-             date: "2023",
-              tel: "0123456789",
-           classe: "MIAGE" },
-           { 
-            image: "/img/profil8.jpg",
+           prenom: "Jean",
+           email: "dramane@example.com",
+           adresse: "Paris, France",
+           date: "2023",
+           tel: "0123456789",
+
+           id: 0,
+           filiere: "MIAGE",
+           matricule: ""
+         },
+           {
+             image: "/img/profil8.jpg",
              nom: "Dupont",
-              prenom: "Jean",
-               email: "dramane@example.com", 
-               adresse: "Paris, France", 
-               date: "2023",
-                tel: "0123456789",
-             classe: "MIAGE" },
-             { 
-              image: "/img/profil9.jpg",
+             prenom: "Jean",
+             email: "dramane@example.com",
+             adresse: "Paris, France",
+             date: "2023",
+             tel: "0123456789",
+
+             id: 0,
+             filiere: "MIAGE",
+             matricule: ""
+           },
+             {
+               image: "/img/profil9.jpg",
                nom: "Dupont",
-                prenom: "Jean",
-                 email: "dramane@example.com", 
-                 adresse: "Paris, France", 
-                 date: "2023",
-                  tel: "0123456789",
-               classe: "MIAGE" },
-               { 
-                image: "/img/profil10.jpg",
+               prenom: "Jean",
+               email: "dramane@example.com",
+               adresse: "Paris, France",
+               date: "2023",
+               tel: "0123456789",
+
+               id: 0,
+               filiere: "MIAGE",
+               matricule: ""
+             },
+               {
+                 image: "/img/profil10.jpg",
                  nom: "Dupont",
-                  prenom: "Jean",
-                   email: "dramane@example.com", 
-                   adresse: "Paris, France", 
-                   date: "2023",
-                    tel: "0123456789",
-                 classe: "GLDW" },
-                 { 
-                  image: "/img/profil11.jpg",
+                 prenom: "Jean",
+                 email: "dramane@example.com",
+                 adresse: "Paris, France",
+                 date: "2023",
+                 tel: "0123456789",
+
+                 id: 0,
+                 filiere: "GLDW",
+                 matricule: ""
+               },
+                 {
+                   image: "/img/profil11.jpg",
                    nom: "Dupont",
-                    prenom: "Jean",
-                     email: "dramane@example.com", 
-                     adresse: "Paris, France", 
-                     date: "2023",
-                      tel: "0123456789",
-                   classe: "GLDW" },
-                   { 
-                    image: "/img/profil12.jpg",
+                   prenom: "Jean",
+                   email: "dramane@example.com",
+                   adresse: "Paris, France",
+                   date: "2023",
+                   tel: "0123456789",
+
+                   id: 0,
+                   filiere: "GLDW",
+                   matricule: ""
+                 },
+                   {
+                     image: "/img/profil12.jpg",
                      nom: "Dupont",
-                      prenom: "Jean",
-                       email: "dramane@example.com", 
-                       adresse: "Paris, France", 
-                       date: "2023",
-                        tel: "0123456789",
-                     classe: "GLDW" },
-                     { 
-                      image: "/img/profil13.jpg",
+                     prenom: "Jean",
+                     email: "dramane@example.com",
+                     adresse: "Paris, France",
+                     date: "2023",
+                     tel: "0123456789",
+
+                     id: 0,
+                     filiere: "GLDW",
+                     matricule: ""
+                   },
+                     {
+                       image: "/img/profil13.jpg",
                        nom: "Dupont",
-                        prenom: "Jean",
-                         email: "dramane@example.com", 
-                         adresse: "Paris, France", 
-                         date: "2023",
-                          tel: "0123456789",
-                       classe:"GLDW" },
+                       prenom: "Jean",
+                       email: "dramane@example.com",
+                       adresse: "Paris, France",
+                       date: "2023",
+                       tel: "0123456789",
+
+                       id: 0,
+                       filiere: "GLDW",
+                       matricule: ""
+                     },
 
 ];
 
@@ -111,10 +163,11 @@ export default function EnseignantList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedEnseignant, setSelectedEnseignant] = useState<User | null>(null);
+  const [showForm, setShowForm] = useState(false);  // Contrôle l'affichage du formulaire d'ajout
   const itemsPerPage = 8;
 
   // Récupération des classes et années uniques pour les filtres
-  const classesDisponibles = Array.from(new Set(enseignantsData.map(ens => ens.classe)));
+  const classesDisponibles = Array.from(new Set(enseignantsData.map(ens => ens.filiere)));
   const anneesDisponibles = Array.from(new Set(enseignantsData.map(ens => ens.date)));
 
   // Filtrage des enseignants
@@ -123,7 +176,7 @@ export default function EnseignantList() {
       `${enseignant.nom} ${enseignant.prenom} ${enseignant.email}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) &&
-      (classFilter ? enseignant.classe === classFilter : true) &&
+      (classFilter ? enseignant.filiere === classFilter : true) &&
       (yearFilter ? enseignant.date === yearFilter : true)
     );
   });
@@ -135,7 +188,11 @@ export default function EnseignantList() {
     setEnseignants((prevEnseignants) => prevEnseignants.filter(ens => ens.nom !== name));
     console.log(`Enseignant avec le nom ${name} supprimé.`);
   };
-  
+    // Fonction pour fermer le formulaire d'ajout
+    const handleCloseForm = () => {
+      setShowForm(false);  // Ferme le formulaire en modifiant l'état
+    };
+
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       <div className="flex justify-between items-center mb-4 ml-6">
@@ -167,9 +224,9 @@ export default function EnseignantList() {
           className="w-1/4 p-3 border rounded-lg text-xs"
         >
           <option value="">Filtrer par classes</option>
-          {classesDisponibles.map((classe) => (
-            <option key={classe} value={classe}>
-              {classe}
+          {classesDisponibles.map((filiere) => (
+            <option key={filiere} value={filiere}>
+              {filiere}
             </option>
           ))}
         </select>
@@ -192,9 +249,9 @@ export default function EnseignantList() {
         </select>
 
         {/* Bouton Ajouter */}
-        <button onClick={() => setIsAddModalOpen(true)} className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg">
-          Ajouter
-        </button>
+        <button onClick={() => setShowForm(true)} className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4">
+  Ajouter
+</button>
       </div>
 
       {/* Liste des enseignants */}
@@ -218,7 +275,7 @@ export default function EnseignantList() {
           <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs">
             Précédent
           </button>
-          <span className="text-lg font-semibold text-xs">Page {currentPage} sur {totalPages}</span>
+          <span className=" font-semibold text-xs">Page {currentPage} sur {totalPages}</span>
           <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-xs">
             Suivant
           </button>
@@ -230,7 +287,12 @@ export default function EnseignantList() {
  <div className="p-5 bg-white rounded-lg shadow-lg w-[400px] relative">
    {/* Bouton Fermer (en haut à droite) */}
    <div className="absolute top-3 right-3">
-    
+   <button
+                onClick={() => setSelectedEnseignant(null)}
+                className="bg-gray-300 text-gray-700 px-3 py-1 text-sm rounded-lg hover:bg-gray-400 transition-all duration-200"
+              >
+                x
+              </button>
    </div>
 
    {/* Section avec background gris */}
@@ -297,18 +359,20 @@ export default function EnseignantList() {
 )}
 
 
-{/* Modal d'ajout d'un enseignant */}
-{isAddModalOpen && (
-  <Modal onClose={() => setIsAddModalOpen(false)}>
-    <RegisterFormEnseignant 
-      onSubmit={async (formData) => {
-        console.log("Formulaire soumis !");
-        console.log("Nouveau étudiant:", Object.fromEntries([...formData.entries()]));
-        setIsAddModalOpen(false);
-      }} 
-    />
-  </Modal>
+{/* Modal d'ajout d'un étudiant avec un formulaire */}
+{showForm && (
+    <Modal onClose={handleCloseForm}>
+        <RegisterFormEnseignant 
+            onSubmit={async (formData) => {
+                console.log("Formulaire soumis !");
+                console.log("Nouvel enseignant:", Object.fromEntries([...formData.entries()]));
+                setShowForm(false);  // Ferme le formulaire après la soumission
+            }} 
+          onClose={handleCloseForm}  // Passe la fonction handleCloseForm à RegisterFormEnseignant
+        />
+    </Modal>
 )}
+
 
     </div>
   );

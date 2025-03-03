@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-=======
-# 📚 ENT - Environnement Numérique de Travail
->>>>>>> 6004c0e130c16fafb9738f42eda731b262eba68e
+
+## 📥 Installation
 
 Bienvenue sur **ENT**, une plateforme e-learning interactive conçue pour améliorer l'expérience d'apprentissage en ligne. Ce projet permet aux enseignants de gérer leurs cours et aux étudiants d'accéder facilement aux ressources pédagogiques.
 
@@ -68,9 +65,6 @@ NEXTAUTH_SECRET="votre_secret"
 
 ## 📅 Roadmap
 
-<<<<<<< HEAD
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-=======
 - [ ] Finalisation du système d'authentification
 - [ ] Ajout de la gestion avancée des cours
 - [ ] Intégration d'un tableau de bord administrateur
@@ -93,4 +87,26 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations
 ---
 
 ✨ _Ce projet est activement développé, restez à l'affût des mises à jour !_
->>>>>>> 6004c0e130c16fafb9738f42eda731b262eba68e
+
+- [ ] Finalisation du système d'authentification
+- [ ] Ajout de la gestion avancée des cours
+- [ ] Intégration d'un tableau de bord administrateur
+- [ ] Amélioration de l'UX/UI
+
+## 🤝 Contribution
+
+Les contributions sont les bienvenues !
+
+1. Forker le repo
+2. Créer une branche (`git checkout -b feature-xyz`)
+3. Commiter vos modifications (`git commit -m "Ajout d'une nouvelle fonctionnalité"`)
+4. Pousser la branche (`git push origin feature-xyz`)
+5. Ouvrir une Pull Request
+
+## 📜 Licence
+
+Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations.
+
+---
+
+✨ _Ce projet est activement développé, restez à l'affût des mises à jour !_

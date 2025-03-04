@@ -38,9 +38,8 @@ export default function Home() {
       {/* <h1 className="text-3xl">Acceuil</h1> */}
       <section className="home flex">
         <div className="home-content">
-          {/* <Statistique menuStat={StatData} /> */}
+          <Statistique menuStat={StatData} />
           {/* <TableauD></TableauD> */}
-          <EmploieStudent />
         </div>
         <RightSidebar />
       </section>

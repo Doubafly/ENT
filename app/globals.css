@@ -50,8 +50,11 @@ input[type="number"] {
   .right-sidebar {
     display: none;
   }
-  .partiecentral {
+  /* .partiecentral {
     margin-left: 50px;
+  } */
+  .menuPrincipale {
+    margin-left: 0;
   }
 }
 @media (max-width: 768px) {
@@ -142,7 +145,7 @@ input[type="number"] {
     @apply flex flex-col justify-between gap-8;
   }
   .partiecentral {
-    @apply flex flex-1 flex-col lg:ml-[240px] md:ml-[50px];
+    @apply flex flex-1 flex-col  md:ml-[50px];
   }
 
   /* Right sidebar */

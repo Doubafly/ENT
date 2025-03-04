@@ -483,7 +483,7 @@ export default function ClasseList() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-10 mt-4 bg-gray-50 min-h-screen">
       <div className="flex justify-between mb-6">
         <input
           type="text"

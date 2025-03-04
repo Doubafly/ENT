@@ -31,20 +31,22 @@ export default function RootLayout({
             <MobileNav />
           </div>
         </div>
-        <div className=" flex float-end mt-1 justify-between">
-          <header className="home-header ml-4">
-            {/* <HeaderBox
+        {/* <div className=" flex float-end mt-1 justify-between"> */}
+        {/* <header className="home-header ml-4"> */}
+        {/* <HeaderBox
               type="greeting"
               title="Bienvenue"
               subtext="Technolab ista le meilleure"
               user="Douba"
             /> */}
-          </header>
-          <div>
-            <UserProfile user={user} />
-          </div>
+        {/* </header> */}
+        <div className=" absolute  right-0 hidden md:block">
+          <UserProfile user={user} />
         </div>
-        {children}
+        {/* </div> */}
+        <div className="mt-10 md:pl-5 lg:pl-10 xl:pl-40 menuPrincipale">
+          {children}
+        </div>
       </div>
     </main>
   );

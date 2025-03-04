@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import ListCard, { User } from "@/components/card/ListCard";
 import Modal from "@/components/modal/Modal";
 import RegisterFormEnseignant from "../formulaires/FormulaireProf";
 import Image from "next/image";
+import { useState } from "react";
 
 const enseignantsData: User[] = [
   {
@@ -15,7 +15,9 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2022",
     tel: "0123456789",
-    classe: "AP",
+    matricule: "12CV",
+    id: 1,
+    filiere: "ap1",
   },
   {
     image: "/img/profil2.jpg",
@@ -25,7 +27,9 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "AP",
+    id: 2,
+    filiere: "AP",
+    matricule: "",
   },
   {
     image: "/img/profil3.jpg",
@@ -35,7 +39,9 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2022",
     tel: "0123456789",
-    classe: "ISR",
+    id: 3,
+    filiere: "ISR",
+    matricule: "",
   },
   {
     image: "/img/profil4.jpg",
@@ -45,7 +51,9 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "ISR",
+    id: 0,
+    filiere: "ISR",
+    matricule: "",
   },
   {
     image: "/img/profil5.jpg",
@@ -55,7 +63,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "ISR",
+
+    id: 0,
+    filiere: "ISR",
+    matricule: "",
   },
   {
     image: "/img/profil6.jpg",
@@ -65,7 +76,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "ISR",
+
+    id: 0,
+    filiere: "ISR",
+    matricule: "",
   },
   {
     image: "/img/profil7.jpg",
@@ -75,7 +89,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "MIAGE",
+
+    id: 0,
+    filiere: "MIAGE",
+    matricule: "",
   },
   {
     image: "/img/profil8.jpg",
@@ -85,7 +102,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "MIAGE",
+
+    id: 0,
+    filiere: "MIAGE",
+    matricule: "",
   },
   {
     image: "/img/profil9.jpg",
@@ -95,7 +115,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "MIAGE",
+
+    id: 0,
+    filiere: "MIAGE",
+    matricule: "",
   },
   {
     image: "/img/profil10.jpg",
@@ -105,7 +128,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "GLDW",
+
+    id: 0,
+    filiere: "GLDW",
+    matricule: "",
   },
   {
     image: "/img/profil11.jpg",
@@ -115,7 +141,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "GLDW",
+
+    id: 0,
+    filiere: "GLDW",
+    matricule: "",
   },
   {
     image: "/img/profil12.jpg",
@@ -125,7 +154,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "GLDW",
+
+    id: 0,
+    filiere: "GLDW",
+    matricule: "",
   },
   {
     image: "/img/profil13.jpg",
@@ -135,7 +167,10 @@ const enseignantsData: User[] = [
     adresse: "Paris, France",
     date: "2023",
     tel: "0123456789",
-    classe: "GLDW",
+
+    id: 0,
+    filiere: "GLDW",
+    matricule: "",
   },
 ];
 
@@ -149,11 +184,12 @@ export default function EnseignantList() {
   const [selectedEnseignant, setSelectedEnseignant] = useState<User | null>(
     null
   );
+  const [showForm, setShowForm] = useState(false); // Contrôle l'affichage du formulaire d'ajout
   const itemsPerPage = 8;
 
   // Récupération des classes et années uniques pour les filtres
   const classesDisponibles = Array.from(
-    new Set(enseignantsData.map((ens) => ens.classe))
+    new Set(enseignantsData.map((ens) => ens.filiere))
   );
   const anneesDisponibles = Array.from(
     new Set(enseignantsData.map((ens) => ens.date))
@@ -165,7 +201,7 @@ export default function EnseignantList() {
       `${enseignant.nom} ${enseignant.prenom} ${enseignant.email}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) &&
-      (classFilter ? enseignant.classe === classFilter : true) &&
+      (classFilter ? enseignant.filiere === classFilter : true) &&
       (yearFilter ? enseignant.date === yearFilter : true)
     );
   });
@@ -182,16 +218,18 @@ export default function EnseignantList() {
     );
     console.log(`Enseignant avec le nom ${name} supprimé.`);
   };
+  // Fonction pour fermer le formulaire d'ajout
+  const handleCloseForm = () => {
+    setShowForm(false); // Ferme le formulaire en modifiant l'état
+  };
 
   return (
-    <div className="ml-0 px-1 py-5 text-xl">
-      <h1 className="text-xl font-bold">
-        <div className="flex ">
-          <img src="/icons/teach.png" alt="Téléphone" className="w-8 h-8" />
-          Liste des Enseignants
-        </div>
+    <div className="ml-0 px-1 py-5 text-xl ">
+      <h1 className="text-xl font-bold mb-6 text-center">
+        {/* <img src="/icons/teach.png" alt="Téléphone" className="w-8 h-8" /> */}
+        <span>Liste des Enseignants</span>
       </h1>
-      <div className="flex justify-between items-center mb-4 mt-4 ml-6">
+      <div className="flex justify-between items-center mb-4 ml-6">
         {/* Barre de recherche */}
         <input
           type="text"
@@ -206,7 +244,7 @@ export default function EnseignantList() {
 
         {/*Filtre  Sélecteur de classe */}
         <select
-          title="class"
+          title="classe"
           value={classFilter}
           onChange={(e) => {
             setClassFilter(e.target.value);
@@ -215,9 +253,9 @@ export default function EnseignantList() {
           className="w-1/4 p-3 border rounded-lg text-xs"
         >
           <option value="">Filtrer par classes</option>
-          {classesDisponibles.map((classe) => (
-            <option key={classe} value={classe}>
-              {classe}
+          {classesDisponibles.map((filiere) => (
+            <option key={filiere} value={filiere}>
+              {filiere}
             </option>
           ))}
         </select>
@@ -242,8 +280,8 @@ export default function EnseignantList() {
 
         {/* Bouton Ajouter */}
         <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg"
+          onClick={() => setShowForm(true)}
+          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4"
         >
           Ajouter
         </button>
@@ -273,7 +311,7 @@ export default function EnseignantList() {
           >
             Précédent
           </button>
-          <span className="text-lg font-semibold text-xs">
+          <span className=" font-semibold text-xs">
             Page {currentPage} sur {totalPages}
           </span>
           <button
@@ -291,7 +329,14 @@ export default function EnseignantList() {
         <Modal onClose={() => setSelectedEnseignant(null)}>
           <div className="p-5 bg-white rounded-lg shadow-lg w-[400px] relative">
             {/* Bouton Fermer (en haut à droite) */}
-            <div className="absolute top-3 right-3"></div>
+            <div className="absolute top-3 right-3">
+              <button
+                onClick={() => setSelectedEnseignant(null)}
+                className="bg-gray-300 text-gray-700 px-3 py-1 text-sm rounded-lg hover:bg-gray-400 transition-all duration-200"
+              >
+                x
+              </button>
+            </div>
 
             {/* Section avec background gris */}
             <div className="bg-gray-100 p-5 rounded-lg flex flex-col items-center">
@@ -370,18 +415,19 @@ export default function EnseignantList() {
         </Modal>
       )}
 
-      {/* Modal d'ajout d'un enseignant */}
-      {isAddModalOpen && (
-        <Modal onClose={() => setIsAddModalOpen(false)}>
+      {/* Modal d'ajout d'un étudiant avec un formulaire */}
+      {showForm && (
+        <Modal onClose={handleCloseForm}>
           <RegisterFormEnseignant
             onSubmit={async (formData) => {
               console.log("Formulaire soumis !");
               console.log(
-                "Nouveau étudiant:",
+                "Nouvel enseignant:",
                 Object.fromEntries([...formData.entries()])
               );
-              setIsAddModalOpen(false);
+              setShowForm(false); // Ferme le formulaire après la soumission
             }}
+            onClose={handleCloseForm} // Passe la fonction handleCloseForm à RegisterFormEnseignant
           />
         </Modal>
       )}

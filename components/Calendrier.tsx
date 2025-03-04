@@ -29,7 +29,6 @@ const Calendrier = () => {
       <h2 className="text-center text-xl font-bold ">
         {format(currentMonth, "MMMM yyyy", { locale: fr })}
       </h2>
-
       <div className="grid grid-cols-7 gap-1 text-center font-semibold">
         {["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"].map((day) => (
           <div key={day} className="p-2">

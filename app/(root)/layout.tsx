@@ -44,7 +44,7 @@ export default function RootLayout({
           <UserProfile user={user} />
         </div>
         {/* </div> */}
-        <div className="mt-10 md:pl-5 lg:pl-10 xl:pl-40 menuPrincipale">
+        <div className="mt-10 md:pl-5 lg:pl-10 xl:pl-44 pl-5 menuPrincipale">
           {children}
         </div>
       </div>

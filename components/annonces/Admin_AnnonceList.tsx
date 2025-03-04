@@ -100,7 +100,7 @@ const AnnonceList: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-2 mt-8 bg-gray-100 min-h-screen">
+    <div className="max-w-7xl ml-5 mx-auto p-2 mt-8 bg-gray-100 min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">
         📢 Annonces
       </h1>

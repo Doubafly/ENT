@@ -79,6 +79,7 @@ export default function UserProfile({ user }) {
           >
             <FormulaireRole
               onSubmit={handleRegisterSubmit}
+              onCancel={() => setIsRoleOpen(false)} 
               title="Creation d'un Nouveau Role"
             />
           </div>
@@ -92,12 +93,14 @@ export default function UserProfile({ user }) {
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 w-full"
           onClick={() => setIsAnnexeOpen(false)}
         >
+          
           <div
             className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
             onClick={(e) => e.stopPropagation()}
           >
             <FormulaireAnnexe
               onSubmit={handleRegisterSubmit}
+              onCancel={() => setIsAnnexeOpen(false)} 
               title="Creation d'une Nouvelle Annexe"
             />
           </div>
@@ -116,6 +119,7 @@ export default function UserProfile({ user }) {
           >
             <FormulaireModule
               onSubmit={handleRegisterSubmit}
+              onCancel={() => setIsModuleOpen(false)} 
               title="Creation d'un Nouveau Module"
             />
           </div>

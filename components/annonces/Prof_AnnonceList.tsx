@@ -25,8 +25,24 @@ const initialAnnonces: Annonce[] = [
       title: "✍️ Devoir à rendre pour la semaine prochaine",
       content: "Un devoir est à rendre avant la date limite, consultez les consignes...",
       fullContent: "Les étudiants de la filière informatique doivent soumettre leur projet sur les bases de données avant le 26 février. Le travail doit être envoyé via la plateforme universitaire. Tout retard entraînera une pénalité. Consultez les consignes détaillées dans l'espace cours.",
-      author: "Prof. Dupont",
+      author: "Prof. Martin",
       date: "2025-02-18",
+    },
+    {
+      id: 3,
+      title: "🎙️ Conférence sur les nouvelles technologies",
+      content: "Un enseignant invité animera une conférence sur les tendances tech...",
+      fullContent: "Le 5 mars, nous aurons l'honneur d'accueillir un expert en cybersécurité qui donnera une conférence sur les défis actuels et futurs dans ce domaine. La conférence aura lieu en amphithéâtre A et sera suivie d'une session de questions-réponses. Les étudiants intéressés doivent s'inscrire avant le 3 mars.",
+      author: "Prof. Lefebvre",
+      date: "2025-02-17",
+    },
+    {
+      id: 4,
+      title: "📖 Ressources supplémentaires pour le cours",
+      content: "Des documents complémentaires sont disponibles en ligne...",
+      fullContent: "Suite à la demande de plusieurs étudiants, j’ai mis en ligne des ressources supplémentaires pour approfondir les notions vues en cours. Vous pouvez les consulter sur la plateforme Moodle. N’hésitez pas à poser vos questions lors des prochaines séances.",
+      author: "Prof. Bernard",
+      date: "2025-02-16",
     },
   ];
   
@@ -168,15 +184,36 @@ const AnnonceList: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6 cursor-pointer bg-white p-4 rounded shadow-md">
             {annonces.map((annonce) => (
-              <div key={annonce.id} className="cursor-pointer bg-white p-4 rounded shadow-md">
-                <AnnonceCard {...annonce} onClick={() => setSelectedAnnonce(annonce)} />
-                <div className="flex justify-end space-x-4 mt-2">
+              <div key={annonce.id}>
+                <AnnonceCard {...annonce}/>
+                <div className="flex justify-end space-x-4">
+                {/* <button
+                onClick={() => setSelectedAnnonce(annonce)}
+                className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-100"
+              >
+                Voir plus
+              </button>
+
+              <button
+                onClick={() => handleEditAnnonce(annonce)}
+                className="ml-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-100"
+              >
+                Modifier
+              </button>
+
+              <button
+                onClick={() => handleDeleteAnnonce(annonce.id)}
+                className="ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-100"
+              >
+                Supprimer
+              </button> */}
+
                   <a href="#" onClick={() => setSelectedAnnonce(annonce)} className="text-blue-600 underline">
                     Voir plus
-                  </a>
-                  <a href="#" onClick={() => handleEditAnnonce(annonce)} className="text-yellow-600 underline">
+                  </a> 
+                   <a href="#" onClick={() => handleEditAnnonce(annonce)} className="text-yellow-600 underline">
                     Modifier
                   </a>
                   <a href="#" onClick={() => handleDeleteAnnonce(annonce.id)} className="text-red-600 underline">

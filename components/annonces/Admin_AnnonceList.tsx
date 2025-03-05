@@ -99,7 +99,7 @@ const AnnonceList: React.FC = () => {
   
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gray-100 min-h-screen">
+    <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold text-center mb-6 text-blue-700">📢 Annonces</h1>
 
       {selectedAnnonce ? (
@@ -183,15 +183,36 @@ const AnnonceList: React.FC = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 cursor-pointer bg-white p-4 rounded shadow-md">
             {annonces.map((annonce) => (
-              <div key={annonce.id} className="cursor-pointer bg-white p-4 rounded shadow-md">
+              <div key={annonce.id}>
                 <AnnonceCard {...annonce}/>
-                <div className="flex justify-end space-x-4 mt-2">
+                <div className="flex justify-end space-x-4">
+                {/* <button
+                onClick={() => setSelectedAnnonce(annonce)}
+                className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-100"
+              >
+                Voir plus
+              </button>
+
+              <button
+                onClick={() => handleEditAnnonce(annonce)}
+                className="ml-2 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-100"
+              >
+                Modifier
+              </button>
+
+              <button
+                onClick={() => handleDeleteAnnonce(annonce.id)}
+                className="ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-100"
+              >
+                Supprimer
+              </button> */}
+
                   <a href="#" onClick={() => setSelectedAnnonce(annonce)} className="text-blue-600 underline">
                     Voir plus
-                  </a>
-                  <a href="#" onClick={() => handleEditAnnonce(annonce)} className="text-yellow-600 underline">
+                  </a> 
+                   <a href="#" onClick={() => handleEditAnnonce(annonce)} className="text-yellow-600 underline">
                     Modifier
                   </a>
                   <a href="#" onClick={() => handleDeleteAnnonce(annonce.id)} className="text-red-600 underline">

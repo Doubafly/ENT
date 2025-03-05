@@ -144,76 +144,18 @@ const AnnonceList: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* <button
-            onClick={() => setShowForm(true)}
-            className="mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            + Ajouter une annonce
-          </button>
-
-          {showForm && (
-            <div className="bg-white p-4 rounded shadow-md mb-6">
-              <h2 className="text-2xl font-bold mb-4">
-                {isEditing ? "Modifier l'annonce" : "Ajouter une annonce"}
-              </h2>
-              <input
-                type="text"
-                placeholder="Titre"
-                value={formAnnonce.title}
-                onChange={(e) =>
-                  setFormAnnonce({ ...formAnnonce, title: e.target.value })
-                }
-                className="w-full p-2 border rounded mb-2"
-              />
-              <textarea
-                placeholder="Résumé"
-                value={formAnnonce.content}
-                onChange={(e) =>
-                  setFormAnnonce({ ...formAnnonce, content: e.target.value })
-                }
-                className="w-full p-2 border rounded mb-2"
-              />
-              <textarea
-                placeholder="Contenu détaillé"
-                value={formAnnonce.fullContent}
-                onChange={(e) =>
-                  setFormAnnonce({ ...formAnnonce, fullContent: e.target.value })
-                }
-                className="w-full p-2 border rounded mb-2"
-              />
-              <input
-                type="text"
-                placeholder="Auteur"
-                value={formAnnonce.author}
-                onChange={(e) =>
-                  setFormAnnonce({ ...formAnnonce, author: e.target.value })
-                }
-                className="w-full p-2 border rounded mb-2"
-              />
-              <button
-                onClick={handleAddOrUpdateAnnonce}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                {isEditing ? "Modifier" : "Ajouter"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setIsEditing(false);
-                }}
-                className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Annuler
-              </button>
-            </div>
-          )} */}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 cursor-pointer bg-white p-4 rounded shadow-md">
             {annonces.map((annonce) => (
-              <div key={annonce.id} className="cursor-pointer bg-white p-4 rounded shadow-md">
-                <AnnonceCard {...annonce} onClick={() => setSelectedAnnonce(annonce)} />
-                <div className="flex justify-end space-x-4 mt-2">
-                  <a href="#" onClick={() => setSelectedAnnonce(annonce)} className="text-blue-600 underline">
+              <div key={annonce.id}>
+                <AnnonceCard {...annonce}/>
+                <div className="flex justify-end space-x-4">
+                  {/* <button
+                onClick={() => setSelectedAnnonce(annonce)}
+                className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-100"
+              >
+                Voir plus
+              </button> */}
+                  <a href="#" onClick={() => setSelectedAnnonce(annonce)} className="text-red-600 underline">
                     Voir plus
                   </a>
                 </div>

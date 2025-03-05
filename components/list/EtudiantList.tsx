@@ -7,6 +7,17 @@ import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 
 // Données fictives des étudiants
 const etudiantsData: User[] = [
+  { image: "/img/profil1.jpg", nom: "Dupont", prenom: "Jean", email: "mah@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :1},
+  { image: "/img/profil2.jpg", nom: "Dupont", prenom: "Jean", email: "kissa@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "IG", matricule: "12CV",id :2, },
+  { image: "/img/profil3.jpg", nom: "Dupont", prenom: "Jean", email: "awa@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "EMI", matricule: "12CV",id :3,},
+  { image: "/img/profil4.jpg", nom: "Dupont", prenom: "Jean", email: "dramane@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "GEER", matricule: "12CV",id :4,},
+  { image: "/img/profil5.jpg", nom: "Dupont", prenom: "Jean", email: "moussa@example.com", adresse: "Paris, France", date: "2021", tel: "0123456789" , filiere : "AP", matricule: "12CV",id :5 },
+  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", filiere : "IG", matricule: "12CV",id :6 },
+  { image: "/img/profil6.jpg", nom: "Dupont", prenom: "Jean", email: "issa@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", filiere : "EMI", matricule: "12CV",id :7},
+  { image: "/img/profil7.jpg", nom: "Dupont", prenom: "Jean", email: "bourma@example.com", adresse: "Paris, France", date: "2022", tel: "0123456789", filiere : "GEER", matricule: "12CV",id :8 },
+  { image: "/img/profil8.jpg", nom: "Maiga", prenom: "Mahamoud", email: "bourma@example.com", adresse: "Bamako, Sotuba", date: "2022", tel: "0123456789", filiere : "CCA", matricule: "12CV",id :9 },
+  { image: "/img/profil9.jpg", nom: "DIALLO", prenom: "Moussa", email: "bourma@example.com", adresse: "Bamako, Mali", date: "2022", tel: "0123456789", filiere : "FC", matricule: "12CV",id :10 },
+
   {
     image: "/img/profil1.jpg",
     nom: "Dupont",
@@ -198,11 +209,7 @@ export default function EtudiantList() {
 
   return (
     <div className="ml-0 px-1 py-5 text-xl">
-      {/* Section de titre, recherche et bouton Ajouter */}
-      <h1 className="text-xl font-bold mb-6  text-center">
-        {/* <img src="/icons/teach.png" alt="Téléphone" className="w-8 h-8" />   */}
-        <span>Liste des Etudiants</span>
-      </h1>
+    
       <div className="flex justify-between items-center mb-4 ml-6">
         {/* Champ de recherche pour filtrer les étudiants */}
         <input

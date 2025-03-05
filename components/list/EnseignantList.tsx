@@ -225,10 +225,10 @@ export default function EnseignantList() {
 
   return (
     <div className="ml-0 px-1 py-5 text-xl ">
-      <h1 className="text-xl font-bold mb-6 text-center">
-        {/* <img src="/icons/teach.png" alt="Téléphone" className="w-8 h-8" /> */}
+      {/* <h1 className="text-xl font-bold mb-6 text-center">
+        <img src="/icons/teach.png" alt="Téléphone" className="w-8 h-8" />
         <span>Liste des Enseignants</span>
-      </h1>
+      </h1> */}
       <div className="flex justify-between items-center mb-4 ml-6">
         {/* Barre de recherche */}
         <input
@@ -281,9 +281,9 @@ export default function EnseignantList() {
         {/* Bouton Ajouter */}
         <button
           onClick={() => setShowForm(true)}
-          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4"
+          className="px-8 py-2 bg-green-500 hover:bg-blue-300 text-white text-ms rounded-lg mr-4"
         >
-          Ajouter
+          + Ajouter
         </button>
       </div>
 

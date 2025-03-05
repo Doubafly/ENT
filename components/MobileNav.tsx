@@ -13,6 +13,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext } from "react";
+import UserProfile from "./HeaderProfil";
 
 const MobileNav = () => {
   const user = useContext(UserContext);
@@ -25,18 +26,27 @@ const MobileNav = () => {
       ? EtudiantLinks
       : [];
   const pathname = usePathname();
+  const utilisateur = {
+    role: user.userRole,
+    firstName: "Mamadou",
+    lastName: "Ba",
+    email: "ba6353158@gmail.com",
+  };
   return (
-    <section className="w-full max-w-[264px]">
+    <section className="w-full max-w-[400px] pt-3">
       <Sheet>
-        <SheetTrigger>
-          <Image
-            src="/icons/hamburger.svg"
-            alt="menu"
-            width={30}
-            height={30}
-            className="cursor-pointer"
-          />
-        </SheetTrigger>
+        <div className="flex items-center">
+          <UserProfile user={utilisateur} />
+          <SheetTrigger>
+            <Image
+              src="/icons/hamburger.svg"
+              alt="menu"
+              width={30}
+              height={30}
+              className="cursor-pointer"
+            />
+          </SheetTrigger>{" "}
+        </div>
         <SheetContent
           side="left"
           className="border-none bg-white"

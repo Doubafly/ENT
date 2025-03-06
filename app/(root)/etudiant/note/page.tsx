@@ -122,7 +122,7 @@ const semestreData = {
 export default function page() {
   const [selectedSemestre, setSelectedSemestre] = useState("");
   return (
-    <div>
+    <div className="ml-4">
       <h1 className="text-2xl font-bold mb-4 ml-2">Les Notes</h1>
       <div className="mt-8 ml-2 mb-4 flex">
         {/* <Semesters /> */}

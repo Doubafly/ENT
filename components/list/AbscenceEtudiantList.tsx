@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { registerTeacher } from "@/actions/signupprofesseur";
-import RegisterFormEnseignant from "../formulaires/FormulaireProf";
+import { registerUser } from "@/actions/signupetudiant";
+import RegisterFormEtudiant from "../formulaires/RegisterFormEtudiant ";
 
-type EnseignantType = {
+type EtudiantType = {
   id: number;
   utilisateurs: {
     nom: string;
@@ -28,8 +28,8 @@ type EnseignantType = {
   }[];
 };
 
-const EnseignantTable = () => {
-  const [enseignants, setEnseignants] = useState<EnseignantType[]>([]);
+const EtudiantTable = () => {
+  const [etudiants, setEtudiants] = useState<EtudiantType[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isSur, setIsSur] = useState(false);
 
@@ -42,7 +42,7 @@ const EnseignantTable = () => {
   };
 
   const handleRegisterSubmit = async (formData: FormData) => {
-    await registerTeacher(formData);
+    await registerUser(formData);
   };
 
   const [search, setSearch] = useState("");
@@ -50,44 +50,44 @@ const EnseignantTable = () => {
   const itemsPerPage = 6;
 
   // Filtrer les enseignants selon la recherche
-  const filteredEnseignants = enseignants.filter(
-    (enseignant) =>
-      enseignant.utilisateurs.nom
+  const filteredEtudiants = etudiants.filter(
+    (etudiant) =>
+      etudiant.utilisateurs.nom
         .toLowerCase()
         .includes(search.toLowerCase()) ||
-      enseignant.utilisateurs.email
+      etudiant.utilisateurs.email
         .toLowerCase()
         .includes(search.toLowerCase()) ||
-      enseignant.cours.some((cours) =>
+      etudiant.cours.some((cours) =>
         cours.filieremodule.filieres.nom
           .toLowerCase()
           .includes(search.toLowerCase())
       ) ||
-      enseignant.cours.some((cours) =>
+      etudiant.cours.some((cours) =>
         cours.filieremodule.syllabus
           .toLowerCase()
           .includes(search.toLowerCase())
       ) ||
-      enseignant.cours.some((cours) =>
+      etudiant.cours.some((cours) =>
         cours.filieremodule.modules.nom
           .toLowerCase()
           .includes(search.toLowerCase())
       ) ||
-      enseignant.utilisateurs.adresse
+      etudiant.utilisateurs.adresse
         .toLowerCase()
         .includes(search.toLowerCase()) ||
-      enseignant.utilisateurs.telephone.includes(search)
+      etudiant.utilisateurs.telephone.includes(search)
   );
 
   // Pagination
-  const totalPages = Math.ceil(filteredEnseignants.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredEtudiants.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentEnseignants = filteredEnseignants.slice(
+  const currentEtudiants = filteredEtudiants.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
-  console.log(currentEnseignants);
+  console.log(currentEtudiants);
 
   const handlePrevPage = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -104,24 +104,24 @@ const EnseignantTable = () => {
 
   // Récupérer les enseignants depuis l'API
   useEffect(() => {
-    const fetchEnseignants = async () => {
-      const res = await fetch("/api/recuperationEnseignant");
+    const fetchEtudiants = async () => {
+      const res = await fetch("/api/etudiant");
       if (!res.ok) {
         console.log("Erreur API :", res.status);
         return;
       }
       const data = await res.json();
       console.log("Données récupérées :", data);
-      setEnseignants(data);
+      setEtudiants(data);
     };
 
-    fetchEnseignants();
+    fetchEtudiants();
   }, []);
 
   return (
     <div className="w-full mt-16 gap-10 flex flex-col justify-start items-center">
       <div className="flex flex-col">
-        <h1 className="text-xl font-bold mb-4">Liste des Enseignants</h1>
+        <h1 className="text-xl font-bold mb-4">Liste des Etudiants</h1>
         <div className="flex items-center justify-between mb-4">
           <input
             type="text"
@@ -138,7 +138,7 @@ const EnseignantTable = () => {
           <thead>
             <tr>
               <th className="p-2">Infos</th>
-              <th className="p-2">ID_Enseignant</th>
+              <th className="p-2">ID_Etudiants</th>
               <th className="p-2">Modules</th>
               <th className="p-2">Classes</th>
               <th className="p-2">Téléphone</th>
@@ -147,13 +147,13 @@ const EnseignantTable = () => {
             </tr>
           </thead>
           <tbody>
-            {currentEnseignants.map((enseignant) => (
-              <tr key={enseignant.id} className="border-b-2 border-b-gray-400">
+            {currentEtudiants.map((etudiant) => (
+              <tr key={etudiant.id} className="border-b-2 border-b-gray-400">
                 <td className="p-2">
                   <div className="flex items-center gap-2">
-                    {enseignant.utilisateurs.profil ? (
+                    {etudiant.utilisateurs.profil ? (
                       <img
-                        src={enseignant.utilisateurs.profil}
+                        src={etudiant.utilisateurs.profil}
                         alt=""
                         className="w-8 h-8 rounded-full"
                       />
@@ -166,32 +166,32 @@ const EnseignantTable = () => {
                     )}
                     <div>
                       <div>
-                        {enseignant.utilisateurs.nom}{" "}
-                        {enseignant.utilisateurs.prenom}
+                        {etudiant.utilisateurs.nom}{" "}
+                        {etudiant.utilisateurs.prenom}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {enseignant.utilisateurs.email}
+                        {etudiant.utilisateurs.email}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="p-2">{enseignant.id}</td>
+                <td className="p-2">{etudiant.id}</td>
                 <td className="p-2">
-                  {enseignant.cours.map((cours) => (
+                  {etudiant.cours.map((cours) => (
                     <div key={cours.filieremodule?.modules.nom}>
                       {cours.filieremodule?.modules.nom || "N/A"}
                     </div>
                   ))}
                 </td>
                 <td className="p-2">
-                  {enseignant.cours.map((cours) => (
+                  {etudiant.cours.map((cours) => (
                     <div key={cours.filieremodule?.filieres.nom}>
                       {cours.filieremodule?.filieres.nom || "N/A"}
                     </div>
                   ))}
                 </td>
-                <td className="p-2">{enseignant.utilisateurs.telephone}</td>
-                <td className="p-2">{enseignant.utilisateurs.adresse}</td>
+                <td className="p-2">{etudiant.utilisateurs.telephone}</td>
+                <td className="p-2">{etudiant.utilisateurs.adresse}</td>
                 <td className="p-2">
                   <div className="flex gap-2">
                     <Image
@@ -251,7 +251,7 @@ const EnseignantTable = () => {
             className="bg-white rounded-lg p-2 shadow-lg lg:px-8 lg:py-4 relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <RegisterFormEnseignant
+            <RegisterFormEtudiant
               onSubmit={handleRegisterSubmit}
               title="Inscription d'un nouveau Enseignant" onClose={function (): void {
                 throw new Error("Function not implemented.");
@@ -294,4 +294,4 @@ const EnseignantTable = () => {
   );
 };
 
-export default EnseignantTable;
+export default EtudiantTable;

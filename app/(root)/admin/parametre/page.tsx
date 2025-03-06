@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import ListeAnnexes from "@/components/list/ListeAnnexes";
 import { useState } from "react";
 import {
   FaCog,
@@ -9,7 +10,13 @@ import {
   FaBell,
   FaBuilding,
   FaUserShield,
+  FaCalendarAlt,
+  FaBook,
+  FaSitemap,
 } from "react-icons/fa";
+import ListeModules from "@/components/list/ListeModules";
+import ListeFilieres from "@/components/list/ListeFilieres";
+import ListeRoles from "@/components/list/ListeRoles";
 
 const ParametrePage = () => {
   const [activeSection, setActiveSection] = useState("Système");
@@ -25,14 +32,29 @@ const ParametrePage = () => {
       description: "Gérer les paramètres système",
     },
     {
+      id: "Roles",
+      icon: <FaUser />,
+      description: "Gérer les differents Roles",
+    },
+    {
       id: "Annexes",
       icon: <FaBuilding />,
       description: "Gérer les differents annexes",
     },
     {
-      id: "Rôles",
-      icon: <FaUserShield />,
-      description: "Gérer les rôles et permissions",
+      id: "Sessions",
+      icon: <FaCalendarAlt />,
+      description: "Gérer les differents Sessions",
+    },
+    {
+      id: "Modules",
+      icon: <FaBook />,
+      description: "Gérer les differents Modules",
+    },
+    {
+      id: "Filieres",
+      icon: <FaSitemap />,
+      description: "Gérer les differents Filieres",
     },
     {
       id: "Personnaliser",
@@ -51,10 +73,10 @@ const ParametrePage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-52 bg-gray-50 text-gray-800 mt-16 p-4 md:p-8 w-full">
+    <div className="flex flex-col min-h-52 bg-gray-50 text-gray-800 mt-15 p-4 md:p-8 w-full">
       <div className="flex flex-1 flex-col md:flex-row">
         {/* Le sidebar du paramètre */}
-        <span className="bg-white text-gray-800 rounded-lg shadow-lg w-full md:w-64 border-r border-gray-200 p-4 mb-4 md:mb-0 h-96">
+        <span className="bg-white text-gray-800 rounded-lg shadow-lg w-full md:w-64 border-r border-gray-200 p-5 mb-50 md:mb-0 h-100">
           <h2 className="text-lg font-semibold mb-4">Menu</h2>
           <ul>
             {sections.map((section) => (
@@ -86,26 +108,45 @@ const ParametrePage = () => {
             {sections
               .filter((section) => section.id === activeSection)
               .map((section) => (
-                <div
-                  key={section.id}
-                  className="bg-white text-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
-                >
-                  <div className="flex items-center mb-4">
-                    <span className="text-2xl mr-3">{section.icon}</span>
-                    <h2 className="text-xl font-semibold truncate">
-                      {section.id}
-                    </h2>
-                  </div>
-                  <p>{section.description}</p>
-                  <button
-                    className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                    onClick={() => handleConfigure(section.id)}
-                  >
-                    Configurer
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-1 gap-6">
+                  {/* Carte pour chaque sous-section */}
+                  {sections
+                    .filter(
+                      (section) =>
+                        section.id === activeSection && section.id !== "Annexes" && section.id !== "Roles" && section.id !== "Modules" && section.id !== "Filieres"
+                    ) // Exclure la section "Annexes"
+                    .map((section) => (
+                      <div
+                        key={section.id}
+                        className="bg-white text-gray-800 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300"
+                      >
+                        <div className="flex items-center mb-4">
+                          <span className="text-2xl mr-3">{section.icon}</span>
+                          <h2 className="text-xl font-semibold truncate">
+                            {section.id}
+                          </h2>
+                        </div>
+                        <p>{section.description}</p>
+                        {!["Annexes", "Filieres", "Roles", "Modules"].includes(
+                          section.id
+                        ) && (
+                          <button
+                            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                            onClick={() => handleConfigure(section.id)}
+                          >
+                            Configurer
+                          </button>
+                        )}
+                      </div>
+                    ))}
                 </div>
               ))}
           </div>
+
+          {activeSection === "Roles" && <ListeRoles />}
+          {activeSection === "Annexes" && <ListeAnnexes />}
+          {activeSection === "Modules" && <ListeModules />}
+          {activeSection === "Filieres" && <ListeFilieres />}
 
           {/* Affichage des actions de configuration */}
           {configurationAction === "Système" && (
@@ -270,38 +311,6 @@ const ParametrePage = () => {
             </button>
           )}
         </main>
-        {activeSection === "Annexes" && (
-          <div className="bg-white text-gray-800 p-6 rounded-lg shadow-lg h-96">
-            <h2 className="text-xl font-semibold mb-4">Liste des annexes</h2>
-            <ul>
-              <li className="flex items-center justify-between mb-2">
-                <span>Annexe 1</span>
-              </li>
-              <li className="flex items-center justify-between mb-2">
-                <span>Annexe 2</span>
-              </li>
-              <li className="flex items-center justify-between mb-2">
-                <span>Annexe 3</span>
-              </li>
-            </ul>
-          </div>
-        )}
-        {activeSection === "Rôles" && (
-          <div className="bg-white text-gray-800 p-6 rounded-lg shadow-lg h-96">
-            <h2 className="text-xl font-semibold mb-4">Liste des Roles</h2>
-            <ul>
-              <li className="flex items-center justify-between mb-2">
-                <span>Rôles 1</span>
-              </li>
-              <li className="flex items-center justify-between mb-2">
-                <span>Rôles 2</span>
-              </li>
-              <li className="flex items-center justify-between mb-2">
-                <span>Rôles 3</span>
-              </li>
-            </ul>
-          </div>
-        )}
       </div>
     </div>
   );

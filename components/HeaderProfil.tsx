@@ -7,6 +7,7 @@ import FormulaireRole from "./formulaires/FormulaireRole";
 import FormulaireAnnexe from "./formulaires/FormulaireAnnexe";
 import FormulaireModule from "./formulaires/FormulaireModule";
 import ParametrePage from "@/app/(root)/admin/parametre/page";
+import FormulaireFiliere from "./formulaires/FormulaireFiliere";
 
 export default function UserProfile({ user }) {
   const [notificationCount, setNotificationCount] = useState(1);
@@ -14,6 +15,7 @@ export default function UserProfile({ user }) {
   const [isAnnexeOpen, setIsAnnexeOpen] = useState(false);
   const [isModuleOpen, setIsModuleOpen] = useState(false);
   const [isParametreOpen, setIsParametreOpen] = useState(false);
+  const [isFiliereOpen, setIsFiliereOpen] = useState(false);
   
 
   function handleRegisterSubmit(formData: FormData): Promise<void> {
@@ -46,7 +48,7 @@ export default function UserProfile({ user }) {
             onCreateRole={() => setIsRoleOpen(true)}
             onCreateAnnexe={() => setIsAnnexeOpen(true)}
             onCreateModule={() => setIsModuleOpen(true)}
-            onCreateAutre={() => console.log("Creer dautre chose")}
+            onCreateFiliere={() => setIsFiliereOpen(true)}
             />
    
       </div>
@@ -125,6 +127,27 @@ export default function UserProfile({ user }) {
           </div>
         </div>
       )}
+
+
+       {/* Overlay et formulaire modal pour la filiere avec bouton parametre */}
+       {isFiliereOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={() => setIsFiliereOpen(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <FormulaireFiliere
+              onSubmit={handleRegisterSubmit}
+              onCancel={() => setIsFiliereOpen(false)} 
+              title="Creation d'une Nouvelle Filiere"
+            />
+          </div>
+        </div>
+      )}
+
 
       {/* Overlay et ouvrage de la page parametre avec bouton parametre */}
       {isParametreOpen && (

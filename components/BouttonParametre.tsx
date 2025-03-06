@@ -8,7 +8,7 @@ interface BoutonParametreProps {
   onCreateRole: () => void;  
   onCreateAnnexe: () => void;
   onCreateModule: () => void;
-  onCreateAutre: () => void;
+  onCreateFiliere: () => void;
 }
 
 const BoutonParametre: React.FC<BoutonParametreProps> = ({
@@ -16,7 +16,7 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
   onCreateRole,  
   onCreateAnnexe,
   onCreateModule,
-  onCreateAutre,
+  onCreateFiliere,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -82,10 +82,10 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
             className="w-full px-4 py-2 text-left hover:bg-gray-200"
             onClick={() => {
               setIsMenuOpen(false);
-              onCreateAutre();
+              onCreateFiliere();
             }}
           >
-            Autre création
+            Creer une filiere
           </button>
         </div>
       )}

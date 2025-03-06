@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import "./statistique.css";
 import { Bar } from "react-chartjs-2";
 import { Doughnut } from "react-chartjs-2";
@@ -15,6 +15,8 @@ import {
   Legend,
 } from "chart.js";
 import MiniSmallIconCard from "../card/MiniIconCard";
+import { UserContext } from "@/changerUtilisateur/utilisateur";
+import EmploieStudent from "../EmploieStudent";
 
 ChartJS.register(
   CategoryScale,
@@ -66,6 +68,8 @@ const options = {
 };
 
 const Statistique = ({ menuStat }) => {
+  const user = useContext(UserContext);
+
   const data2 = {
     labels: ["Hommes", "Femmes"],
     datasets: [
@@ -87,61 +91,20 @@ const Statistique = ({ menuStat }) => {
             name={stat.nom}
           />
         ))}
-
-        {/* <MiniSmallIconCard
-          photoName={"/icons/text-books.png"}
-          stats={"2"}
-          name={"Nombre Filiere"}
-        />
-        <MiniSmallIconCard
-          photoName={"/icons/friends.png"}
-          stats={"2"}
-          name={"Nombre etudiant"}
-        />
-        <MiniSmallIconCard
-          photoName={"/icons/teach.png"}
-          stats={"2"}
-          name={"Nombre classe"}
-        />
-        <MiniSmallIconCard
-          photoName={"/icons/Training.png"}
-          stats={"2"}
-          name={"Nombre enseignant"} 
-        />*/}
-        {/* <div className="gridenf">
-          <h3 className="font-bold text-lg">Nombre Filiere</h3>
-          <p id="traitCourriers" className="text-2xl">
-            1
-          </p>
-        </div>
-        <div className="gridenf">
-          <h3 className="font-bold text-lg">Nombre etudiant</h3>
-          <p id="urgentCourriers" className="text-2xl">
-            1220
-          </p>
-        </div>
-        <div className="gridenf">
-          <h3 className="font-bold text-lg">Nombre classe</h3>
-          <p id="readCourriers" className="text-2xl">
-            1
-          </p>
-        </div>
-        <div className="gridenf">
-          <h3 className="font-bold text-lg">Courriers en attent</h3>
-          <p id="standCourriers" className="text-2xl">
-            0
-          </p>
-        </div> */}
       </div>
-      <div className="flex md:flex-row flex-col">
-        <div className="bg-white rounded-2xl shadow-md p-4 md:w-1/4 flex flex-col items-center md:mr-2 md:mb-0 mb-2">
-          <h2 className="text-lg font-bold mb-2">Students</h2>
-          <Doughnut data={data} />
+      {user.userRole === "etudiant" ? (
+        <EmploieStudent />
+      ) : (
+        <div className="flex md:flex-row flex-col">
+          <div className="bg-white rounded-2xl shadow-md p-4 md:w-1/4 flex flex-col items-center md:mr-2 md:mb-0 mb-2">
+            <h2 className="text-lg font-bold mb-2">Students</h2>
+            <Doughnut data={data} />
+          </div>
+          <div className="bg-white rounded-2xl shadow-md p-4 md:w-3/4 ml-2">
+            <Bar data={data} />
+          </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-md p-4 md:w-3/4 ml-2">
-          <Bar data={data} />
-        </div>
-      </div>
+      )}
     </div>
   );
 };

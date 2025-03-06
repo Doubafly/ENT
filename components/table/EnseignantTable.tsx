@@ -253,8 +253,9 @@ const EnseignantTable = () => {
           >
             <RegisterFormEnseignant
               onSubmit={handleRegisterSubmit}
-              title="Inscription d'un nouveau Enseignant"
-            />
+              title="Inscription d'un nouveau Enseignant" onClose={function (): void {
+                throw new Error("Function not implemented.");
+              } }            />
           </div>
         </div>
       )}

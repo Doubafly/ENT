@@ -61,8 +61,7 @@ model etudiants {
   date_naissance DateTime
   id_filiere     Int
   filieres       filieres     @relation(fields: [id_filiere], references: [id_filiere], map: "Etudiants_id_filiere_fkey")
-    utilisateurs   utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
-
+  utilisateurs   utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
   notes          notes[]
   paiements      paiements[]
 

@@ -2,8 +2,84 @@
 import ListCard, { User } from "@/components/card/ListCard";
 import Image from "next/image";
 import { useState } from "react";
+import Configuration from "../note/Configuration2";
 // Icônes Heroicons
-
+const classe = [
+  {
+    id: 1,
+    name: "L1 Informatique",
+    semestres: [
+      {
+        id: 1,
+        name: "Semestre 1",
+        modules: [
+          {
+            id: 101,
+            name: "Programmation",
+            students: [
+              { id: 1, name: "Banca Bissi Ba", note_class: 15, note_exam: 0 },
+              { id: 2, name: "Kadidiatou Ba", note_class: 16, note_exam: 0 },
+              { id: 3, name: "Sekou Ba", note_class: 9, note_exam: 0 },
+            ],
+          },
+          {
+            id: 102,
+            name: "Algèbre",
+            students: [
+              { id: 1, name: "Banca Bissi Ba", note_class: 14, note_exam: 0 },
+              { id: 2, name: "Kadidiatou Ba", note_class: 12, note_exam: 0 },
+              { id: 3, name: "Sekou Ba", note_class: 10, note_exam: 0 },
+            ],
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: "Semestre 2",
+        modules: [
+          // Ajoutez les modules du semestre 2 ici
+        ],
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "L2 Informatique",
+    semestres: [
+      {
+        id: 1,
+        name: "Semestre 1",
+        modules: [
+          {
+            id: 201,
+            name: "Base de Données",
+            students: [
+              { id: 7, name: "Mamadou Ba", note_class: 19, note_exam: 0 },
+              { id: 8, name: "Dayfourou Ba", note_class: 16, note_exam: 0 },
+              { id: 9, name: "Aly Ba", note_class: 16, note_exam: 0 },
+            ],
+          },
+          {
+            id: 202,
+            name: "Systèmes d'exploitation",
+            students: [
+              { id: 7, name: "Mamadou Ba", note_class: 18, note_exam: 0 },
+              { id: 8, name: "Dayfourou Ba", note_class: 17, note_exam: 0 },
+              { id: 9, name: "Aly Ba", note_class: 16, note_exam: 0 },
+            ],
+          },
+        ],
+      },
+      {
+        id: 2,
+        name: "Semestre 2",
+        modules: [
+          // Ajoutez les modules du semestre 2 ici
+        ],
+      },
+    ],
+  },
+];
 interface Classe {
   id: number;
   abbr: string;
@@ -133,6 +209,29 @@ const enseignantsData: User[] = [
     tel: "0123456789",
     filiere: "Mathématiques",
     matricule: "MAT010",
+  },
+];
+
+const matieresData: any[] = [
+  {
+    id: 1,
+    name: "Mathématiques",
+  },
+  {
+    id: 2,
+    name: "Physique",
+  },
+  {
+    id: 3,
+    name: "Chimie",
+  },
+  {
+    id: 4,
+    name: "Biologie",
+  },
+  {
+    id: 5,
+    name: "Informatique",
   },
 ];
 
@@ -337,6 +436,11 @@ export default function ClasseList() {
       effectif: 18,
     },
   ]);
+
+  const [showTeachers, setShowTeachers] = useState(false);
+  const [showStudents, setShowStudents] = useState(false);
+  const [showSubjects, setShowSubjects] = useState(false);
+
   const [selectedEnseignant, setSelectedEnseignant] = useState<User | null>(
     null
   );
@@ -387,11 +491,13 @@ export default function ClasseList() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [newTeacher, setNewTeacher] = useState("");
+  const [newStudent, setNewStudent] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
   const [newClassTeachers, setNewClassTeachers] = useState<string[]>([]);
   const [tempTeacher, setTempTeacher] = useState("");
+  const [newSubject, setNewSubject] = useState("");
 
   const filteredClasses = classes.filter(
     (c) =>
@@ -481,6 +587,36 @@ export default function ClasseList() {
       setTempTeacher("");
     }
   };
+
+  function handleAddStudent() {
+    if (!newStudent.trim() || !selectedClassId) return;
+
+    const trimmedStudent = newStudent.trim();
+    const exists = classes.some(
+      (c) => c.id === selectedClassId && c.etudiants?.includes(trimmedStudent)
+    );
+
+    if (exists) {
+      alert("Cet étudiant existe déjà !");
+      return;
+    }
+
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id === selectedClassId
+          ? {
+              ...c,
+              etudiants: c.etudiants
+                ? [...c.etudiants, trimmedStudent]
+                : [trimmedStudent],
+            }
+          : c
+      )
+    );
+    setNewStudent("");
+  }
+
+  const [selectedMatiere, setSelectedMatiere] = useState<any | null>(null);
 
   return (
     <div className="p-10 mt-4 bg-gray-50 min-h-screen">
@@ -629,117 +765,129 @@ export default function ClasseList() {
               </div>
 
               {/* Section Enseignants */}
-              <div className="flex gap-10">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Enseignants
-                  </label>
-                  <ul className="space-y-2 grid grid-cols-2">
-                    {enseignantsData.map((enseignant, index) => (
-                      // <ListCard key={`${enseignant.email}-${index}`} item={enseignant} onEdit={() => {}} onDelete={handleDelete} />
-                      <li key={`${enseignant.email}-${index}`}>
-                        <ListCard
-                          item={enseignant}
-                          onEdit={() => {}}
-                          onDelete={handleDelete}
-                          onSelect={() => setSelectedEnseignant(enseignant)}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      placeholder="Ajouter un enseignant"
-                      className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={newTeacher}
-                      onChange={(e) => setNewTeacher(e.target.value)}
-                    />
-                    <button
-                      onClick={handleAddTeacher}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
-                    >
-                      Ajouter
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Etudiants
-                  </label>
-                  <ul className="space-y-2 grid grid-cols-2">
-                    {enseignantsData.map((enseignant, index) => (
-                      // <ListCard key={`${enseignant.email}-${index}`} item={enseignant} onEdit={() => {}} onDelete={handleDelete} />
-                      <li key={`${enseignant.email}-${index}`}>
-                        <ListCard
-                          item={enseignant}
-                          onEdit={() => {}}
-                          onDelete={handleDelete}
-                          onSelect={() => setSelectedEnseignant(enseignant)}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      placeholder="Ajouter un enseignant"
-                      className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={newTeacher}
-                      onChange={(e) => setNewTeacher(e.target.value)}
-                    />
-                    <button
-                      onClick={handleAddTeacher}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
-                    >
-                      Ajouter
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {/* Section Liste des Enseignants */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-blue-500">
-                  Liste des Enseignants
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {/* {enseignantsData
-                    .filter((enseignant) =>
-                      selectedClass.enseignants.includes(enseignant.email)
-                    )
-                    .map((enseignant, index) => (
-                      <ListCard
-                        key={`${enseignant.email}-${index}`}
-                        item={enseignant}
-                        onEdit={() => {}}
-                        onDelete={() =>
-                          handleDeleteEnseignant(enseignant.email)
-                        }
-                        onSelect={() => setSelectedEnseignant(enseignant)}
+                <button
+                  onClick={() => setShowTeachers(!showTeachers)}
+                  className="flex items-center justify-between h-full w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
+                >
+                  <span className="text-lg font-semibold text-blue-500">
+                    Enseignants
+                  </span>
+                  <span className="text-blue-500 transform transition-transform duration-200">
+                    {showTeachers ? "▲" : "▼"}
+                  </span>
+                </button>
+                {/* Animation avec Tailwind */}
+                <div
+                  className={`overflow-scroll overflow-x-hidden transition-all duration-300 ease-in-out ${
+                    showTeachers ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="mt-4 h-full space-y-4">
+                    <ul className="grid grid-cols-3 h-full">
+                      {enseignantsData.map((enseignant, index) => (
+                        <li key={`${enseignant.email}-${index}`}>
+                          <ListCard
+                            item={enseignant}
+                            onEdit={() => {}}
+                            onDelete={handleDelete}
+                            onSelect={() => setSelectedEnseignant(enseignant)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        placeholder="Ajouter un enseignant"
+                        className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={newTeacher}
+                        onChange={(e) => setNewTeacher(e.target.value)}
                       />
-                    ))} */}
+                      <button
+                        onClick={handleAddTeacher}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Section Liste des Étudiants */}
+              {/* Section Étudiants */}
               <div>
-                <h3 className="text-lg font-semibold mb-4 text-blue-500">
-                  Liste des Étudiants
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {etudiantsData
-                    .filter((etudiant) =>
-                      selectedClass.etudiants?.includes(etudiant.email)
-                    )
-                    .map((etudiant, index) => (
-                      <ListCard
-                        key={`${etudiant.email}-${index}`}
-                        item={etudiant}
-                        onEdit={() => {}}
-                        onDelete={() => handleDeleteEtudiant(etudiant.email)}
-                        onSelect={() => setSelectedEtudiant(etudiant)}
+                <button
+                  onClick={() => setShowStudents(!showStudents)}
+                  className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
+                >
+                  <span className="text-lg font-semibold text-blue-500">
+                    Étudiants
+                  </span>
+                  <span className="text-blue-500 transform transition-transform duration-200">
+                    {showStudents ? "▲" : "▼"}
+                  </span>
+                </button>
+                {/* Animation avec Tailwind */}
+                <div
+                  className={`overflow-scroll overflow-x-hidden transition-all duration-300 ease-in-out ${
+                    showStudents ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="mt-4 space-y-4">
+                    <ul className="space-y-2 grid grid-cols-3">
+                      {etudiantsData.map((etudiant, index) => (
+                        <li key={`${etudiant.email}-${index}`}>
+                          <ListCard
+                            item={etudiant}
+                            onEdit={() => {}}
+                            onDelete={handleDelete}
+                            onSelect={() => setSelectedEtudiant(etudiant)}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        placeholder="Ajouter un étudiant"
+                        className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={newStudent}
+                        onChange={(e) => setNewStudent(e.target.value)}
                       />
-                    ))}
+                      <button
+                        onClick={handleAddStudent}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg mt-2 w-full hover:bg-blue-600 transition duration-200"
+                      >
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section Matières */}
+              <div>
+                <button
+                  onClick={() => setShowSubjects(!showSubjects)}
+                  className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
+                >
+                  <span className="text-lg font-semibold text-blue-500">
+                    Matières
+                  </span>
+                  <span className="text-blue-500 transform transition-transform duration-200">
+                    {showSubjects ? "▲" : "▼"}
+                  </span>
+                </button>
+                {/* Animation avec Tailwind */}
+                <div
+                  className={`overflow-scroll overflow-x-hidden transition-all duration-300 ease-in-out ${
+                    showSubjects ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <div className="mt-4 space-y-4">
+                    <Configuration classes={classe} />
+                  </div>
                 </div>
               </div>
             </div>

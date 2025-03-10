@@ -17,6 +17,7 @@ import {
 import ListeModules from "@/components/list/ListeModules";
 import ListeFilieres from "@/components/list/ListeFilieres";
 import ListeRoles from "@/components/list/ListeRoles";
+import ListeSession from "@/components/list/ListeSession";
 
 const ParametrePage = () => {
   const [activeSection, setActiveSection] = useState("Système");
@@ -113,7 +114,7 @@ const ParametrePage = () => {
                   {sections
                     .filter(
                       (section) =>
-                        section.id === activeSection && section.id !== "Annexes" && section.id !== "Roles" && section.id !== "Modules" && section.id !== "Filieres"
+                        section.id === activeSection && section.id !== "Annexes" && section.id !== "Roles" && section.id !== "Modules" && section.id !== "Filieres" && section.id !== "Sessions"
                     ) // Exclure la section "Annexes"
                     .map((section) => (
                       <div
@@ -147,6 +148,7 @@ const ParametrePage = () => {
           {activeSection === "Annexes" && <ListeAnnexes />}
           {activeSection === "Modules" && <ListeModules />}
           {activeSection === "Filieres" && <ListeFilieres />}
+          {activeSection === "Sessions" && <ListeSession />}
 
           {/* Affichage des actions de configuration */}
           {configurationAction === "Système" && (

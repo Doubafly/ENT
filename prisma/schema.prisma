@@ -15,14 +15,20 @@ model annexes {
   region    String?
   filieres  filieres[]
 }
+model Sessions{
+  id_sessions Int   @id @default(autoincrement())
+  annee_academique  String           @db.VarChar(9)
+  cours cours[] @relation(map: "Cours_id_sessions_fkey")
+}
 
 model cours {
   id_cours          Int              @id @default(autoincrement())
   id_filiere_module Int
   id_professeur     Int
+  id_sessions  Int           
   semestre          cours_semestre
-  annee_academique  String           @db.VarChar(9)
   filieremodule     filieremodule    @relation(fields: [id_filiere_module], references: [id_filiere_module], map: "Cours_id_filiere_module_fkey")
+  Sessions          Sessions         @relation(fields: [id_sessions], references: [id_sessions], map: "Cours_id_sessions_fkey")
   enseignant        enseignants      @relation(fields: [id_professeur], references: [id], map: "Cours_id_professeur_fkey")
   emploisdutemps    emploisdutemps[]
   notes             notes[]
@@ -64,7 +70,6 @@ model etudiants {
   utilisateurs   utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
   notes          notes[]
   paiements      paiements[]
-
   @@index([id_filiere], map: "Etudiants_id_filiere_fkey")
   @@unique([id_utilisateur, id_filiere], map: "Unique_Student_Filiere") // Un étudiant ne peut être inscrit deux fois à la même filière
 }
@@ -74,6 +79,8 @@ model filieremodule {
   syllabus          String?
   id_filiere        Int
   id_module         Int
+  volumeHoraire     Int?     
+  code_module       String  
   cours             cours[]
   filieres          filieres @relation(fields: [id_filiere], references: [id_filiere], map: "FiliereModule_id_filiere_fkey")
   modules           modules  @relation(fields: [id_module], references: [id_module], map: "FiliereModule_id_module_fkey")
@@ -92,17 +99,13 @@ model filieres {
   etudiants     etudiants[]
   filieremodule filieremodule[]
   annexes       annexes?        @relation(fields: [id_annexe], references: [id_annexe], map: "Filieres_id_annexe_fkey")
-
   @@index([id_annexe], map: "Filieres_id_annexe_fkey")
 }
 
 model modules {
   id_module     Int             @id @default(autoincrement())
   nom           String
-  code_module   String          @unique(map: "Modules_code_module_key")
   description   String?
-  credits       Int
-  volumeHoraire Int?
   filieremodule filieremodule[]
 }
 

@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import EnseignantList from "@/components/list/EnseignantList";
+import Enseignant from "@/components/paiement/Enseignant";
 import AbscenceProfList from "@/components/list/AbscenceProfList";
 import GroupConfigProf from "@/components/list/GroupConfigProf";
 import { Tabs, Tab, Box } from "@mui/material";
+import Etudiant from "@/components/paiement/Etudiant";
+import Depense from "@/components/paiement/Depense";
 
 export default function Paiement() {
   const [tabIndex, setTabIndex] = useState(0);
@@ -17,16 +19,16 @@ export default function Paiement() {
           value={tabIndex}
           onChange={(_, newIndex) => setTabIndex(newIndex)}
         >
+          <Tab label="Etudiants " />
           <Tab label="Enseignants" />
-          <Tab label="Etudiants" />
           <Tab label="Depences" />
         </Tabs>
       </Box>
 
       {/* Contenu selon l'onglet actif */}
-      {tabIndex === 0 && <EnseignantList />}
-      {tabIndex === 1 && <AbscenceProfList />}
-      {tabIndex === 2 && <GroupConfigProf />}
+      {tabIndex === 0 && <Etudiant></Etudiant>}
+      {tabIndex === 1 && <Enseignant />}
+      {tabIndex === 2 && <Depense />}
     </Box>
   );
 }

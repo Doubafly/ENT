@@ -15,21 +15,28 @@ model annexes {
   region    String?
   filieres  filieres[]
 }
+model Sessions{
+  id_sessions Int   @id @default(autoincrement())
+  annee_academique  String           @db.VarChar(9)
+  cours cours[] @relation(map: "Cours_id_sessions_fkey")
+}
 
 model cours {
   id_cours          Int              @id @default(autoincrement())
   id_filiere_module Int
   id_professeur     Int
+  id_sessions  Int           
   semestre          cours_semestre
-  annee_academique  String           @db.VarChar(9)
   filieremodule     filieremodule    @relation(fields: [id_filiere_module], references: [id_filiere_module], map: "Cours_id_filiere_module_fkey")
-  enseignant        enseignant       @relation(fields: [id_professeur], references: [id], map: "Cours_id_professeur_fkey")
+  Sessions          Sessions         @relation(fields: [id_sessions], references: [id_sessions], map: "Cours_id_sessions_fkey")
+  enseignant        enseignants      @relation(fields: [id_professeur], references: [id], map: "Cours_id_professeur_fkey")
   emploisdutemps    emploisdutemps[]
   notes             notes[]
 
   @@index([id_filiere_module], map: "Cours_id_filiere_module_fkey")
   @@index([id_professeur], map: "Cours_id_professeur_fkey")
 }
+
 
 model emploisdutemps {
   id_emploi   Int                 @id @default(autoincrement())
@@ -41,15 +48,16 @@ model emploisdutemps {
   cours       cours               @relation(fields: [id_cours], references: [id_cours], map: "EmploisDuTemps_id_cours_fkey")
 
   @@index([id_cours], map: "EmploisDuTemps_id_cours_fkey")
+  @@unique([id_cours, jour, heure_debut, heure_fin], map: "Unique_Cours_Same_Time") // Empêcher la superposition des cours
 }
 
-model enseignant {
+model enseignants {
   id             Int          @id @default(autoincrement())
   matricule      String       @unique(map: "Enseignant_matricule_key")
   id_utilisateur Int          @unique(map: "Enseignant_id_utilisateur_key")
   specialite     String
   cours          cours[]
-  utilisateurs   utilisateurs @relation(fields: [id_utilisateur], references: [id_utilisateur], map: "Enseignant_id_utilisateur_fkey")
+  utilisateurs   utilisateurs @relation("UtilisateurEnseignant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 }
 
 model etudiants {
@@ -59,11 +67,11 @@ model etudiants {
   date_naissance DateTime
   id_filiere     Int
   filieres       filieres     @relation(fields: [id_filiere], references: [id_filiere], map: "Etudiants_id_filiere_fkey")
-  utilisateurs   utilisateurs @relation(fields: [id_utilisateur], references: [id_utilisateur], map: "Etudiants_id_utilisateur_fkey")
+  utilisateurs   utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
   notes          notes[]
   paiements      paiements[]
-
   @@index([id_filiere], map: "Etudiants_id_filiere_fkey")
+  @@unique([id_utilisateur, id_filiere], map: "Unique_Student_Filiere") // Un étudiant ne peut être inscrit deux fois à la même filière
 }
 
 model filieremodule {
@@ -71,6 +79,8 @@ model filieremodule {
   syllabus          String?
   id_filiere        Int
   id_module         Int
+  volumeHoraire     Int?     
+  code_module       String  
   cours             cours[]
   filieres          filieres @relation(fields: [id_filiere], references: [id_filiere], map: "FiliereModule_id_filiere_fkey")
   modules           modules  @relation(fields: [id_module], references: [id_module], map: "FiliereModule_id_module_fkey")
@@ -84,27 +94,19 @@ model filieres {
   nom           String
   description   String?
   niveau        filieres_niveau
+  montant_annuel Float          @default(0.0) // Ajout du montant annuel
   id_annexe     Int?
   etudiants     etudiants[]
   filieremodule filieremodule[]
   annexes       annexes?        @relation(fields: [id_annexe], references: [id_annexe], map: "Filieres_id_annexe_fkey")
-  modules       modules[]
-
   @@index([id_annexe], map: "Filieres_id_annexe_fkey")
 }
 
 model modules {
   id_module     Int             @id @default(autoincrement())
   nom           String
-  code_module   String          @unique(map: "Modules_code_module_key")
   description   String?
-  credits       Int
-  volumeHoraire Int?
-  id_filiere    Int?
   filieremodule filieremodule[]
-  filieres      filieres?       @relation(fields: [id_filiere], references: [id_filiere], map: "Modules_id_filiere_fkey")
-
-  @@index([id_filiere], map: "Modules_id_filiere_fkey")
 }
 
 model notes {
@@ -139,7 +141,7 @@ model role {
   id_role      Int            @id @default(autoincrement())
   nom          String         @db.VarChar(50)
   description  String?        @db.VarChar(50)
-  permissions  Json
+  permissions  Json           // Gestion des permissions sous format JSON
   utilisateurs utilisateurs[]
 }
 
@@ -156,9 +158,13 @@ model utilisateurs {
   adresse        String?
   profil         String            @unique(map: "Utilisateurs_profil_key")
   date_creation  DateTime          @default(now())
-  enseignant     enseignant?
-  etudiants      etudiants?
-  role           role @relation(fields: [id_role], references: [id_role], map: "Utilisateurs_id_role_fkey")
+
+  // Relations avec les différents types d'utilisateurs
+  etudiant   etudiants?   @relation("UtilisateurEtudiant")
+  enseignant enseignants? @relation("UtilisateurEnseignant")
+
+  // Relation avec les rôles
+  role role @relation(fields: [id_role], references: [id_role], map: "Utilisateurs_id_role_fkey")
 
   @@index([id_role], map: "Utilisateurs_id_role_fkey")
 }

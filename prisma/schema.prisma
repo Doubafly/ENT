@@ -190,8 +190,7 @@ enum filieres_niveau {
 enum cours_semestre {
   Semestre1
   Semestre2
-  Semestre3
-  Semestre4
+
 }
 
 enum paiements_type_paiement {

@@ -23,6 +23,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
+
+
+
+
 // Mise à jour par id : PUT /api/sessions/[id]
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {

@@ -24,7 +24,7 @@ export async function PUT(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const { nom, prenom, email, sexe, mot_de_passe, telephone, adresse, profil, matricule, specialite } =
+  const { nom, prenom, email, sexe, mot_de_passe, telephone, adresse, profil, matricule, specialite, } =
     await req.json();
   try {
     const updatedEnseignant = await prisma.enseignants.update({

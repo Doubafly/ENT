@@ -1,5 +1,6 @@
+import bcrypt from "bcryptjs";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../prisma";
-import bcrypt from 'bcrypt';
 
 export async function GET() {
   try {
@@ -8,17 +9,18 @@ export async function GET() {
         type: "Admin",
       },
     });
-    return new Response(JSON.stringify(utilisateurs), { status: 200 });
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+
+    return NextResponse.json(utilisateurs, { status: 200 });
+  } catch (error: any) {
+    console.error("Erreur lors de la récupération des utilisateurs :", error);
+    return NextResponse.json(
+      { message: "Une erreur est survenue", erreur: error.message },
       { status: 500 }
     );
   }
 }
 
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const {
       nom,
@@ -29,54 +31,66 @@ export async function POST(request: Request) {
       telephone,
       adresse,
       profil,
-      permissions, // [1, 2, 3] la liste des permissions c'est bizarre je sais
+      permissions, // Ex: [1, 2, 3]
     } = await request.json();
+
+    // Validation des données
     if (
-      !nom ||
-      !prenom ||
-      !email ||
-      !sexe ||
+      !nom?.trim() ||
+      !prenom?.trim() ||
+      !email?.trim() ||
+      !sexe?.trim() ||
       !mot_de_passe ||
-      !telephone ||
-      !adresse ||
-      !profil ||
-      !permissions
+      !telephone?.trim() ||
+      !adresse?.trim() ||
+      !profil?.trim() ||
+      !Array.isArray(permissions) ||
+      permissions.length === 0 ||
+      !permissions.every((p) => Number.isInteger(p))
     ) {
-      return new Response(
-        JSON.stringify({ message: "Veuillez remplir tous les champs" }),
+      return NextResponse.json(
+        { message: "Veuillez remplir tous les champs correctement" },
         { status: 400 }
       );
     }
-    const hash_pass = await bcrypt.hash(mot_de_passe, 10);
-    const utilisateur = await prisma.utilisateurs.create({
-      data: {
-        nom,
-        prenom,
-        email,
-        sexe,
-        mot_de_passe: hash_pass,
-        telephone,
-        adresse,
-        profil,
-        type: "Admin",
-      },
-    });
 
-    await prisma.admin.create({
+    // Hash du mot de passe
+    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+
+    // Création de l'admin et des permissions en une seule requête
+    const utilisateur = await prisma.admin.create({
       data: {
-        id_utilisateur: utilisateur.id_utilisateur,
+        utilisateur: {
+          create: {
+            nom,
+            prenom,
+            email,
+            sexe,
+            mot_de_passe: hashPass,
+            telephone,
+            adresse,
+            profil,
+            type: "Admin",
+          },
+        },
         permissions: {
-          create: permissions.map((permissionId: number) => ({
-            id_permission: permissionId,
-          })),
+          create: permissions.map((id_permission) => ({ id_permission })),
         },
       },
+      include: {
+        utilisateur: true,
+        permissions: true,
+      },
     });
 
-    return new Response(JSON.stringify({ message: "Utilisateur créé avec succès", utilisateur }), { status: 201 });
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return NextResponse.json(
+      { message: "Utilisateur et admin créés avec succès", utilisateur },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Erreur lors de la création de l'utilisateur :", error);
+    return NextResponse.json(
+      { message: "Une erreur est survenue", erreur: error.message },
       { status: 500 }
     );
   }

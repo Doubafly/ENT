@@ -188,13 +188,15 @@ model Utilisateurs {
 //   @@index([id_etudiant], map: "Presences_id_etudiant_fkey")
 //   @@index([id_cours], map: "Presences_id_cours_fkey")
 // }
-
-// Table pour gérer les administrateurs
+   // Table pour gérer les administrateurs
+   
 model Admin {
   id_admin      Int               @id @default(autoincrement())
   id_utilisateur Int              @unique(map: "Admin_id_utilisateur_key")
+  id_permissions   Int  
   utilisateur   Utilisateurs      @relation("UtilisateurAdmin", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
-  permissions   AdminPermission[] // Relation avec la table de liaison
+  permission   Permission      @relation("PermissionAdmin", fields: [id_permissions], references: [id_permission], onDelete: Cascade)
+  // permissions   AdminPermission[] // Relation avec la table de liaison
 
   @@map("admin")
 }
@@ -202,24 +204,20 @@ model Admin {
 // Table pour gérer les permissions
 model Permission {
   id_permission Int               @id @default(autoincrement())
-  nom           String            @unique(map: "Permission_nom_key")
-  description   String?
-  admin_permission AdminPermission[] // Relation inverse
-
+  enseignants    Boolean           @default(false)
+  etudiants      Boolean           @default(false)
+  admin         Boolean           @default(false)
+  classes       Boolean           @default(false)
+  paiement     Boolean           @default(false)
+  note         Boolean           @default(false)
+  emplois_du_temps Boolean       @default(false)
+  parametres    Boolean           @default(false)
+  annonces      Boolean           @default(false)
+  admin_permission Admin[] @relation("PermissionAdmin")
   @@map("permission")
 }
 
-// Table de liaison pour gérer les permissions des administrateurs
-model AdminPermission {
-  id_admin      Int
-  id_permission Int
-  has_access    Boolean           @default(true) // true = accès accordé, false = accès refusé
-  admin         Admin             @relation(fields: [id_admin], references: [id_admin])
-  permission    Permission        @relation(fields: [id_permission], references: [id_permission])
 
-  @@id([id_admin, id_permission]) // Clé primaire composée
-  @@map("admin_permission")
-}
 
 // Enums
 enum EmploisDuTempsJour {

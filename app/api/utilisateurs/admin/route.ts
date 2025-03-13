@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
             adresse,
             profil,
             type: "Admin",
-          },
+          }
         },
         permissions: {
           create: permissions.map((id_permission) => ({ id_permission })),

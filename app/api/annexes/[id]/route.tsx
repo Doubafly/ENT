@@ -1,5 +1,8 @@
 import prisma from "@/app/api/prisma";
 
+
+
+// Récupération par Id : GET /api/annexes/[id]
 export async function GET( request: Request, { params }: { params: { id: string } }) {
   try {
     const annexe = await prisma.annexes.findUnique({
@@ -22,6 +25,8 @@ export async function GET( request: Request, { params }: { params: { id: string 
   }
 }
 
+
+// Mise à jour par id : PUT /api/annexes/[id]
 export async function PUT( req: Request, { params }: { params: { id: string } }) {
   const { nom, adresse, ville, region } = await req.json();
 
@@ -45,6 +50,8 @@ export async function PUT( req: Request, { params }: { params: { id: string } })
   }
 }
 
+
+// Suppression par id: DELETE /api/annexes/[id]
 export async function DELETE( request: Request, { params }: { params: { id: string } }) {
   try {
     await prisma.annexes.delete({

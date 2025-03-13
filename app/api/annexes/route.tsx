@@ -1,5 +1,6 @@
 import prisma from "../prisma";
 
+// Récupération de toutes les annexes:: GET /api/annexes
 export async function GET() {
   try {
     const annexes = await prisma.annexes.findMany();
@@ -12,6 +13,8 @@ export async function GET() {
   }
 }
 
+
+// Création d'une annexe :POST /api/annexes
 export async function POST(request: Request) {
   try {
     const { nom, adresse, ville, region } = await request.json();

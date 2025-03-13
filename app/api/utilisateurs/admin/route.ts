@@ -1,4 +1,5 @@
 import prisma from "../../prisma";
+import bcrypt from 'bcrypt';
 
 export async function GET() {
   try {
@@ -15,6 +16,7 @@ export async function GET() {
     );
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -45,14 +47,14 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-
+    const hash_pass = await bcrypt.hash(mot_de_passe, 10);
     const utilisateur = await prisma.utilisateurs.create({
       data: {
         nom,
         prenom,
         email,
         sexe,
-        mot_de_passe,
+        mot_de_passe: hash_pass,
         telephone,
         adresse,
         profil,
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
       },
     });
 
-    return new Response(JSON.stringify(utilisateur), { status: 201 });
+    return new Response(JSON.stringify({ message: "Utilisateur créé avec succès", utilisateur }), { status: 201 });
   } catch (e) {
     return new Response(
       JSON.stringify({ message: "Une erreur est survenue" }),

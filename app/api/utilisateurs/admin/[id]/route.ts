@@ -48,3 +48,20 @@ export async function PUT(
     );
   }
 }
+ export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    await prisma.utilisateurs.delete({
+      where: {
+        id_utilisateur: parseInt(params.id),
+      },
+    });
+    return new Response(JSON.stringify({ message: "Utilisateur supprimé" }), {
+      status: 200,
+    });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ message: "Une erreur est survenue" }),
+      { status: 500 }
+    );
+  }
+ }

@@ -1,10 +1,11 @@
-{
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#201B82",
-        "titleBar.activeBackground": "#2D26B6",
-        "titleBar.activeForeground": "#F9F9FE"
-    }
-} // {
+// {
+//     "workbench.colorCustomizations": {
+//         "activityBar.background": "#201B82",
+//         "titleBar.activeBackground": "#2D26B6",
+//         "titleBar.activeForeground": "#F9F9FE"
+//     }
+// } 
+// {
 //   "WillLuke.nextjs.hasPrompted": true,
 //   "workbench.colorCustomizations": {
 //     "activityBar.background": "#201B82",

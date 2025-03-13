@@ -5,7 +5,11 @@ import Configuration from "./configuration";
 import Resultat from "./resultat";
 import { Tabs, Tab, Box } from "@mui/material";
 
-export default function NoteRegistre({ classes }) {
+interface NoteRegistreProps {  
+  classes: any;
+}
+
+export default function NoteRegistre({ classes }: NoteRegistreProps) {
   const [tabIndex, setTabIndex] = useState(0);
 
   return (

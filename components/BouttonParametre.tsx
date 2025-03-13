@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 
 interface BoutonParametreProps {
-    reglage: () => void;
+  reglage: () => void;
   onCreateRole: () => void;  
   onCreateAnnexe: () => void;
   onCreateModule: () => void;
@@ -12,7 +12,7 @@ interface BoutonParametreProps {
 }
 
 const BoutonParametre: React.FC<BoutonParametreProps> = ({
-    reglage,
+  reglage,
   onCreateRole,  
   onCreateAnnexe,
   onCreateModule,

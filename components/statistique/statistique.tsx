@@ -83,9 +83,10 @@ const Statistique = ({ menuStat }) => {
   return (
     <div className="statistique">
       <h2>Statistiques</h2>
-      <div className="gridStat">
-        {menuStat.map((stat) => (
+      <div className="gridStat" key={"statistique"}>
+        {menuStat.map((stat, index) => (
           <MiniSmallIconCard
+            key={index}
             photoName={stat.link}
             stats={stat.value}
             name={stat.nom}

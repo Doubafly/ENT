@@ -1,8 +1,5 @@
 import prisma from "@/app/api/prisma";
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET( request: Request,{ params }: { params: { id: string } }) {
   try {
     const utilisateurs = await prisma.utilisateurs.findMany({
       where: {
@@ -18,10 +15,8 @@ export async function GET(
     );
   }
 }
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+
+export async function PUT( req: Request, { params }: { params: { id: string } }) {
   const { nom, prenom, email, sexe, mot_de_passe, telephone, adresse, profil } =
     await req.json();
   try {

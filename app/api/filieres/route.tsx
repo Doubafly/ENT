@@ -1,28 +1,47 @@
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
 export async function GET() {
   try {
     const filieres = await prisma.filieres.findMany({
-        include: {
-            filiere_module: {
-                include: {
-                    module: true
-                }
-            }
-        }
+      include: {
+        filiere_module: {
+          include: {
+            module: {
+              select: {
+                nom: true,
+                description: true,
+              },
+            },
+          },
+        },
+      },
     });
-    return new Response(JSON.stringify({message: "succes",filieres}), { status: 200 });
+    return NextResponse.json(
+      { message: "succes", filieres },
+      {
+        status: 200,
+      }
+    );
   } catch (e) {
-    return new Response(JSON.stringify({ message: "Une erreur est survenue" }), { status: 500 });
-}
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
+      { status: 500 }
+    );
+  }
 }
 
-
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { nom, description, niveau, montant_annuel, id_annexe}= await request.json();
+    const { nom, description, niveau, montant_annuel, id_annexe } =
+      await request.json();
     if (!nom || !description || !niveau || !montant_annuel || !id_annexe) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), { status: 400 });
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     const filiere = await prisma.filieres.create({
       data: {
@@ -30,12 +49,19 @@ export async function POST(request: Request) {
         description,
         niveau,
         montant_annuel,
-        id_annexe
-      }
+        id_annexe,
+      },
     });
-    return new Response(JSON.stringify({message: "succes",filiere}), { status: 201 });
+    return NextResponse.json(
+      { message: "succes", filiere },
+      {
+        status: 201,
+      }
+    );
   } catch (e) {
-      return new Response(JSON.stringify({ message: "Une erreur est survenue" }), { status: 500 });   
-    
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
+      { status: 500 }
+    );
   }
 }

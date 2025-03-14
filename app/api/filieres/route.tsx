@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
 export async function GET() {
@@ -7,17 +7,25 @@ export async function GET() {
       include: {
         filiere_module: {
           include: {
-            module: true,
+            module: {
+              select: {
+                nom: true,
+                description: true,
+              },
+            },
           },
         },
       },
     });
-    return new Response(JSON.stringify({ message: "succes", filieres }), {
-      status: 200,
-    });
+    return NextResponse.json(
+      { message: "succes", filieres },
+      {
+        status: 200,
+      }
+    );
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -28,9 +36,12 @@ export async function POST(request: NextRequest) {
     const { nom, description, niveau, montant_annuel, id_annexe } =
       await request.json();
     if (!nom || !description || !niveau || !montant_annuel || !id_annexe) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
-        status: 400,
-      });
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     const filiere = await prisma.filieres.create({
       data: {
@@ -41,12 +52,15 @@ export async function POST(request: NextRequest) {
         id_annexe,
       },
     });
-    return new Response(JSON.stringify({ message: "succes", filiere }), {
-      status: 201,
-    });
+    return NextResponse.json(
+      { message: "succes", filiere },
+      {
+        status: 201,
+      }
+    );
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

@@ -5,11 +5,32 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const id = request.nextUrl.pathname.split("/").pop();
+  if (!id) {
+    return new Response(JSON.stringify({ message: "ID manquant" }), {
+      status: 400,
+    });
+  }
   try {
     const filiereModule = await prisma.filiereModule.findMany({
-      where: { id_filiere: parseInt(params.id) },
+      where: { id_filiere_module: parseInt(id) },
       include: {
-        module: true,
+        module: {
+          select: {
+            nom: true,
+            description: true,
+            id_module: true,
+          },
+        },
+        filiere: {
+          select: {
+            nom: true,
+            description: true,
+            montant_annuel: true,
+            niveau: true,
+            id_filiere: true,
+          },
+        },
       },
     });
 

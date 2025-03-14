@@ -175,26 +175,16 @@ model Utilisateurs {
   etudiant   Etudiants?   @relation("UtilisateurEtudiant")
   enseignant Enseignants? @relation("UtilisateurEnseignant")
   admin      Admin?       @relation("UtilisateurAdmin")
+
+  Permission Permission[] @relation("UtilisateurPermission")
 }
-//idee a implementer apres
-// model Presences {
-//   id_presence Int @id @default(autoincrement())
-//   id_etudiant Int
-//   id_cours    Int
-//   date_presence DateTime
-//   etudiant    Etudiants @relation(fields: [id_etudiant], references: [id_etudiant])
-//   cours       Cours    @relation(fields: [id_cours], references: [id_cours])
 
-//   @@index([id_etudiant], map: "Presences_id_etudiant_fkey")
-//   @@index([id_cours], map: "Presences_id_cours_fkey")
-// }
-
-// Table pour gérer les administrateurs
 model Admin {
   id_admin      Int               @id @default(autoincrement())
   id_utilisateur Int              @unique(map: "Admin_id_utilisateur_key")
   utilisateur   Utilisateurs      @relation("UtilisateurAdmin", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
-  permissions   AdminPermission[] // Relation avec la table de liaison
+
+  // permissions   AdminPermission[] // Relation avec la table de liaison
 
   @@map("admin")
 }
@@ -202,24 +192,22 @@ model Admin {
 // Table pour gérer les permissions
 model Permission {
   id_permission Int               @id @default(autoincrement())
-  nom           String            @unique(map: "Permission_nom_key")
-  description   String?
-  admin_permission AdminPermission[] // Relation inverse
+  id_utilisateur Int               @unique(map: "Permission_id_utilisateur_key")
+  enseignants    Boolean           @default(false)
+  etudiants      Boolean           @default(false)
+  admin         Boolean           @default(false)
+  classes       Boolean           @default(false)
+  paiement     Boolean           @default(false)
+  note         Boolean           @default(false)
+  emplois_du_temps Boolean       @default(false)
+  parametres    Boolean           @default(false)
+  annonces      Boolean           @default(false)
+  utilisateur   Utilisateurs      @relation("UtilisateurPermission", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("permission")
 }
 
-// Table de liaison pour gérer les permissions des administrateurs
-model AdminPermission {
-  id_admin      Int
-  id_permission Int
-  has_access    Boolean           @default(true) // true = accès accordé, false = accès refusé
-  admin         Admin             @relation(fields: [id_admin], references: [id_admin])
-  permission    Permission        @relation(fields: [id_permission], references: [id_permission])
 
-  @@id([id_admin, id_permission]) // Clé primaire composée
-  @@map("admin_permission")
-}
 
 // Enums
 enum EmploisDuTempsJour {

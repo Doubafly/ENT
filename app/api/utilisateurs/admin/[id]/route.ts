@@ -4,11 +4,11 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const id = req.nextUrl.pathname.split("/").pop();
   try {
+    const id = req.nextUrl.pathname.split("/").pop();
     const admin = await prisma.admin.findUnique({
       where: {
-        id_admin: id ? parseInt(id) : 0,
+        id_utilisateur: id ? parseInt(id) : 0,
       },
       include: {
         utilisateur: {

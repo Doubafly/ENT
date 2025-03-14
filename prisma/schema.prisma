@@ -175,27 +175,15 @@ model Utilisateurs {
   etudiant   Etudiants?   @relation("UtilisateurEtudiant")
   enseignant Enseignants? @relation("UtilisateurEnseignant")
   admin      Admin?       @relation("UtilisateurAdmin")
-}
-//idee a implementer apres
-// model Presences {
-//   id_presence Int @id @default(autoincrement())
-//   id_etudiant Int
-//   id_cours    Int
-//   date_presence DateTime
-//   etudiant    Etudiants @relation(fields: [id_etudiant], references: [id_etudiant])
-//   cours       Cours    @relation(fields: [id_cours], references: [id_cours])
 
-//   @@index([id_etudiant], map: "Presences_id_etudiant_fkey")
-//   @@index([id_cours], map: "Presences_id_cours_fkey")
-// }
-   // Table pour gérer les administrateurs
-   
+  Permission Permission[] @relation("UtilisateurPermission")
+}
+
 model Admin {
   id_admin      Int               @id @default(autoincrement())
   id_utilisateur Int              @unique(map: "Admin_id_utilisateur_key")
-  id_permissions   Int  
   utilisateur   Utilisateurs      @relation("UtilisateurAdmin", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
-  permission   Permission      @relation("PermissionAdmin", fields: [id_permissions], references: [id_permission], onDelete: Cascade)
+
   // permissions   AdminPermission[] // Relation avec la table de liaison
 
   @@map("admin")
@@ -204,6 +192,7 @@ model Admin {
 // Table pour gérer les permissions
 model Permission {
   id_permission Int               @id @default(autoincrement())
+  id_utilisateur Int               @unique(map: "Permission_id_utilisateur_key")
   enseignants    Boolean           @default(false)
   etudiants      Boolean           @default(false)
   admin         Boolean           @default(false)
@@ -213,7 +202,8 @@ model Permission {
   emplois_du_temps Boolean       @default(false)
   parametres    Boolean           @default(false)
   annonces      Boolean           @default(false)
-  admin_permission Admin[] @relation("PermissionAdmin")
+  utilisateur   Utilisateurs      @relation("UtilisateurPermission", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+
   @@map("permission")
 }
 

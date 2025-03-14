@@ -124,7 +124,7 @@ const AnnonceList: React.FC = () => {
         <>
           <button
             onClick={() => setShowForm(true)}
-            className="mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            className="flex justify-end mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           >
             + Ajouter une annonce
           </button>

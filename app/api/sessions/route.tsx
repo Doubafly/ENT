@@ -1,9 +1,23 @@
 import prisma from "../prisma";
 
-// Récupération de toutes les sessions académiques : GET /api/sessions
-export async function GET() {
+// Récupération des sessions (toutes ou par année académique) : GET /api/sessions ou GET /api/sessions?annee_academique=2024-2025
+export async function GET(request: Request) {
   try {
-    const sessions = await prisma.sessions.findMany();
+    const { searchParams } = new URL(request.url);
+    const annee_academique = searchParams.get("annee_academique");
+
+    let sessions;
+
+    if (annee_academique) {
+      // Filtrer par année académique
+      sessions = await prisma.sessions.findMany({
+        where: { annee_academique },
+      });
+    } else {
+      // Récupérer toutes les sessions
+      sessions = await prisma.sessions.findMany();
+    }
+
     return new Response(JSON.stringify(sessions), { status: 200 });
   } catch (e) {
     return new Response(
@@ -27,9 +41,7 @@ export async function POST(request: Request) {
     }
 
     const session = await prisma.sessions.create({
-      data: {
-        annee_academique,
-      },
+      data: { annee_academique },
     });
 
     return new Response(JSON.stringify(session), { status: 201 });

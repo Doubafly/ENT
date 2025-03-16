@@ -7,7 +7,13 @@ export async function GET() {
       include: {
         filiere_module: {
           include: {
-            filiere: true,
+            filiere: {
+              select:{
+                nom: true,
+                niveau: true,
+                montant_annuel: true,
+              },
+            }, 
           },
         },
       },

@@ -21,7 +21,7 @@ export async function GET(
             description: true,
             id_module: true,
           },
-        },
+        }, 
         filiere: {
           select: {
             nom: true,

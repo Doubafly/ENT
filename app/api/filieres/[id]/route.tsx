@@ -41,7 +41,7 @@ export async function DELETE(request: NextRequest) {
         { message: "Paramètres manquants" },
         {
           status: 400,
-        }
+        } 
       );
     }
     await prisma.filieres.delete({

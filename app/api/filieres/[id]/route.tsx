@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest) {
           status: 400,
         }
       );
-    }
+    } 
     const filiere = await prisma.filieres.update({
       where: { id_filiere: id ? parseInt(id) : 0 },
       data: {

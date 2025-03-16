@@ -18,7 +18,7 @@ export async function GET(
         module: {
           select: {
             nom: true,
-            description: true,
+            description: true, 
             id_module: true,
           },
         }, 
@@ -61,6 +61,7 @@ export async function PUT(request: NextRequest) {
       code_module,
       volume_horaire,
     } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (
       !id_filiere_module ||
       !syllabus ||
@@ -74,7 +75,7 @@ export async function PUT(request: NextRequest) {
       });
     }
     const filiereModule = await prisma.filiereModule.update({
-      where: { id_filiere_module: id_filiere_module },
+      where: { id_filiere_module: id ? parseInt(id) : 0 },
       data: {
         syllabus,
         id_module,
@@ -97,13 +98,14 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { id_filiere_module } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (!id_filiere_module) {
       return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
         status: 400,
       });
     }
     await prisma.filiereModule.delete({
-      where: { id_filiere_module: id_filiere_module },
+      where: { id_filiere_module: id ? parseInt(id) : 0 },
     });
     return new Response(JSON.stringify({ message: "succes" }), { status: 200 });
   } catch (e) {

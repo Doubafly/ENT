@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../prisma";
 import { UtilisateursType } from "@prisma/client";
-
 export async function GET() {
   try {
     const utilisateurs = await prisma.enseignants.findMany({
@@ -23,7 +22,7 @@ export async function GET() {
             profil: true,
             date_creation: true,
           },
-        },
+  
       },
     });
 
@@ -56,6 +55,8 @@ export async function POST(request: NextRequest) {
       telephone,
       adresse,
       profil,
+      matricule,
+      specialite,
     } = await request.json();
 
     // Validation des données

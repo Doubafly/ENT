@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       !volume_horaire ||
       !code_module
     ) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
         status: 400,
       });
     }
@@ -66,13 +66,12 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-    return new Response(JSON.stringify({ message: "succes", filiereModule }), {
-      status: 201,
+    return  NextResponse.json({ message: "succes", filiereModule }, {
+      status: 201
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
-      { status: 500 }
-    );
+    return  NextResponse.
+      json({ message: "Une erreur est survenue" },
+      { status: 500 });
   }
 }

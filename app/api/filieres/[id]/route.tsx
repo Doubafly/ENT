@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
       }
-    );
+    ); 
   } catch (e) {
     return NextResponse.json(
       { message: "Une erreur est survenue" },

@@ -2,10 +2,36 @@ import { NextResponse } from "next/server";
 import prisma from "../prisma";
 
 // GET : Récupérer toutes les notes
-export async function GET() {
+export async function GET(request: Request) {
   try {
+
+    const { searchParams } = new URL(request.url);
+
+    // Construire dynamiquement l'objet de filtrage
+    let whereClause: any = {};
+
+    searchParams.forEach((value, key) => {
+      if (value) {
+        switch (key) {
+          case "id_etudiant":
+          case "id_cours":
+            whereClause[key] = parseInt(value); // Convertir en nombre
+            break;
+          case "date_saisie":
+            whereClause[key] = new Date(value); // Convertir en Date
+            break;
+          case "note_class":
+          case "note_exam":
+            whereClause[key] = { gte: parseFloat(value) }; // Note >= valeur
+            break;
+          default:
+            whereClause[key] = value; // Garder tel quel
+        }
+      }
+    });
     // Récupérer toutes les notes avec les relations cours et étudiant
     const notes = await prisma.notes.findMany({
+      where: Object.keys(whereClause).length > 0 ? whereClause : undefined, // Pas de filtre si aucun paramètre fourni
       select: {
         id_note: true,
         id_etudiant: true,

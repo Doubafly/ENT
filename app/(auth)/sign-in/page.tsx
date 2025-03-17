@@ -21,7 +21,7 @@ export default function Page() {
 
     console.log("Payload envoyé :", payload); // Debugging
 
-    const login = await fetch("/api/connexion", {
+    const login = await fetch("/api/auth/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -12,7 +12,7 @@ export async function GET() {
                 nom: true,
                 description: true,
               },
-            },
+            }, 
           },
         },
       },

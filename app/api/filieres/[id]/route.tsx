@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest) {
           status: 400,
         }
       );
-    }
+    } 
     const filiere = await prisma.filieres.update({
       where: { id_filiere: id ? parseInt(id) : 0 },
       data: {
@@ -41,7 +41,7 @@ export async function DELETE(request: NextRequest) {
         { message: "Paramètres manquants" },
         {
           status: 400,
-        }
+        } 
       );
     }
     await prisma.filieres.delete({
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       {
         status: 200,
       }
-    );
+    ); 
   } catch (e) {
     return NextResponse.json(
       { message: "Une erreur est survenue" },

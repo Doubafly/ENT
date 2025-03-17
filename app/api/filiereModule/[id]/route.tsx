@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const id = request.nextUrl.pathname.split("/").pop();
   if (!id) {
-    return new Response(JSON.stringify({ message: "ID manquant" }), {
+    return  NextResponse.json({ message: "ID manquant" }, {
       status: 400,
     });
   }
@@ -18,10 +18,10 @@ export async function GET(
         module: {
           select: {
             nom: true,
-            description: true,
+            description: true, 
             id_module: true,
           },
-        },
+        }, 
         filiere: {
           select: {
             nom: true,
@@ -35,17 +35,16 @@ export async function GET(
     });
 
     if (!filiereModule || filiereModule.length === 0) {
-      return new Response(JSON.stringify({ message: "Aucun module trouvé" }), {
+      return  NextResponse.json({ message: "Aucun module trouvé" }, {
         status: 404,
       });
     }
 
-    return new Response(JSON.stringify({ message: "succes", filiereModule }), {
+    return  NextResponse.json({ message: "succes", filiereModule }, {
       status: 200,
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return  NextResponse.json({ message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -61,6 +60,7 @@ export async function PUT(request: NextRequest) {
       code_module,
       volume_horaire,
     } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (
       !id_filiere_module ||
       !syllabus ||
@@ -69,12 +69,12 @@ export async function PUT(request: NextRequest) {
       !code_module ||
       !volume_horaire
     ) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
         status: 400,
       });
     }
     const filiereModule = await prisma.filiereModule.update({
-      where: { id_filiere_module: id_filiere_module },
+      where: { id_filiere_module: id ? parseInt(id) : 0 },
       data: {
         syllabus,
         id_module,
@@ -83,32 +83,30 @@ export async function PUT(request: NextRequest) {
         volume_horaire,
       },
     });
-    return new Response(JSON.stringify({ message: "succes", filiereModule }), {
+    return  NextResponse.json({ message: "succes", filiereModule }, {
       status: 200,
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
-      { status: 500 }
-    );
+    return  NextResponse.json({ message: "Une erreur est survenue" },
+      { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
     const { id_filiere_module } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (!id_filiere_module) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
         status: 400,
       });
     }
     await prisma.filiereModule.delete({
-      where: { id_filiere_module: id_filiere_module },
+      where: { id_filiere_module: id ? parseInt(id) : 0 },
     });
-    return new Response(JSON.stringify({ message: "succes" }), { status: 200 });
+    return  NextResponse.json({ message: "succes" }, { status: 200 });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return  NextResponse.json({ message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

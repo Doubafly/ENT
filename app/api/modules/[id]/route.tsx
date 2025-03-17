@@ -4,13 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function PUT(request: NextRequest) {
   try {
     const { id_module, nom, description } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (!id_module || !nom || !description) {
       return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
         status: 400,
       });
     }
     const module = await prisma.modules.update({
-      where: { id_module: id_module },
+      where: { id_module: id ? parseInt(id) : 0 },
       data: {
         nom,
         description,
@@ -30,13 +31,14 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { id_module } = await request.json();
+    const id = request.nextUrl.pathname.split("/").pop();
     if (!id_module) {
       return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
         status: 400,
       });
     }
     await prisma.modules.delete({
-      where: { id_module: id_module },
+      where: { id_module: id ? parseInt(id) : 0 },
     });
     return new Response(JSON.stringify({ message: "succes" }), { status: 200 });
   } catch (error) {

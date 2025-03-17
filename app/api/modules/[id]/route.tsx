@@ -6,7 +6,7 @@ export async function PUT(request: NextRequest) {
     const { id_module, nom, description } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
     if (!id_module || !nom || !description) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return new NextResponse(JSON.stringify({ message: "Paramètres manquants" }), {
         status: 400,
       });
     }
@@ -17,11 +17,11 @@ export async function PUT(request: NextRequest) {
         description,
       },
     });
-    return new Response(JSON.stringify({ message: "succes", module }), {
+    return new NextResponse(JSON.stringify({ message: "succes", module }), {
       status: 200,
     });
   } catch (error) {
-    return new Response(
+    return new NextResponse(
       JSON.stringify({ message: "Une erreur est survenue" }),
       { status: 500 }
     );
@@ -33,16 +33,16 @@ export async function DELETE(request: NextRequest) {
     const { id_module } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
     if (!id_module) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return new NextResponse(JSON.stringify({ message: "Paramètres manquants" }), {
         status: 400,
       });
     }
     await prisma.modules.delete({
       where: { id_module: id ? parseInt(id) : 0 },
     });
-    return new Response(JSON.stringify({ message: "succes" }), { status: 200 });
+    return new NextResponse(JSON.stringify({ message: "succes" }), { status: 200 });
   } catch (error) {
-    return new Response(
+    return new NextResponse(
       JSON.stringify({ message: "Une erreur est survenue" }),
       { status: 500 }
     );

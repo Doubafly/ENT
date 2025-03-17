@@ -44,7 +44,7 @@ export async function PUT(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "modifier avec succe", annexe },
+      { message: "Modifier avec succès", annexe },
       { status: 200 }
     );
   } catch (e) {

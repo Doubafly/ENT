@@ -1,26 +1,70 @@
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
-// Récupération de tous les cours : GET /api/cours
+// Récupération de tous les cours :: GET /api/cours
 export async function GET() {
   try {
     const cours = await prisma.cours.findMany({
-      include: {
-        filiere_module: true,
-        sessions: true,
-        enseignant: true,
+      select: {
+        id_cours: true,
+        semestre: true,
+        filiere_module: {
+          select: {
+            code_module: true,
+            volume_horaire: true,
+            filiere: {
+              select: {
+                nom: true,
+              },
+            },
+            module: {
+              select: {
+                nom: true,
+              },
+            },
+          },
+        },
+        enseignant: {
+          select: {
+            id: true,
+            specialite: true,
+            utilisateur: {
+              select: {
+                nom: true,
+                prenom: true,
+                email: true,
+              },
+            },
+          },
+        },
+        sessions: {
+          select: {
+            annee_academique: true,
+          },
+        },
       },
     });
-    return new Response(JSON.stringify(cours), { status: 200 });
+
+    return NextResponse.json(
+      { message: "Cours récupérés avec succès", cours },
+      { status: 200 }
+    );
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    if (e instanceof Error) {
+      return NextResponse.json(
+        { message: "Une erreur est survenue", erreur: e.message },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json(
+      { message: "Une erreur inconnue est survenue" },
       { status: 500 }
     );
   }
 }
 
-// Création d'un cours : POST /api/cours
-export async function POST(request: Request) {
+// Création d'un cours :: POST /api/cours
+export async function POST(request: NextRequest) {
   try {
     const { id_filiere_module, id_professeur, id_sessions, semestre } = await request.json();
 
@@ -42,8 +86,14 @@ export async function POST(request: Request) {
 
     return new Response(JSON.stringify(cours), { status: 201 });
   } catch (e) {
+    if (e instanceof Error) {
+      return new Response(
+        JSON.stringify({ message: "Une erreur est survenue", erreur: e.message }),
+        { status: 500 }
+      );
+    }
     return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+      JSON.stringify({ message: "Une erreur inconnue est survenue" }),
       { status: 500 }
     );
   }

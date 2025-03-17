@@ -3,12 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(request: NextRequest) {
   try {
-    const { id_module, nom, description } = await request.json();
+    const { nom, description } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
-    if (!id_module || !nom || !description) {
-      return  NextResponse.json({ message: "Paramètres manquants" }, {
-        status: 400,
-      });
+    if (!nom || !description) {
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     const module = await prisma.modules.update({
       where: { id_module: id ? parseInt(id) : 0 },
@@ -17,11 +20,15 @@ export async function PUT(request: NextRequest) {
         description,
       },
     });
-    return  NextResponse.json({ message: "succes", module }, {
-      status: 200,
-    });
+    return NextResponse.json(
+      { message: "succes", module },
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -32,24 +39,28 @@ export async function DELETE(request: NextRequest) {
     const { id_module } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
     if (!id_module) {
-      return  NextResponse.json({ message: "Paramètres manquants" }, {
-        status: 400,
-      });
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     await prisma.modules.delete({
       where: { id_module: id ? parseInt(id) : 0 },
     });
-    return  NextResponse.json({ message: "succes" }), { status: 200 };
+    return NextResponse.json({ message: "succes" }), { status: 200 };
   } catch (error) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
 }
 
 export async function GET(request: NextRequest) {
-   // Récupère l'ID depuis l'URL
-  const id = request.nextUrl.pathname.split("/").pop(); 
+  // Récupère l'ID depuis l'URL
+  const id = request.nextUrl.pathname.split("/").pop();
 
   // Verifie si l'id est valide
   if (!id || isNaN(parseInt(id))) {
@@ -84,14 +95,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      { message: "Succès", module },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "Succès", module }, { status: 200 });
   } catch (error) {
     console.error("Erreur lors de la récupération du module :", error);
     return NextResponse.json(
-      { message: "Une erreur est survenue",},
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

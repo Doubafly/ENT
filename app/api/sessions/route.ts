@@ -1,55 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
-import { UtilisateursType } from "@prisma/client";
 
-// teste de premier niveau a chaque fois
-
-// Récupération de tous les cours :: GET /api/cours
+// Récupération de toutes les sessions académiques :: GET /api/sessions
 export async function GET() {
   try {
-    const cours = await prisma.cours.findMany({
+    const sessions = await prisma.sessions.findMany({
       select: {
-        id_cours: true,
-        semestre: true,
-        filiere_module: {
+        id_sessions: true,
+        annee_academique: true,
+        cours: {
           select: {
-            code_module: true,
-            volume_horaire: true,
-            filiere: {
+            id_cours: true,
+            semestre: true,
+            filiere_module: {
               select: {
-                nom: true,
+                code_module: true,
+                volume_horaire: true,
+                filiere: {
+                  select: {
+                    nom: true,
+                  },
+                },
+                module: {
+                  select: {
+                    nom: true,
+                  },
+                },
               },
             },
-            module: {
+            enseignant: {
               select: {
-                nom: true,
+                id: true,
+                specialite: true,
+                utilisateur: {
+                  select: {
+                    nom: true,
+                    prenom: true,
+                  },
+                },
               },
             },
-          },
-        },
-        enseignant: {
-          select: {
-            id: true,
-            specialite: true,
-            utilisateur: {
-              select: {
-                nom: true,
-                prenom: true,
-                email: true,
-              },
-            },
-          },
-        },
-        sessions: {
-          select: {
-            annee_academique: true,
           },
         },
       },
     });
 
     return NextResponse.json(
-      { message: "Cours récupérés avec succès", cours },
+      { message: "Sessions récupérées avec succès", sessions },
       { status: 200 }
     );
   } catch (e) {
@@ -66,37 +63,34 @@ export async function GET() {
   }
 }
 
-// Création d'un cours :: POST /api/cours
+// Création d'une session académique :: POST /api/sessions
 export async function POST(request: NextRequest) {
   try {
-    const { id_filiere_module, id_professeur, id_sessions, semestre } = await request.json();
+    const { annee_academique } = await request.json();
 
-    if (!id_filiere_module || !id_professeur || !id_sessions || !semestre) {
-      return NextResponse.json(
-        { message: "Tous les champs sont obligatoires" },
+    if (!annee_academique) {
+      return new Response(
+        JSON.stringify({ message: "L'année académique est obligatoire" }),
         { status: 400 }
       );
     }
 
-    const cours = await prisma.cours.create({
+    const session = await prisma.sessions.create({
       data: {
-        id_filiere_module,
-        id_professeur,
-        id_sessions,
-        semestre,
+        annee_academique,
       },
     });
 
-    return NextResponse.json(cours, { status: 201 });
+    return new Response(JSON.stringify(session), { status: 201 });
   } catch (e) {
     if (e instanceof Error) {
-      return NextResponse.json(
-        { message: "Une erreur est survenue", erreur: e.message },
+      return new Response(
+        JSON.stringify({ message: "Une erreur est survenue", erreur: e.message }),
         { status: 500 }
       );
     }
-    return NextResponse.json(
-      { message: "Une erreur inconnue est survenue" },
+    return new Response(
+      JSON.stringify({ message: "Une erreur inconnue est survenue" }),
       { status: 500 }
     );
   }

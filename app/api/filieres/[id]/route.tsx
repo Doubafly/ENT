@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest) {
     const filiere = await prisma.filieres.update({
       where: { id_filiere: id ? parseInt(id) : 0 },
       data: {
-        nom,
+        nom, 
         description,
         niveau,
         montant_annuel,

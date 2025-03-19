@@ -12,10 +12,10 @@ export async function GET() {
                 nom: true,
                 description: true,
               },
-            },
-          },
+            }, 
+          }, 
         },
-      },
+      }, 
     });
     return NextResponse.json(
       { message: "succes", filieres },

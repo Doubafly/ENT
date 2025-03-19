@@ -4,99 +4,65 @@ import { UtilisateursType } from "@prisma/client";
 
 // teste de premier niveau a chaque fois
 
-// Récupération de tous les cours :: GET /api/cours
+// Récupération de toutes les annexes:: GET /api/annexes
 export async function GET() {
+  // les infos directement lier aussi doivent etre recuperer
   try {
-    const cours = await prisma.cours.findMany({
+    const annexes = await prisma.annexes.findMany({
       select: {
-        id_cours: true,
-        semestre: true,
-        filiere_module: {
+        id_annexe: true,
+        nom: true,
+        adresse: true,
+        ville: true,
+        region: true,
+        filieres: {
           select: {
-            code_module: true,
-            volume_horaire: true,
-            filiere: {
-              select: {
-                nom: true,
-              },
-            },
-            module: {
-              select: {
-                nom: true,
-              },
-            },
-          },
-        },
-        enseignant: {
-          select: {
-            id: true,
-            specialite: true,
-            utilisateur: {
-              select: {
-                nom: true,
-                prenom: true,
-              },
-            },
-          },
-        },
-        sessions: {
-          select: {
-            annee_academique: true,
+            nom: true,
+            description: true,
+            niveau: true,
+            montant_annuel: true,
           },
         },
       },
     });
-
     return NextResponse.json(
-      { message: "Cours récupérés avec succès", cours },
+      { message: "Annexes récupérées avec succès", annexes },
       { status: 200 }
     );
-  } catch (e) {
-    if (e instanceof Error) {
-      return NextResponse.json(
-        { message: "Une erreur est survenue", erreur: e.message },
-        { status: 500 }
-      );
-    }
+  } catch (e: any) {
     return NextResponse.json(
-      { message: "Une erreur inconnue est survenue" },
+      { message: "Une erreur est survenue", erreur: e.message },
       { status: 500 }
     );
   }
 }
 
-// Création d'un cours :: POST /api/cours
+// Création d'une annexe :POST /api/annexes
 export async function POST(request: NextRequest) {
   try {
-    const { id_filiere_module, id_professeur, id_sessions, semestre } = await request.json();
+    const { nom, adresse, ville, region } = await request.json();
 
-    if (!id_filiere_module || !id_professeur || !id_sessions || !semestre) {
-      return NextResponse.json(
-        { message: "Tous les champs sont obligatoires" },
+    if (!nom || !adresse || !ville || !region) {
+      return new Response(
+        JSON.stringify({ message: "Tous les champs sont obligatoires" }),
         { status: 400 }
       );
     }
 
-    const cours = await prisma.cours.create({
+    const annexe = await prisma.annexes.create({
       data: {
-        id_filiere_module,
-        id_professeur,
-        id_sessions,
-        semestre,
+        nom,
+        adresse,
+        ville,
+        region,
       },
     });
 
-    return NextResponse.json(cours, { status: 201 });
+    return new Response(JSON.stringify(annexe), { status: 201 });
   } catch (e) {
-    if (e instanceof Error) {
-      return NextResponse.json(
-        { message: "Une erreur est survenue", erreur: e.message },
-        { status: 500 }
-      );
-    }
-    return NextResponse.json(
-      { message: "Une erreur inconnue est survenue" },
+    return new Response(
+      JSON.stringify({ message: "Une erreur est survenue" }),
       { status: 500 }
     );
   }
-}
+} 

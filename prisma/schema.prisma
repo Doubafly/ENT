@@ -168,7 +168,7 @@ model Utilisateurs {
   type           UtilisateursType
   telephone      String?           @db.VarChar(15)
   adresse        String?
-  profil         String            @unique(map: "Utilisateurs_profil_key")
+  profil         String?            @unique(map: "Utilisateurs_profil_key")
   date_creation  DateTime          @default(now())
 
   // Relations avec les différents types d'utilisateurs
@@ -221,22 +221,22 @@ enum EmploisDuTempsJour {
 
 enum FilieresNiveau {
   Primaire
-  Secondaire 
-  Licence                                       
-  Master1      
+  Secondaire
+  Licence
+  Master1
   Master2
-  Doctorat  
+  Doctorat
 }
 
 enum CoursSemestre {
   Semestre1
-  Semestre2 
+  Semestre2
 }
 
 enum PaiementsTypePaiement {
-  Inscription 
+  Inscription
   Scolarite
-  Autre          
+  Autre
 }
 
 enum UtilisateursSexe {

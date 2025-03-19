@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
     const { annee_academique } = await request.json();
 
     if (!annee_academique) {
-      return new Response(
-        JSON.stringify({ message: "L'année académique est obligatoire" }),
+      return NextResponse.json(
+        { message: "L'année académique est obligatoire" },
         { status: 400 }
       );
     }
@@ -81,16 +81,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return new Response(JSON.stringify(session), { status: 201 });
+    return NextResponse.json(session, { status: 201 });
   } catch (e) {
     if (e instanceof Error) {
-      return new Response(
-        JSON.stringify({ message: "Une erreur est survenue", erreur: e.message }),
+      return NextResponse.json(
+        { message: "Une erreur est survenue", erreur: e.message },
         { status: 500 }
       );
     }
-    return new Response(
-      JSON.stringify({ message: "Une erreur inconnue est survenue" }),
+    return NextResponse.json(
+      { message: "Une erreur inconnue est survenue" },
       { status: 500 }
     );
   }

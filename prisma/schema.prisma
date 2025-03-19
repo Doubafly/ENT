@@ -221,22 +221,22 @@ enum EmploisDuTempsJour {
 
 enum FilieresNiveau {
   Primaire
-  Secondaire 
-  Licence                                       
-  Master1      
+  Secondaire
+  Licence
+  Master1
   Master2
-  Doctorat  
+  Doctorat
 }
 
 enum CoursSemestre {
   Semestre1
-  Semestre2 
+  Semestre2
 }
 
 enum PaiementsTypePaiement {
-  Inscription 
+  Inscription
   Scolarite
-  Autre          
+  Autre
 }
 
 enum UtilisateursSexe {

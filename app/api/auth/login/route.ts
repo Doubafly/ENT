@@ -36,25 +36,30 @@ export async function POST(request: NextRequest) {
     }
 
     // Connexion réussie
-    const reponse =  NextResponse.json(
+    const reponse = NextResponse.json(
       { message: "Connexion réussie", user },
       { status: 200 }
     );
-    
-    reponse.cookies.set("session_user", JSON.stringify({ 
-        id: user.id_utilisateur, 
-        email: user.email, 
-        nom: user.nom, 
-        prenom: user.prenom 
-      }), {
+
+    reponse.cookies.set(
+      "session_user",
+      JSON.stringify({
+        id: user.id_utilisateur,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        type: user.type,
+        profil: user.profil,
+      }),
+      {
         httpOnly: true, // Sécurise le cookie
         secure: true, // Active HTTPS
         maxAge: 60 * 60 * 24, // Expiration : 1 jour
         path: "/",
-      });
-  
-    return reponse;
+      }
+    );
 
+    return reponse;
   } catch (error) {
     console.error("Erreur lors de la connexion :", error);
     return NextResponse.json(

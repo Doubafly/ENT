@@ -6,6 +6,7 @@ import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal";
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
+
   id: number;
   image: string;
   nom: string;
@@ -16,6 +17,7 @@ export interface User {
   tel: string;
   filiere: string;
   matricule: string;
+  sexe: string;
 }
 
 // Définition de l'interface des props pour le composant UserCard
@@ -101,14 +103,15 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
             {item.adresse} {/* Affiche l'adresse de l'utilisateur */}
           </p>
           <p className="flex gap-1 items-center">
-            <Image
-              src="/icons/calendar.png"
-              alt="Date"
-              width={12}
-              height={12}
-            />
-            {item.date} {/* Affiche la date associée à l'utilisateur */}
-          </p>
+  <Image
+    src="/icons/calendar.png"
+    alt="Date"
+    width={12}
+    height={12}
+  />
+  {new Date(item.date).toLocaleDateString("fr-FR")}
+</p>
+
           <p className="flex gap-1 items-center">
             <Image
               src="/icons/call.png"

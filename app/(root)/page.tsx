@@ -36,7 +36,7 @@ const page = () => {
           router.push("/admin");
         } else if (user.type === "Enseignant") {
           router.push("/professeur");
-        } else if (user.type === "etudiant") {
+        } else if (user.type === "Etudiant") {
           router.push("/etudiant");
         } else {
           throw new Error("Type inconnu");

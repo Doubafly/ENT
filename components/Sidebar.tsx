@@ -1,7 +1,6 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useContext, useEffect, useState } from "react";
-import { UserContext } from "@/changerUtilisateur/utilisateur";
+import { useEffect, useState } from "react";
 import { AdminLinks, EtudiantLinks, ProfesseurLinks } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,7 +32,6 @@ const Sidebar = () => {
 
     fetchUserSession();
   }, []);
-  const user = useContext(UserContext);
   const links: any[] =
     users.type === "Admin"
       ? AdminLinks
@@ -60,8 +58,7 @@ const Sidebar = () => {
         {links.map((items) => {
           const isActive =
             pathname === items.path ||
-            (pathname &&
-              pathname.startsWith(`${user.userRole}/${items.path}/`));
+            (pathname && pathname.startsWith(`${users.type}/${items.path}/`));
           return (
             <Link
               href={items.path}

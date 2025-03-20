@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
       mot_de_passe,
       telephone,
       adresse,
-      profil,
       matricule,
       date_naissance,
       date_inscription,
@@ -70,7 +69,6 @@ export async function POST(request: NextRequest) {
       !mot_de_passe ||
       !telephone?.trim() ||
       !adresse?.trim() ||
-      !profil?.trim() ||
       !matricule?.trim() ||
       !date_naissance ||
       !date_inscription ||
@@ -96,7 +94,7 @@ export async function POST(request: NextRequest) {
         mot_de_passe: hashPass,
         telephone,
         adresse,
-        profil,
+        profil: "/profils/default.jpg",
       },
     });
 

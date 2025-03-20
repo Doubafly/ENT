@@ -1,20 +1,43 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useContext } from "react";
-import { UserContext } from "@/changerUtilisateur/utilisateur";
+import { useEffect, useState } from "react";
 import { AdminLinks, EtudiantLinks, ProfesseurLinks } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
 
 import { usePathname } from "next/navigation";
 const Sidebar = () => {
-  const user = useContext(UserContext);
+  const [users, setUser] = useState({
+    id: "",
+    email: "",
+    nom: "",
+    prenom: "",
+    type: "",
+  });
+
+  useEffect(() => {
+    const fetchUserSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData.user);
+        } else {
+          console.error("Failed to fetch user session");
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUserSession();
+  }, []);
   const links: any[] =
-    user.userRole === "admin"
+    users.type === "Admin"
       ? AdminLinks
-      : user.userRole === "professeur"
+      : users.type === "Enseignant"
       ? ProfesseurLinks
-      : user.userRole === "etudiant"
+      : users.type === "Etudiant"
       ? EtudiantLinks
       : [];
   const pathname = usePathname();
@@ -35,8 +58,7 @@ const Sidebar = () => {
         {links.map((items) => {
           const isActive =
             pathname === items.path ||
-            (pathname &&
-              pathname.startsWith(`${user.userRole}/${items.path}/`));
+            (pathname && pathname.startsWith(`${users.type}/${items.path}/`));
           return (
             <Link
               href={items.path}

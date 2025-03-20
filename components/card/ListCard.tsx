@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 import Image from "next/image";
@@ -16,7 +16,6 @@ export interface User {
   tel: string;
   filiere: string;
   matricule: string;
- 
 }
 
 // Définition de l'interface des props pour le composant UserCard
@@ -78,12 +77,20 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       {/* Section avec background gris et photo de l'utilisateur */}
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">
         <div className="w-[100px] h-[100px] relative rounded-full overflow-hidden border">
-          <Image src={item.image} alt={`Photo de ${item.nom}`} fill className="object-cover w-full h-full" />
+          <Image
+            src={item.image}
+            alt={`Photo de ${item.nom}`}
+            fill
+            sizes="100px"
+            className="object-cover w-full h-full"
+          />
         </div>
         <h3 className="text-center text-sm font-semibold mt-2">
-          {item.nom} {item.prenom} {/* Affiche le nom et prénom de l'utilisateur */}
+          {item.nom} {item.prenom}{" "}
+          {/* Affiche le nom et prénom de l'utilisateur */}
         </h3>
-        <p className="text-gray-500 text-xs">{item.email}</p> {/* Affiche l'email de l'utilisateur */}
+        <p className="text-gray-500 text-xs">{item.email}</p>{" "}
+        {/* Affiche l'email de l'utilisateur */}
       </div>
 
       {/* Contenu avec deux colonnes : détails à gauche et boutons à droite */}
@@ -94,11 +101,21 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
             {item.adresse} {/* Affiche l'adresse de l'utilisateur */}
           </p>
           <p className="flex gap-1 items-center">
-            <Image src="/icons/calendar.png" alt="Date" width={12} height={12} />
+            <Image
+              src="/icons/calendar.png"
+              alt="Date"
+              width={12}
+              height={12}
+            />
             {item.date} {/* Affiche la date associée à l'utilisateur */}
           </p>
           <p className="flex gap-1 items-center">
-            <Image src="/icons/call.png" alt="Téléphone" width={12} height={12} />
+            <Image
+              src="/icons/call.png"
+              alt="Téléphone"
+              width={12}
+              height={12}
+            />
             {item.tel} {/* Affiche le numéro de téléphone de l'utilisateur */}
           </p>
         </div>
@@ -158,7 +175,7 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       {isUpdateModalOpen && selectedUser && (
         <UpdateEtudiantModal
           etudiant={{
-            id: selectedUser.id,  // Passe l'id de l'utilisateur pour la mise à jour
+            id: selectedUser.id, // Passe l'id de l'utilisateur pour la mise à jour
             utilisateurs: {
               nom: selectedUser.nom,
               prenom: selectedUser.prenom,
@@ -175,7 +192,6 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
           onUpdate={handleUpdate} // Appelle la fonction de mise à jour des données
         />
       )}
-
     </div>
   );
 };

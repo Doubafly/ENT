@@ -1,39 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { PrismaClient } from "@prisma/client";
 
-export async function POST(req: NextRequest) {
+const prisma = new PrismaClient();
+
+export async function POST(request: NextRequest) {
   try {
-    // 🔹 Récupération des données du formulaire envoyé dans la requête
-    const {formData,id} = await req.json();
-    
-    // 🔹 Extraction du fichier depuis le formData
-    const file = formData.get("file") as File;
+    // Récupérer les données du formulaire
+    const formData = await request.formData();
+    const file = formData.get("image");
+    const userId = formData.get("userId");
 
-    // 🔹 Vérification si un fichier a bien été fourni
-    if (!file) {
-      return NextResponse.json({ error: "Aucun fichier fourni" }, { status: 400 });
+    if (!file || !userId) {
+      return NextResponse.json(
+        { message: "No file or user ID provided" },
+        { status: 400 }
+      );
     }
 
-    // 🔹 Définition du chemin où le fichier sera enregistré (dossier public/uploads)
-    const filePath = path.join(process.cwd(), "public/profil", file.name);
+    // Générer un nom de fichier unique basé sur l'ID de l'utilisateur
+    if (!(file instanceof File)) {
+      return NextResponse.json(
+        { message: "Invalid file type" },
+        { status: 400 }
+      );
+    }
+    const fileExt = path.extname(file.name);
+    const fileName = `${userId}${fileExt}`;
+    const filePath = path.join(process.cwd(), "public", "profils", fileName);
 
-    // 🔹 Lecture du contenu du fichier en tant que ArrayBuffer (binaire)
-    const fileBuffer = await file.arrayBuffer();
+    // Convertir le fichier en buffer et l'écrire dans le dossier public
+    const buffer = await file.arrayBuffer();
+    fs.writeFileSync(filePath, Buffer.from(buffer));
 
-    // 🔹 Conversion de l'ArrayBuffer en Buffer pour pouvoir l'écrire sur le disque
-    fs.writeFileSync(filePath, Buffer.from(fileBuffer));
+    // Mettre à jour le profil de l'utilisateur dans la base de données
+    await prisma.utilisateurs.update({
+      where: { id_utilisateur: parseInt(userId) }, // Assurez-vous que l'ID est un nombre
+      data: { profil: `/profils/${fileName}` },
+    });
 
-    // 🔹 Réponse indiquant le succès du téléversement avec le nom du fichier
     return NextResponse.json(
-      { message: "Fichier téléversé avec succès", file: file.name },
+      {
+        message: "File uploaded successfully",
+        filePath: `/profils/${fileName}`,
+      },
       { status: 200 }
     );
   } catch (error) {
-    // 🔹 Gestion des erreurs en cas de problème lors du téléversement
-    return NextResponse.json(
-      { error: "Erreur lors du téléversement" },
-      { status: 500 }
-    );
+    console.error("Error uploading file:", error);
+    return NextResponse.json({ message: "An error occurred" }, { status: 500 });
   }
 }

@@ -64,7 +64,6 @@ export async function POST(request: NextRequest) {
       mot_de_passe,
       telephone,
       adresse,
-      profil,
       permissions, // Ex: [1, 2, 3]
     } = await request.json();
 
@@ -77,7 +76,6 @@ export async function POST(request: NextRequest) {
       !mot_de_passe ||
       !telephone?.trim() ||
       !adresse?.trim() ||
-      !profil?.trim() ||
       permissions.length === 0
     ) {
       return NextResponse.json(
@@ -100,7 +98,6 @@ export async function POST(request: NextRequest) {
         mot_de_passe: hashPass,
         telephone,
         adresse,
-        profil,
       },
     });
     //creation des permissions

@@ -16,7 +16,6 @@ export default function UserProfile({ user }) {
   const [isModuleOpen, setIsModuleOpen] = useState(false);
   const [isParametreOpen, setIsParametreOpen] = useState(false);
   const [isFiliereOpen, setIsFiliereOpen] = useState(false);
-  
 
   function handleRegisterSubmit(formData: FormData): Promise<void> {
     throw new Error("Function not implemented.");
@@ -44,33 +43,43 @@ export default function UserProfile({ user }) {
         </button>
 
         <BoutonParametre
-            reglage={() => setIsParametreOpen(true)}
-            onCreateRole={() => setIsRoleOpen(true)}
-            onCreateAnnexe={() => setIsAnnexeOpen(true)}
-            onCreateModule={() => setIsModuleOpen(true)}
-            onCreateFiliere={() => setIsFiliereOpen(true)}
-            />
-   
+          reglage={() => setIsParametreOpen(true)}
+          onCreateRole={() => setIsRoleOpen(true)}
+          onCreateAnnexe={() => setIsAnnexeOpen(true)}
+          onCreateModule={() => setIsModuleOpen(true)}
+          onCreateFiliere={() => setIsFiliereOpen(true)}
+        />
       </div>
       <div>
         <p className="text-lg font-bold">
           {" "}
-          {user.firstName} {user.lastName}
+          {user.prenom} {user.nom}
         </p>
-        <p className="text-gray-600">{user.role}</p>
+        <p className="text-gray-600">{user.type}</p>
       </div>
       <div className="w-10 h-10 bg-gray-300 rounded-full">
-        <Image
-          className=" rounded-full w-full h-full"
-          src={"/img/man1.jpg"}
-          width={100}
-          height={100}
-          title="Profil"
-          alt="Profil"
-        />
+        {user.profil ? (
+          <Image
+            className="rounded-full w-full h-full"
+            src={user.profil}
+            width={100}
+            height={100}
+            title="Profil"
+            alt="Profil"
+          />
+        ) : (
+          <Image
+            className="rounded-full w-full h-full"
+            src={"/profils/default.jpg"}
+            width={100}
+            height={100}
+            title="Profil"
+            alt="Profil"
+          />
+        )}
       </div>
-        {/* Overlay et formulaire modal pour le role  avec boutton parametre*/}
-        {isRoleOpen && (
+      {/* Overlay et formulaire modal pour le role  avec boutton parametre*/}
+      {isRoleOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 w-full"
           onClick={() => setIsRoleOpen(false)}
@@ -81,36 +90,34 @@ export default function UserProfile({ user }) {
           >
             <FormulaireRole
               onSubmit={handleRegisterSubmit}
-              onCancel={() => setIsRoleOpen(false)} 
+              onCancel={() => setIsRoleOpen(false)}
               title="Creation d'un Nouveau Role"
             />
           </div>
         </div>
       )}
 
-
-        {/* Overlay et formulaire modal pour le Annexe  avec boutton parametre*/}
-        {isAnnexeOpen && (
+      {/* Overlay et formulaire modal pour le Annexe  avec boutton parametre*/}
+      {isAnnexeOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 w-full"
           onClick={() => setIsAnnexeOpen(false)}
         >
-          
           <div
             className="bg-white rounded-lg p-3 shadow-lg lg:px-8 lg:py-4 relative"
             onClick={(e) => e.stopPropagation()}
           >
             <FormulaireAnnexe
               onSubmit={handleRegisterSubmit}
-              onCancel={() => setIsAnnexeOpen(false)} 
+              onCancel={() => setIsAnnexeOpen(false)}
               title="Creation d'une Nouvelle Annexe"
             />
           </div>
         </div>
       )}
 
-       {/* Overlay et formulaire modal pour le Module avec bouton parametre */}
-       {isModuleOpen && (
+      {/* Overlay et formulaire modal pour le Module avec bouton parametre */}
+      {isModuleOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={() => setIsModuleOpen(false)}
@@ -121,16 +128,15 @@ export default function UserProfile({ user }) {
           >
             <FormulaireModule
               onSubmit={handleRegisterSubmit}
-              onCancel={() => setIsModuleOpen(false)} 
+              onCancel={() => setIsModuleOpen(false)}
               title="Creation d'un Nouveau Module"
             />
           </div>
         </div>
       )}
 
-
-       {/* Overlay et formulaire modal pour la filiere avec bouton parametre */}
-       {isFiliereOpen && (
+      {/* Overlay et formulaire modal pour la filiere avec bouton parametre */}
+      {isFiliereOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={() => setIsFiliereOpen(false)}
@@ -141,22 +147,15 @@ export default function UserProfile({ user }) {
           >
             <FormulaireFiliere
               onSubmit={handleRegisterSubmit}
-              onCancel={() => setIsFiliereOpen(false)} 
+              onCancel={() => setIsFiliereOpen(false)}
               title="Creation d'une Nouvelle Filiere"
             />
           </div>
         </div>
       )}
 
-
       {/* Overlay et ouvrage de la page parametre avec bouton parametre */}
-      {isParametreOpen && (
-       
-            <ParametrePage
-            />
-        
-      
-      )}
+      {isParametreOpen && <ParametrePage />}
     </div>
   );
 }

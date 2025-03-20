@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse} from "next/server";
 import prisma from "../prisma";
 
 export async function GET() {
@@ -7,17 +7,22 @@ export async function GET() {
       include: {
         filiere_module: {
           include: {
-            filiere: true,
+            filiere: {
+              select:{
+                nom: true,
+                niveau: true,
+                montant_annuel: true,
+              },
+            }, 
           },
         },
       },
     });
-    return new Response(JSON.stringify({ message: "succes", modules }), {
+    return  NextResponse.json({ message: "succes", modules }, {
       status: 200,
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return  NextResponse.json({ message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -27,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const { nom, description } = await request.json();
     if (!nom || !description) {
-      return new Response(JSON.stringify({ message: "Paramètres manquants" }), {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
         status: 400,
       });
     }
@@ -37,12 +42,11 @@ export async function POST(request: NextRequest) {
         description,
       },
     });
-    return new Response(JSON.stringify({ message: "succes", module }), {
+    return  NextResponse.json({ message: "succes", module }, {
       status: 201,
     });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
+    return  NextResponse.json({ message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

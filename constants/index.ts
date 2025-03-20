@@ -56,7 +56,7 @@ export const AdminLinks = [
   },
   {
     image: "/icons/out.png",
-    path: "/?2",
+    path: "/deconnexion",
     title: "Déconnexion",
   },
 ];
@@ -104,7 +104,7 @@ export const EtudiantLinks = [
   },
   {
     image: "/icons/out.png",
-    path: "/?2",
+    path: "/deconnexion",
     title: "Déconnexion",
   },
 ];
@@ -159,7 +159,7 @@ export const ProfesseurLinks = [
   },
   {
     image: "/icons/out.png",
-    path: "/?2",
+    path: "/deconnexion",
     title: "Déconnexion",
   },
 ];

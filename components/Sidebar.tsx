@@ -1,13 +1,45 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { UserContext } from "@/changerUtilisateur/utilisateur";
 import { AdminLinks, EtudiantLinks, ProfesseurLinks } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
 
 import { usePathname } from "next/navigation";
+import router from "next/navigation";
 const Sidebar = () => {
+  
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const res = await fetch("/api/auth/session", {
+            credentials: "include",
+          });
+  
+          const data = await res.json();
+          const user = data.user;
+  
+          if (user.type === "Admin") {
+            router.push("/admin");
+          } else if (user.type === "Enseignant") {
+            router.push("/professeur");
+          } else if (user.type === "Etudiant") {
+            router.push("/etudiant");
+          } else {
+            throw new Error("Type inconnu");
+            // router.push("/sign-in");
+          }
+        } catch (error) {
+          router.push("/sign-in");
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchUser();
+    }, [router]);
+  
   const user = useContext(UserContext);
   const links: any[] =
     user.userRole === "admin"

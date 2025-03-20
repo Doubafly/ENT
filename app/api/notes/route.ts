@@ -4,7 +4,6 @@ import prisma from "../prisma";
 // GET : Récupérer toutes les notes
 export async function GET(request: Request) {
   try {
-
     const { searchParams } = new URL(request.url);
 
     // Construire dynamiquement l'objet de filtrage

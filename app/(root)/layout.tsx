@@ -1,24 +1,42 @@
 "use client";
 import HeaderBox from "@/components/HeaderBox";
 import UserProfile from "@/components/HeaderProfil";
-import { useContext } from "react";
+import { useEffect, useState } from "react";
 import MobileNav from "@/components/MobileNav";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
-import { UserContext } from "@/changerUtilisateur/utilisateur";
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const users = useContext(UserContext);
-  const user = {
-    role: users.userRole,
-    firstName: "Mamadou",
-    lastName: "Ba",
-    email: "ba6353158@gmail.com",
-  };
+  const [user, setUser] = useState({
+    id: "",
+    email: "",
+    nom: "",
+    prenom: "",
+    type: "",
+  });
+
+  useEffect(() => {
+    const fetchUserSession = async () => {
+      try {
+        const response = await fetch("/api/auth/session");
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData.user);
+        } else {
+          console.error("Failed to fetch user session");
+        }
+      } catch (error) {
+        console.error("Error fetching user session:", error);
+      }
+    };
+
+    fetchUserSession();
+  }, []);
+
   return (
     <main className="flex h-screen w-full font-inter">
       <div className="fixed h-screen left-0 top-0 ">

@@ -1,6 +1,7 @@
 import prisma from "@/app/api/prisma";
 import { UtilisateursType } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import { init } from "next/dist/compiled/webpack/webpack";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
@@ -92,6 +93,14 @@ export async function PUT(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // const pathProfil = await fetch("api/files/upload",{
+    //   method: "POST",
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body:
+    // });
     // Hash du mot de passe
     const hashPass = await bcrypt.hash(mot_de_passe, 10);
 

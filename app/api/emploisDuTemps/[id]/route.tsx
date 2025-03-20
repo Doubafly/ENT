@@ -1,75 +1,157 @@
 import prisma from "@/app/api/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-// 🔹 Récupération d'un emploi du temps par ID :: GET /api/emplois-du-temps/[id]
-export async function GET(request: NextRequest) {
-  const id = request.nextUrl.pathname.split("/").pop();
-  try {
-    const emploi = await prisma.emploisDuTemps.findUnique({
-      where: { id_emploi: id ? parseInt(id) : 0 },
-     });
-
-    if (!emploi) {
+export async function PUT(request: NextRequest) {
+    try {
+      const { id_cours, jour, heure_debut, heure_fin, salle } = await request.json();
+  
+      // Extraction de l'ID depuis l'URL
+      const id_emploi = request.nextUrl.pathname.split("/").pop();
+  
+      // Vérification des paramètres
+      if (!id_cours || !jour || !heure_debut || !heure_fin || !salle) {
+        return NextResponse.json(
+          { message: "Paramètres manquants" },
+          { status: 400 }
+        );
+      }
+  
+      // Mise à jour de l'emploi du temps
+      const emploiMisAJour = await prisma.emploisDuTemps.update({
+        where: { id_emploi: id_emploi ? parseInt(id_emploi) : 0 },
+        data: {
+          id_cours,
+          jour,
+          heure_debut: new Date(heure_debut),
+          heure_fin: new Date(heure_fin),
+          salle
+        }
+      });
+  
       return NextResponse.json(
-        { message: "Emploi du temps introuvable" },
-        { status: 404 }
+        { message: "Succès", emploi: emploiMisAJour },
+        { status: 200 }
+      );
+    } catch (e) {
+      console.error("Erreur lors de la mise à jour de l'emploi du temps :", e);
+      return NextResponse.json(
+        { message: "Une erreur est survenue" },
+        { status: 500 }
       );
     }
-
-    return NextResponse.json(
-      { message: "Emploi du temps trouvé", emploi },
-      { status: 200 }
-    );
-  } catch (e) {
-    return NextResponse.json(
-      { message: "Une erreur est survenue" },
-      { status: 500 }
-    );
   }
-}
 
-// 🔹 Mise à jour d'un emploi du temps par ID :: PUT /api/emplois-du-temps/[id]
-export async function PUT(request: NextRequest) {
-  const id = request.nextUrl.pathname.split("/").pop();
-  const { id_cours, jour, heure_debut, heure_fin, salle } = await request.json();
-
-  try {
-    const emploi = await prisma.emploisDuTemps.update({
-      where: { id_emploi: id ? parseInt(id) : 0 },
-      data: {
-        id_cours,
-        jour,
-        heure_debut: new Date(heure_debut),
-        heure_fin: new Date(heure_fin),
-        salle,
-      },
-    });
-
-    return NextResponse.json(
-      { message: "Emploi du temps modifié avec succès", emploi },
-      { status: 200 }
-    );
-  } catch (e) {
-    return NextResponse.json(
-      { message: "Une erreur est survenue" },
-      { status: 500 }
-    );
-  }
-}
-
-// 🔹 Suppression d'un emploi du temps par ID :: DELETE /api/emplois-du-temps/[id]
+  
+  
 export async function DELETE(request: NextRequest) {
-  const id = request.nextUrl.pathname.split("/").pop();
-  try {
-    await prisma.emploisDuTemps.delete({
-      where: { id_emploi: id ? parseInt(id) : 0 },
-    });
-
-    return NextResponse.json({ message: "Emploi du temps supprimé" }, { status: 200 });
-  } catch (e) {
-    return NextResponse.json(
-      { message: "Une erreur est survenue" },
-      { status: 500 }
-    );
+    try {
+      // Extraction de l'ID depuis l'URL
+      const id_emploi = request.nextUrl.pathname.split("/").pop();
+  
+      // Vérification si l'ID est valide
+      if (!id_emploi || isNaN(parseInt(id_emploi))) {
+        return NextResponse.json(
+          { message: "ID invalide ou manquant" },
+          { status: 400 }
+        );
+      }
+  
+      // Vérification de l'existence de l'emploi du temps
+      const emploiExiste = await prisma.emploisDuTemps.findUnique({
+        where: { id_emploi: parseInt(id_emploi) }
+      });
+  
+      if (!emploiExiste) {
+        return NextResponse.json(
+          { message: "L'emploi du temps n'existe pas" },
+          { status: 404 }
+        );
+      }
+  
+      // Suppression de l'emploi du temps
+      await prisma.emploisDuTemps.delete({
+        where: { id_emploi: parseInt(id_emploi) }
+      });
+  
+      return NextResponse.json(
+        { message: "Emploi du temps supprimé avec succès" },
+        { status: 200 }
+      );
+    } catch (e) {
+      console.error("Erreur lors de la suppression :", e);
+      return NextResponse.json(
+        { message: "Une erreur est survenue" },
+        { status: 500 }
+      );
+    }
   }
-}
+
+
+
+export async function GET(request: NextRequest) {
+    try {
+      // Extraction de l'ID depuis l'URL
+      const id_emploi = request.nextUrl.pathname.split("/").pop();
+  
+      // Vérification si l'ID est valide
+      if (!id_emploi || isNaN(parseInt(id_emploi))) {
+        return NextResponse.json(
+          { message: "ID invalide ou manquant" },
+          { status: 400 }
+        );
+      }
+  
+      // Recherche de l'emploi du temps avec ses relations
+      const emploiDuTemps = await prisma.emploisDuTemps.findUnique({
+        where: { id_emploi: parseInt(id_emploi) },
+        select: {
+          jour: true,
+          heure_debut: true,
+          heure_fin: true,
+          salle: true,
+          cours: {
+            select: {
+              id_cours: true,
+              semestre: true,
+              filiere_module: {
+                select: {
+                  filiere: { select: { nom: true } },
+                  module: { select: { nom: true } }
+                }
+              },
+              enseignant: {
+                select: {
+                  utilisateur: {
+                    select: {
+                      nom: true,
+                      prenom: true,
+                      telephone: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+  
+      // Vérification si l'emploi du temps existe
+      if (!emploiDuTemps) {
+        return NextResponse.json(
+          { message: "L'emploi du temps n'existe pas" },
+          { status: 404 }
+        );
+      }
+  
+      return NextResponse.json(
+        { message: "Succès", emploiDuTemps },
+        { status: 200 }
+      );
+    } catch (e) {
+      console.error("Erreur lors de la récupération :", e);
+      return NextResponse.json(
+        { message: "Une erreur est survenue" },
+        { status: 500 }
+      );
+    }
+  }

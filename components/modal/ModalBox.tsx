@@ -1,4 +1,6 @@
+"use client";
 import { useEffect, useState } from "react";
+import { FaCheckCircle, FaTimesCircle, FaInfoCircle } from "react-icons/fa";
 
 interface ModalProps {
   message: string;
@@ -7,12 +9,16 @@ interface ModalProps {
 
 export default function Modal({ message, status }: ModalProps) {
   const [visible, setVisible] = useState(true);
-  const [opacity, setOpacity] = useState("opacity-0");
+  const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    setOpacity("opacity-100");
-    const timer = setTimeout(() => setOpacity("opacity-0"), 2500); // Disparaît avant la suppression
-    const hideTimer = setTimeout(() => setVisible(false), 3000);
+    const timer = setTimeout(() => {
+      setIsExiting(true); // Déclenche l'animation de sortie
+    }, 3000); // Commence à disparaître après 2,5 secondes
+
+    const hideTimer = setTimeout(() => {
+      setVisible(false); // Supprime le modal après 3 secondes
+    }, 3000);
 
     return () => {
       clearTimeout(timer);
@@ -33,13 +39,35 @@ export default function Modal({ message, status }: ModalProps) {
     }
   };
 
+  const getIcon = () => {
+    switch (status) {
+      case "success":
+        return (
+          <FaCheckCircle className="w-12 h-12 mx-auto mb-4 animate-bounce" />
+        );
+      case "error":
+        return (
+          <FaTimesCircle className="w-12 h-12 mx-auto mb-4 animate-bounce" />
+        );
+      default:
+        return (
+          <FaInfoCircle className="w-12 h-12 mx-auto mb-4 animate-bounce" />
+        );
+    }
+  };
+
   return (
     <div
-      className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-500 ${opacity}`}
+      className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-500 ${
+        isExiting ? "opacity-0" : "opacity-100"
+      }`}
     >
       <div
-        className={`bg-gradient-to-br ${getColor()} p-6 rounded-lg shadow-lg relative w-[350px]`}
+        className={`bg-gradient-to-br ${getColor()} p-6 rounded-lg shadow-lg relative w-[350px] transform transition-all duration-500 ${
+          isExiting ? "scale-90" : "scale-100"
+        }`}
       >
+        {getIcon()}
         <p className="text-center">{message}</p>
       </div>
     </div>

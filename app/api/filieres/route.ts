@@ -13,9 +13,9 @@ export async function GET() {
                 description: true,
               },
             }, 
-          },
+          }, 
         },
-      },
+      }, 
     });
     return NextResponse.json(
       { message: "succes", filieres },

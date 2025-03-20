@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
-// 🔹 Récupération de tous les emplois du temps :: GET /api/emplois-du-temps
 export async function GET() {
   try {
     const emploisDuTemps = await prisma.emploisDuTemps.findMany({
       select: {
-        id_emploi: true,
         jour: true,
         heure_debut: true,
         heure_fin: true,
@@ -17,17 +15,28 @@ export async function GET() {
             semestre: true,
             filiere_module: {
               select: {
-                code_module: true,
-                volume_horaire: true,
-                filiere: { select: { nom: true } },
-                module: { select: { nom: true } },
+                filiere: {
+                  select: {
+                    nom: true,
+                    niveau: true,
+                  },
+                },
+                module: {
+                  select: {
+                    nom: true,
+                  },
+                },
               },
             },
             enseignant: {
               select: {
-                id: true,
-                specialite: true,
-                utilisateur: { select: { nom: true, prenom: true } },
+                utilisateur: {
+                  select: {
+                    nom: true,
+                    prenom: true,
+                    telephone: true,
+                  },
+                },
               },
             },
           },
@@ -36,50 +45,33 @@ export async function GET() {
     });
 
     return NextResponse.json(
-      { message: "Emplois du temps récupérés avec succès", emploisDuTemps },
+      { message: "Succès", emploisDuTemps },
       { status: 200 }
     );
   } catch (e) {
+    console.error("Erreur lors de la récupération des emplois du temps :", e);
     return NextResponse.json(
-      { message: "Une erreur est survenue", erreur: e instanceof Error ? e.message : "Erreur inconnue" },
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
 }
 
-// 🔹 Création d'un emploi du temps :: POST /api/emplois-du-temps
 export async function POST(request: NextRequest) {
   try {
-    const { id_cours, jour, heure_debut, heure_fin, salle } = await request.json();
+    const { id_cours, jour, heure_debut, heure_fin, salle } =
+      await request.json();
 
-    // Vérification des champs obligatoires
-    if (!id_cours || !jour || !heure_debut || !heure_fin) {
+    // Vérification des données requises
+    if (!id_cours || !jour || !heure_debut || !heure_fin || !salle) {
       return NextResponse.json(
-        { message: "Tous les champs sont obligatoires" },
-        { status: 400 }
-      );
-    }
-
-    // Vérification de la superposition des cours (éviter les conflits)
-    const conflit = await prisma.emploisDuTemps.findFirst({
-      where: {
-        id_cours,
-        jour,
-        OR: [
-          { heure_debut: { lt: heure_fin }, heure_fin: { gt: heure_debut } },
-        ],
-      },
-    });
-
-    if (conflit) {
-      return NextResponse.json(
-        { message: "Conflit d'emploi du temps détecté" },
+        { message: "Paramètres manquants" },
         { status: 400 }
       );
     }
 
     // Création de l'emploi du temps
-    const emploiDuTemps = await prisma.emploisDuTemps.create({
+    const nouvelEmploi = await prisma.emploisDuTemps.create({
       data: {
         id_cours,
         jour,
@@ -90,12 +82,13 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "Emploi du temps ajouté avec succès", emploiDuTemps },
-      { status: 201 }
+      { message: "Emploi du temps ajouté avec succès", emploi: nouvelEmploi },
+      { status: 200 }
     );
   } catch (e) {
+    console.error("Erreur lors de l'ajout de l'emploi du temps :", e);
     return NextResponse.json(
-      { message: "Une erreur est survenue", erreur: e instanceof Error ? e.message : "Erreur inconnue" },
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

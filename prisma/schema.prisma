@@ -168,7 +168,7 @@ model Utilisateurs {
   type           UtilisateursType
   telephone      String?           @db.VarChar(15)
   adresse        String?
-  profil         String            @unique(map: "Utilisateurs_profil_key")
+  profil         String?            @unique(map: "Utilisateurs_profil_key")
   date_creation  DateTime          @default(now())
 
   // Relations avec les différents types d'utilisateurs

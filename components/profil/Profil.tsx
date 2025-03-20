@@ -9,7 +9,7 @@ interface User {
 }
 
 const ProfilePage = ({ user }: { user: User }) => {
-  const [profileImage, setProfileImage] = useState<string>("");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   useEffect(() => {
     // Fonction pour récupérer l'image de profil
@@ -17,7 +17,17 @@ const ProfilePage = ({ user }: { user: User }) => {
       try {
         const response = await fetch(`/api/utilisateurs/admin/${user.id}`);
         const data = await response.json();
-        setProfileImage(data.admin.utilisateur.profil);
+        console.log(data);
+
+        if (
+          data.admin &&
+          data.admin.utilisateur &&
+          data.admin.utilisateur.profil
+        ) {
+          setProfileImage(data.admin.utilisateur.profil);
+        } else {
+          setProfileImage("/profils/default.jpg");
+        }
       } catch (error) {
         console.error("Error fetching profile image:", error);
       }
@@ -27,7 +37,7 @@ const ProfilePage = ({ user }: { user: User }) => {
   }, [user.id]);
 
   return (
-    <div className="flex bg-gray-100 ml-5 mr-1">
+    <div className="flex bg-gray-100 ml-1 xl:ml-5 mr-1">
       {/* Sidebar (déjà existant) */}
       {/* <Sidebar /> */}
 

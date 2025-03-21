@@ -74,45 +74,45 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
           onSelect(item); // Appelle la fonction de sélection si aucun modal n'est ouvert
         }
       }}
-      className="w-[230px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
+      className="w-[250px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
     >
       {/* Section avec background gris et photo de l'utilisateur */}
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">
-        <div className="w-[100px] h-[100px] relative rounded-full overflow-hidden border">
+        <div className="w-[102px] h-[115px] relative rounded-full overflow-hidden border">
           <Image
             src={item.image}
             alt={`Photo de ${item.nom}`}
             fill
             sizes="100px"
-            className="object-cover w-full h-full"
+            className="object-cover w-full h-full text-sm"
           />
         </div>
-        <h3 className="text-center text-sm font-semibold mt-2">
+        <h3 className="text-center  font-semibold mt-2 text-lg">
           {item.nom} {item.prenom}{" "}
           {/* Affiche le nom et prénom de l'utilisateur */}
         </h3>
-        <p className="text-gray-500 text-xs">{item.email}</p>{" "}
+        <p className="text-gray-500 text-sm">{item.email}</p>{" "}
         {/* Affiche l'email de l'utilisateur */}
       </div>
 
       {/* Contenu avec deux colonnes : détails à gauche et boutons à droite */}
       <div className="flex items-start mt-4">
         <div className="flex-1 flex flex-col gap-2 text-xs text-gray-700">
-          <p className="flex gap-1 items-center">
+          <p className="flex gap-1 items-center text-sm">
             <Image src="/icons/book.png" alt="Adresse" width={12} height={12} />
             {item.adresse} {/* Affiche l'adresse de l'utilisateur */}
           </p>
-          <p className="flex gap-1 items-center">
-  <Image
-    src="/icons/calendar.png"
-    alt="Date"
-    width={12}
-    height={12}
-  />
-  {new Date(item.date).toLocaleDateString("fr-FR")}
-</p>
+          <p className="flex gap-1 items-center text-sm">
+            <Image
+              src="/icons/calendar.png"
+              alt="Date"
+              width={12}
+              height={12}
+            />
+            {new Date(item.date).toLocaleDateString("fr-FR")}
+          </p>
 
-          <p className="flex gap-1 items-center">
+          <p className="flex gap-1 items-center text-sm">
             <Image
               src="/icons/call.png"
               alt="Téléphone"
@@ -130,7 +130,7 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
               e.stopPropagation(); // Empêche la propagation de l'événement de clic
               handleEditClick(item); // Ouvre le modal de mise à jour
             }}
-            className="bg-blue-500 text-white px-3 py-1 text-xs rounded hover:bg-blue-600 transition-all duration-200"
+            className="bg-blue-500 text-white px-3 py-1 text-sm rounded hover:bg-blue-600 transition-all duration-200"
           >
             Modifier
           </button>
@@ -139,7 +139,7 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
               e.stopPropagation(); // Empêche la propagation de l'événement de clic
               handleDeleteClick(item); // Ouvre le modal de confirmation de suppression
             }}
-            className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600 transition-all duration-200"
+            className="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 transition-all duration-200"
           >
             Supprimer
           </button>
@@ -149,7 +149,7 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       {/* Modal de confirmation de suppression */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg w-[300px]">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
             <h2 className="text-center text-lg font-semibold mb-4">
               Êtes-vous sûr ?
             </h2>
@@ -159,13 +159,13 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
             <div className="flex justify-around">
               <button
                 onClick={() => setIsModalOpen(false)} // Ferme le modal sans suppression
-                className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400 transition-all duration-200"
+                className="bg-gray-300 text-black px-4 py-1 rounded hover:bg-gray-400 transition-all duration-200 text-sm"
               >
                 Annuler
               </button>
               <button
                 onClick={handleConfirmDelete} // Confirme la suppression de l'utilisateur
-                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition-all duration-200"
+                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition-all duration-200 text-sm"
               >
                 Confirmer
               </button>

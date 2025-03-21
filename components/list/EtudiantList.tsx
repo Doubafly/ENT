@@ -73,7 +73,7 @@ export default function EtudiantList() {
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
-      <div className="flex justify-between items-center mb-4 ml-6">
+      <div className="flex justify-between items-center mb-4 ml-6 ">
         <input
           type="text"
           placeholder="Rechercher un étudiant..."
@@ -82,7 +82,7 @@ export default function EtudiantList() {
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-1/3 p-3 border rounded-lg text-xs"
+          className="w-1/3 p-3 border rounded-lg text-sm"
         />
         <select
           value={classFilter}
@@ -90,7 +90,7 @@ export default function EtudiantList() {
             setClassFilter(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-1/4 p-3 border rounded-lg text-xs"
+          className="w-1/4 p-3 border rounded-lg text-sm"
         >
           <option value="">Filtrer par classe</option>
           {[...new Set(etudiants.map((e) => e.filiere))].map((filiere) => (
@@ -101,7 +101,7 @@ export default function EtudiantList() {
         </select>
         <button
           onClick={() => setShowForm(true)}
-          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-xs rounded-lg mr-4"
+          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-sm rounded-lg mr-4"
         >
           Ajouter
         </button>
@@ -152,7 +152,7 @@ export default function EtudiantList() {
         onClick={() => setSelectedEtudiant(null)}
         className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
       >
-        ✖
+        x
       </button>
 
       {/* Image de profil et Nom */}
@@ -191,7 +191,7 @@ export default function EtudiantList() {
         onClick={() => setShowForm(false)}
         className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
       >
-        ✖
+        X
       </button>
 
       {/* Formulaire d'ajout d'un étudiant */}

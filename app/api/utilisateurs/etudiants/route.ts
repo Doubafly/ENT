@@ -3,12 +3,24 @@ import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../prisma";
 
-// Récupérer tous les étudiants avec leurs notes et paiements
+// GET : Récupérer tous les étudiants avec leurs informations liées
 export async function GET() {
   try {
     const etudiants = await prisma.etudiants.findMany({
       include: {
-        utilisateur: true, // Informations de l'utilisateur
+        utilisateur: {
+          select: {
+            id_utilisateur: true,
+            nom: true,
+            prenom: true,
+            email: true,
+            sexe: true,
+            telephone: true,
+            adresse: true,
+            profil: true,
+            date_creation: true,
+          },
+        },
         filiere: true, // Informations de la filière
         notes: {
           include: {
@@ -27,15 +39,19 @@ export async function GET() {
       },
     });
 
+    if (!etudiants || etudiants.length === 0) {
+      return NextResponse.json(
+        { message: "Aucun étudiant trouvé" },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { message: "Étudiants récupérés avec succès", etudiants },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error({
-      message: "Erreur lors de la récupération des étudiants :",
-      error,
-    });
+    console.error("Erreur lors de la récupération des étudiants :", error);
     return NextResponse.json(
       { message: "Une erreur est survenue", erreur: error.message },
       { status: 500 }
@@ -43,7 +59,7 @@ export async function GET() {
   }
 }
 
-// Créer un nouvel étudiant
+// POST : Créer un nouvel étudiant
 export async function POST(request: NextRequest) {
   try {
     const {
@@ -80,6 +96,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Vérifier si l'email ou le matricule existe déjà
+    const existingUser = await prisma.utilisateurs.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "Un utilisateur avec cet email existe déjà" },
+        { status: 409 }
+      );
+    }
+
+    const existingMatricule = await prisma.etudiants.findUnique({
+      where: { matricule },
+    });
+    if (existingMatricule) {
+      return NextResponse.json(
+        { message: "Un étudiant avec ce matricule existe déjà" },
+        { status: 409 }
+      );
+    }
+
     // Hash du mot de passe
     const hashPass = await bcrypt.hash(mot_de_passe, 10);
 
@@ -103,7 +140,7 @@ export async function POST(request: NextRequest) {
       data: {
         matricule,
         date_naissance: new Date(date_naissance),
-        date_inscription: new Date(),
+        date_inscription: new Date(date_inscription),
         id_filiere,
         id_utilisateur: utilisateur.id_utilisateur,
       },

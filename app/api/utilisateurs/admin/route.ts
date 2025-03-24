@@ -98,6 +98,7 @@ export async function POST(request: NextRequest) {
         mot_de_passe: hashPass,
         telephone,
         adresse,
+        profil: "/profils/default.jpg",
       },
     });
     //creation des permissions

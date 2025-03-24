@@ -4,46 +4,45 @@ import prisma from "../prisma";
 export async function GET() {
   try {
     const emploisDuTemps = await prisma.emploisDuTemps.findMany({
-        select:{
-            jour:true,
-            heure_debut:true,
-            heure_fin:true,
-            salle:true,
-            cours: {
+      select: {
+        jour: true,
+        heure_debut: true,
+        heure_fin: true,
+        salle: true,
+        cours: {
+          select: {
+            id_cours: true,
+            semestre: true,
+            filiere_module: {
               select: {
-                id_cours: true,
-                semestre: true,
-                filiere_module: {
+                filiere: {
                   select: {
-                    filiere: {
-                      select: {
-                        nom: true,
-                      }, 
-                    },
-                    module:{
-                        select:{
-                            nom:true
-                        }
-                    }
+                    nom: true,
+                    niveau: true,
                   },
                 },
-                enseignant: {
-                    select: {
-                      utilisateur: {
-                        select: {
-                          nom: true,
-                          prenom: true,
-                          telephone:true
-                        },
-                      },
-                    },
+                module: {
+                  select: {
+                    nom: true,
                   },
+                },
               },
             },
-
-        }
+            enseignant: {
+              select: {
+                utilisateur: {
+                  select: {
+                    nom: true,
+                    prenom: true,
+                    telephone: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-    );
+    });
 
     return NextResponse.json(
       { message: "Succès", emploisDuTemps },
@@ -57,7 +56,6 @@ export async function GET() {
     );
   }
 }
-
 
 export async function POST(request: NextRequest) {
     try {

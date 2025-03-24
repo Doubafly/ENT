@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
       mot_de_passe,
       telephone,
       adresse,
-      profil,
     } = await request.json();
 
     // Validation des données
@@ -66,7 +65,6 @@ export async function POST(request: NextRequest) {
       !mot_de_passe ||
       !telephone?.trim() ||
       !adresse?.trim() ||
-      !profil?.trim() ||
       !matricule?.trim() ||
       !specialite?.trim()
     ) {
@@ -90,7 +88,7 @@ export async function POST(request: NextRequest) {
         mot_de_passe: hashPass,
         telephone,
         adresse,
-        profil,
+        profil: "/profils/default.jpg",
       },
     });
 

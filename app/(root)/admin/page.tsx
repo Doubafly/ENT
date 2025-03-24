@@ -4,12 +4,6 @@ import RightSidebar from "@/components/RightSidebar";
 import Statistique from "@/components/statistique/statistique";
 
 export default function Home() {
-  const user = {
-    role: "Admin",
-    firstName: "Mamadou",
-    lastName: "Ba",
-    email: "ba6353158@gmail.com",
-  };
 
   const [statData, setStatData] = useState([
     { link: "/icons/text-books.png", value: "0", nom: "Nombre Filiere" },

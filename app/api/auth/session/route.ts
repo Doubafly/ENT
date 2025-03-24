@@ -10,10 +10,13 @@ export async function GET(req: NextRequest) {
 
   const user = JSON.parse(sessionUser);
 
-  // Récupérer les informations de l'utilisateur avec la relation enseignant
+  // Récupérer les informations de l'utilisateur avec les relations enseignant et étudiant
   const utilisateur = await prisma.utilisateurs.findUnique({
     where: { id_utilisateur: user.id },
-    include: { enseignant: true }, // Inclure la relation enseignant
+    include: { 
+      enseignant: true,  // Inclure la relation enseignant
+      etudiant: true     // Inclure la relation étudiant
+    }, 
   });
 
   if (!utilisateur) {

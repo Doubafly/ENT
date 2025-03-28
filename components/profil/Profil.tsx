@@ -6,6 +6,7 @@ interface User {
   nom: string;
   prenom: string;
   type: "Etudiant" | "Enseignant" | "Admin";
+  profil: string;
 }
 
 const ProfilePage = ({ user }: { user: User }) => {
@@ -15,16 +16,8 @@ const ProfilePage = ({ user }: { user: User }) => {
     // Fonction pour récupérer l'image de profil
     const fetchProfileImage = async () => {
       try {
-        const response = await fetch(`/api/utilisateurs/admin/${user.id}`);
-        const data = await response.json();
-        console.log(data);
-
-        if (
-          data.admin &&
-          data.admin.utilisateur &&
-          data.admin.utilisateur.profil
-        ) {
-          setProfileImage(data.admin.utilisateur.profil);
+        if (user.profil) {
+          setProfileImage(user.profil);
         } else {
           setProfileImage("/profils/default.jpg");
         }
@@ -37,20 +30,42 @@ const ProfilePage = ({ user }: { user: User }) => {
   }, [user.id]);
 
   return (
-    <div className="flex bg-gray-100 ml-1 xl:ml-5 mr-1">
+    <div className="flex bg-gray-100  xl:ml-5 mr-1">
       {/* Sidebar (déjà existant) */}
       {/* <Sidebar /> */}
 
       {/* Contenu principal */}
       <div className="flex-1 overflow-y-auto">
         {/* Bannière de profil */}
-        <div className="h-32 bg-blue-500  relative">
+        <div className="h-32 bg-blue-500  float">
           {/* Photo de profil */}
-          <div className="absolute -bottom-16 left-8">
+          <div className="relative -bottom-16 ">
             <img
               src={profileImage || "/profils/default.jpg"}
               alt="Photo de profil"
               className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+            />
+            <label
+              htmlFor="upload-button"
+              className="absolute bottom-2 left-24  bg-gray-200 text-gray-700 rounded-full p-2 cursor-pointer"
+              style={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
+            >
+              <i className="fas fa-camera"></i>
+            </label>
+            <input
+              type="file"
+              id="upload-button"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setProfileImage(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
             />
           </div>
         </div>

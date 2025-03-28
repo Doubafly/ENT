@@ -2,10 +2,9 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 
-
 interface BoutonParametreProps {
   reglage: () => void;
-  onCreateRole: () => void;  
+  onCreateRole: () => void;
   onCreateAnnexe: () => void;
   onCreateModule: () => void;
   onCreateFiliere: () => void;
@@ -13,7 +12,7 @@ interface BoutonParametreProps {
 
 const BoutonParametre: React.FC<BoutonParametreProps> = ({
   reglage,
-  onCreateRole,  
+  onCreateRole,
   onCreateAnnexe,
   onCreateModule,
   onCreateFiliere,
@@ -37,7 +36,7 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
 
       {/* Menu déroulant en dessous du bouton */}
       {isMenuOpen && (
-        <div className="absolute right-8 mt-10 w-48 bg-white border rounded shadow-lg">
+        <div className="fixed right-8 mt-10 w-48 bg-white border rounded shadow-lg">
           <button
             className="w-full px-4 py-2 text-left hover:bg-gray-200"
             onClick={() => {
@@ -45,7 +44,7 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
               reglage();
             }}
           >
-            Parametre 
+            Parametre
           </button>
 
           <button

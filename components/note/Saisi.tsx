@@ -14,7 +14,7 @@ interface Module {
 }
 
 interface Semestre {
-  id: number;
+  id: string; // Correction : ID sous forme "id_filiere-Semestre1"
   name: string;
   modules: Module[];
 }
@@ -33,6 +33,10 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
   students,
   moduleKey,
 }) => {
+  function submitNote() {
+    alert("merci le monde");
+  }
+
   return (
     <>
       <table className="w-full border-collapse border border-gray-300">
@@ -69,7 +73,10 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
           ))}
         </tbody>
       </table>
-      <button className="float-right mt-4 border sidebar-link bg-green-100">
+      <button
+        className="float-right mt-4 border sidebar-link bg-green-100"
+        onClick={submitNote}
+      >
         {" "}
         Valider
       </button>
@@ -78,21 +85,21 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
 };
 
 const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
-  const [selectedClass, setSelectedClass] = useState<number | null>(1);
-  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
 
   const handleClassChange = (classId: number) => {
-    // alert("bombe");
     setSelectedClass(classId);
     setSelectedSemester(null);
     setSelectedModule(null);
   };
 
-  const handleSemesterChange = (semesterId: number) => {
+  const handleSemesterChange = (semesterId: string) => {
     setSelectedSemester(semesterId);
     setSelectedModule(null);
   };
+
   return (
     <div className="mt-4">
       <div className="md:flex">
@@ -105,9 +112,6 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
             title="Sélectionner une classe"
             className="p-2 border rounded w-full"
             onChange={(e) => handleClassChange(Number(e.target.value))}
-            onClick={(e) =>
-              handleClassChange(Number((e.target as HTMLSelectElement).value))
-            }
           >
             <option value="">-- Choisir --</option>
             {classes.map((cls) => (
@@ -127,12 +131,7 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
             <select
               title="Sélectionner un semestre"
               className="p-2 border rounded w-full"
-              onChange={(e) => handleSemesterChange(Number(e.target.value))}
-              onClick={(e) =>
-                handleSemesterChange(
-                  Number((e.target as HTMLSelectElement).value)
-                )
-              }
+              onChange={(e) => handleSemesterChange(e.target.value)}
             >
               <option value="">-- Choisir --</option>
               {classes
@@ -156,9 +155,6 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
               title="Sélectionner un module"
               className="p-2 border rounded w-full"
               onChange={(e) => setSelectedModule(Number(e.target.value))}
-              onClick={(e) =>
-                setSelectedModule(Number((e.target as HTMLSelectElement).value))
-              }
             >
               <option value="">-- Choisir --</option>
               {classes
@@ -193,4 +189,5 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
     </div>
   );
 };
+
 export default Saisi;

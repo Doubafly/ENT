@@ -15,6 +15,29 @@ export async function GET() {
             filiere: {
               select: {
                 nom: true,
+                description: true,
+                niveau: true,
+                montant_annuel: true,
+                id_annexe: true,
+                etudiants: {
+                  select: {
+                    matricule: true,
+                    notes: {
+                      select: {
+                        note_exam: true,
+                        note_class: true,
+                        commentaire: true,
+                      },
+                    },
+                    utilisateur: {
+                      select: {
+                        nom: true,
+                        prenom: true,
+                        email: true,
+                      },
+                    },
+                  },
+                },
               },
             },
             module: {
@@ -66,7 +89,8 @@ export async function GET() {
 // Création d'un cours :: POST /api/cours
 export async function POST(request: NextRequest) {
   try {
-    const { id_filiere_module, id_professeur, id_sessions, semestre } = await request.json();
+    const { id_filiere_module, id_professeur, id_sessions, semestre } =
+      await request.json();
 
     if (!id_filiere_module || !id_professeur || !id_sessions || !semestre) {
       return new Response(
@@ -88,7 +112,10 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     if (e instanceof Error) {
       return new Response(
-        JSON.stringify({ message: "Une erreur est survenue", erreur: e.message }),
+        JSON.stringify({
+          message: "Une erreur est survenue",
+          erreur: e.message,
+        }),
         { status: 500 }
       );
     }

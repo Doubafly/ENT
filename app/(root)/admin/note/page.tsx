@@ -4,87 +4,63 @@ import EtudiantNoteTable from "@/components/table/EtudiantNoteTable";
 import FiliereTable from "@/components/table/FiliereTable";
 import NoteTable from "@/components/table/NoteTable";
 import Semestre from "@/components/table/SemestreTableau";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const classes = [
-  {
-    id: 1,
-    name: "L1 Informatique",
-    semestres: [
-      {
-        id: 1,
-        name: "Semestre 1",
-        modules: [
-          {
-            id: 101,
-            name: "Programmation",
-            students: [
-              { id: 1, name: "Banca Bissi Ba", note_class: 15, note_exam: 0 },
-              { id: 2, name: "Kadidiatou Ba", note_class: 16, note_exam: 0 },
-              { id: 3, name: "Sekou Ba", note_class: 9, note_exam: 0 },
-            ],
-          },
-          {
-            id: 102,
-            name: "Algèbre",
-            students: [
-              { id: 1, name: "Banca Bissi Ba", note_class: 14, note_exam: 0 },
-              { id: 2, name: "Kadidiatou Ba", note_class: 12, note_exam: 0 },
-              { id: 3, name: "Sekou Ba", note_class: 10, note_exam: 0 },
-            ],
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: "Semestre 2",
-        modules: [
-          // Ajoutez les modules du semestre 2 ici
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "L2 Informatique",
-    semestres: [
-      {
-        id: 1,
-        name: "Semestre 1",
-        modules: [
-          {
-            id: 201,
-            name: "Base de Données",
-            students: [
-              { id: 7, name: "Mamadou Ba", note_class: 19, note_exam: 0 },
-              { id: 8, name: "Dayfourou Ba", note_class: 16, note_exam: 0 },
-              { id: 9, name: "Aly Ba", note_class: 16, note_exam: 0 },
-            ],
-          },
-          {
-            id: 202,
-            name: "Systèmes d'exploitation",
-            students: [
-              { id: 7, name: "Mamadou Ba", note_class: 18, note_exam: 0 },
-              { id: 8, name: "Dayfourou Ba", note_class: 17, note_exam: 0 },
-              { id: 9, name: "Aly Ba", note_class: 16, note_exam: 0 },
-            ],
-          },
-        ],
-      },
-      {
-        id: 2,
-        name: "Semestre 2",
-        modules: [
-          // Ajoutez les modules du semestre 2 ici
-        ],
-      },
-    ],
-  },
-];
 export default function page() {
-  const [selectedSemestre, setSelectedSemestre] = useState("");
-  const [selectedFiliere, setSelectedFiliere] = useState("");
+  const [classes, setClasses] = useState([]);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const response = await fetch("/api/filieres");
+        const data = await response.json();
+
+        if (data.filieres) {
+          // Transformer les données API en structure attendue
+          const formattedClasses = data.filieres.map((filiere: any) => {
+            // Vérifier le niveau et formater le nom de la classe
+            let niveauLabel = "";
+            if (filiere.niveau.toLowerCase().includes("primaire")) {
+              niveauLabel = `L1 ${filiere.nom}`;
+            } else if (filiere.niveau.toLowerCase().includes("secondaire")) {
+              niveauLabel = `L2 ${filiere.nom}`;
+            } else {
+              niveauLabel = `Autre ${filiere.nom}`;
+            }
+
+            return {
+              id: filiere.id_filiere,
+              name: niveauLabel, // Intégration du niveau dans le nom de la classe
+              semestres: filiere.filiere_module.flatMap((mod: any) =>
+                mod.cours.map((cours: any) => ({
+                  id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique basé sur la filière et le semestre
+                  name: cours.semestre, // Correction : Prendre le semestre ici
+                  modules: [
+                    {
+                      id: mod.id_module,
+                      name: mod.module.nom,
+                      students: filiere.etudiants.map((etudiant: any) => ({
+                        id: etudiant.matricule,
+                        name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
+                        note_class: etudiant.notes?.note_class || 0,
+                        note_exam: etudiant.notes?.note_exam || 0,
+                      })),
+                    },
+                  ],
+                }))
+              ),
+            };
+          });
+
+          setClasses(formattedClasses);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des filieres :", error);
+      }
+    }
+
+    fetchStats();
+  }, []);
   return (
     <div>
       <div className="mt-8 ml-2 mb-4 flex flex-col">

@@ -14,11 +14,11 @@ export default function Modal({ message, status }: ModalProps) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsExiting(true); // Déclenche l'animation de sortie
-    }, 3000); // Commence à disparaître après 2,5 secondes
+    }, 2000); // Commence à disparaître après 2,5 secondes
 
     const hideTimer = setTimeout(() => {
       setVisible(false); // Supprime le modal après 3 secondes
-    }, 3000);
+    }, 2000);
 
     return () => {
       clearTimeout(timer);

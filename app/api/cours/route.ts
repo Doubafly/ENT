@@ -14,6 +14,7 @@ export async function GET() {
             volume_horaire: true,
             filiere: {
               select: {
+                id_filiere: true,
                 nom: true,
                 description: true,
                 niveau: true,
@@ -42,6 +43,7 @@ export async function GET() {
             },
             module: {
               select: {
+                id_module: true,
                 nom: true,
               },
             },

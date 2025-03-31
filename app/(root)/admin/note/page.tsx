@@ -27,10 +27,12 @@ export default function page() {
             } else {
               niveauLabel = `Autre ${filiere.nom}`;
             }
-
             return {
               id: filiere.id_filiere,
               name: niveauLabel, // Intégration du niveau dans le nom de la classe
+              coefficients: filiere.filiere_module.map(
+                (mod: any) => mod.coefficient
+              ), // Récupérer tous les coefficients des modules
               semestres: filiere.filiere_module.flatMap((mod: any) =>
                 mod.cours.map((cours: any) => ({
                   id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique basé sur la filière et le semestre
@@ -44,6 +46,7 @@ export default function page() {
                         name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
                         note_class: etudiant.notes?.note_class || 0,
                         note_exam: etudiant.notes?.note_exam || 0,
+                        coefficient: mod.coefficient, // Associer le coefficient au module
                       })),
                     },
                   ],
@@ -51,7 +54,6 @@ export default function page() {
               ),
             };
           });
-
           setClasses(formattedClasses);
         }
       } catch (error) {

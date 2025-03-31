@@ -23,6 +23,7 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
     <div className="flex space-x-2">
       {/* Bouton Paramètres */}
       <button
+        title="parametre"
         className="relative p-2 rounded-full bg-white shadow"
         onClick={() => setIsMenuOpen(!isMenuOpen)}
       >

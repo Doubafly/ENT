@@ -5,6 +5,7 @@ interface Student {
   name: string;
   note_class?: number;
   note_exam?: number;
+  coefficient?: number;
 }
 
 interface Module {
@@ -45,10 +46,11 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
             <th className="border p-2">Étudiant</th>
             <th className="border p-2">Note Classe</th>
             <th className="border p-2">Note Examen</th>
+            <th className="border p-2">coefficient</th>
           </tr>
         </thead>
         <tbody>
-          {students.map(({ id, name, note_class, note_exam }) => (
+          {students.map(({ id, name, note_class, note_exam, coefficient }) => (
             <tr key={id} className="border">
               <td className="p-2 border">{name}</td>
               <td className="p-2 border">
@@ -66,6 +68,15 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
                   className="border p-1 w-full"
                   defaultValue={note_exam}
                   key={`${moduleKey}-${id}-note_exam`}
+                  title="Note Examen"
+                />
+              </td>
+              <td className="p-2 border">
+                <input
+                  type="number"
+                  className="border p-1 w-full"
+                  defaultValue={coefficient}
+                  key={`${moduleKey}-${id}-coefficient`}
                   title="Note Examen"
                 />
               </td>
@@ -88,6 +99,8 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
+
+  console.log(classes);
 
   const handleClassChange = (classId: number) => {
     setSelectedClass(classId);

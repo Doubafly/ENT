@@ -102,7 +102,9 @@ export default function UpdateEtudiantModal({
     fetchFilieres();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
@@ -115,39 +117,83 @@ export default function UpdateEtudiantModal({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, profil: reader.result as string }));
+        setFormData((prev) => ({
+          ...prev,
+          profil: `${reader.result as string}`,
+        }));
       };
       reader.readAsDataURL(file);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Préparer les données avant soumission
-    const updatedData: Partial<typeof formData> = {
-      ...formData,
-      id_filiere: idFiliere, // Ajoute la filière sélectionnée
-      sexe: formData.sexe === "Homme" ? "M" : "F",
-      date_naissance: formData.date_naissance ? formatDateToInput(formData.date_naissance) : "", // Formatage de la date
-      date_inscription: formData.date_inscription ? formatDateToInput(formData.date_inscription) : "", // Formatage de la date
-    };
+    try {
+      let profilPath = formData.profil;
 
-    // Soumettre les données mises à jour
-    await onUpdate(etudiant.id, updatedData);
+      // Vérifiez si une nouvelle image a été sélectionnée
+      if (formData.profil.startsWith("data:image")) {
+        const formDataImage = new FormData();
+        const blob = await fetch(formData.profil).then((res) => res.blob());
+        const file = new File([blob], `${etudiant.id_utilisateur}.jpg`, {
+          type: blob.type,
+        });
 
-    // Fermer la modal après mise à jour
-    onClose();
+        formDataImage.append("image", file);
+        formDataImage.append("userId", etudiant.id_utilisateur.toString());
+
+        // Envoyer l'image à l'API
+        const response = await fetch("/api/files/uploads", {
+          method: "POST",
+          body: formDataImage,
+        });
+
+        if (!response.ok) {
+          throw new Error("Erreur lors du téléchargement de l'image");
+        }
+
+        const data = await response.json();
+        profilPath = `${data.filePath}?t=${new Date().getTime()}`; // Ajoutez un timestamp pour éviter le cache
+      }
+
+      // Préparer les données avant soumission
+      const updatedData: Partial<typeof formData> = {
+        ...formData,
+        profil: profilPath, // Utiliser le chemin mis à jour
+        id_filiere: idFiliere, // Ajoute la filière sélectionnée
+        sexe: formData.sexe === "Homme" ? "M" : "F",
+        date_naissance: formData.date_naissance
+          ? formatDateToInput(formData.date_naissance)
+          : "", // Formatage de la date
+        date_inscription: formData.date_inscription
+          ? formatDateToInput(formData.date_inscription)
+          : "", // Formatage de la date
+      };
+
+      // Soumettre les données mises à jour
+      await onUpdate(etudiant.id, updatedData);
+
+      // Fermer la modal après mise à jour
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      alert("Une erreur est survenue lors de la mise à jour.");
+    }
   };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div
         className="bg-white rounded-lg p-6 shadow-lg w-full max-w-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold mb-4 text-center">Modifier l'étudiant</h2>
-        <form onSubmit={handleSubmit} className="text-sm">
+        <h2 className="text-lg font-bold mb-4 text-center">
+          Modifier l'étudiant
+        </h2>
+        <form
+          onSubmit={handleSubmit}
+          className="text-sm"
+          encType="multipart/form-data"
+        >
           {/* Image de Profil */}
           <div className="flex justify-center mb-4">
             <label htmlFor="profil" className="cursor-pointer">
@@ -317,6 +363,7 @@ export default function UpdateEtudiantModal({
             <div>
               <label className="block font-medium">Filière</label>
               <select
+                title="filiere"
                 name="filiere"
                 value={idFiliere}
                 onChange={(e) => setIdFiliere(Number(e.target.value))}
@@ -353,5 +400,3 @@ export default function UpdateEtudiantModal({
     </div>
   );
 }
-
-

@@ -80,7 +80,7 @@ const RegisterFormEtudiant = ({ onStudentAdded, onClose }: RegisterFormProps) =>
             id_filiere: etudiant.filiere?.id_filiere || 0,
             nom: etudiant.filiere?.nom || "Non assigné",
           },
-          date_naissance: etudiant.utilisateur?.date_naissance || "",
+          date_naissance: etudiant.date_naissance || "",
           date_inscription: etudiant.date_inscription,
           id: 0
         });

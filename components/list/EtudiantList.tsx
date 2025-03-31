@@ -124,13 +124,10 @@ export default function EtudiantList() {
             date_inscription: newEtudiant.date_inscription || "Date inconnue",
           },
         ]);
-        await fetchEtudiants(); // 🔄 Rafraîchit la liste après ajout
+        
         setCurrentPage(1);
         setShowForm(false);
         
-        // Une fois l'action terminée, rediriger vers la même page pour la recharger
-
- 
       } else {
         const errorText = await response.text();
         console.error("Erreur lors de l'ajout :", errorText);
@@ -337,30 +334,59 @@ const handleDeleteEtudiant = async () => {
   onClose={() => setIsUpdateModalOpen(false)}
   onUpdate={async (id_utilisateur, updatedData) => {
     console.log("ID utilisateur :", id_utilisateur);
-console.log("Données envoyées à l'API :", updatedData);
+    console.log("Données envoyées à l'API :", updatedData);
 
-  
-    // Vérifie si l'ID est bien présent
-    if (!id_utilisateur) {
-      console.error("❌ Erreur : ID utilisateur manquant !");
-      return;
-    }
-  
-    // Appeler handleUpdateEtudiant pour envoyer les données à l'API
-    await handleUpdateEtudiant(id_utilisateur, updatedData);
-    await fetchEtudiants(); // 🔄 Rafraîchit la liste après modification
-    // Mettre à jour l'état local après la mise à jour réussie
-    setEtudiants((prev) =>
-      prev.map((etudiant) =>
-        etudiant.id_utilisateur === id_utilisateur ? { ...etudiant, ...updatedData } : etudiant
-      )
-    );
+    await handleUpdateEtudiant(id_utilisateur, updatedData); 
     setIsUpdateModalOpen(false);
   }}
-  
 />
       )}
+  {/* Modal d'affichage des détails */}
+  {selectedEtudiant && (
+  <Modal onClose={() => setSelectedEtudiant(null)}>
+    <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
+      {/* Bouton Fermer */}
+      <button
+        onClick={() => setSelectedEtudiant(null)}
+        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+      >
+        x
+      </button>
 
+      {/* Image de profil et Nom */}
+      <div className="flex flex-col items-center mb-4">
+        <img
+          src={selectedEtudiant.image}
+          
+          className="object-cover w-[220px] h-[220px] rounded-full border"
+        />
+        {/* <h2 className="text-lg font-bold mt-2">{selectedEtudiant.nom} {selectedEtudiant.prenom}</h2>
+        <p className="text-gray-500 text-sm">{selectedEtudiant.email}</p> */}
+      </div>
+
+      {/* Informations détaillées en colonnes */}
+      <div className="grid grid-cols-2 gap-4 text-lg border-t pt-4">
+      <p><strong>Nom :</strong> {selectedEtudiant.nom}</p>
+      <p><strong>Prénom :</strong> {selectedEtudiant.prenom}</p>
+      <p><strong>Email :</strong> {selectedEtudiant.email}</p>
+        <p><strong>Sexe :</strong> {selectedEtudiant.sexe}</p>
+        <p><strong>Téléphone :</strong> {selectedEtudiant.tel || "Non renseigné"}</p>
+        <p><strong>Adresse :</strong> {selectedEtudiant.adresse || "Non renseignée"}</p>
+        <p><strong>Matricule :</strong> {selectedEtudiant.matricule}</p>
+        <p><strong>Filière :</strong> {selectedEtudiant.filiere.nom}</p>
+        <p>
+           <strong>Date d'inscription :</strong>{" "}
+            {new Date(selectedEtudiant.date_inscription).toLocaleDateString("fr-FR")}
+        </p>
+        <p>
+           <strong>Date de naissance :</strong>{" "}
+            {new Date(selectedEtudiant.date_naissance).toLocaleDateString("fr-FR")}
+        </p>
+
+      </div>
+    </div>
+  </Modal>
+)}
       {/* Modal d'ajout d'un étudiant */}
       {showForm && (
        <Modal onClose={() => setShowForm(false)}>

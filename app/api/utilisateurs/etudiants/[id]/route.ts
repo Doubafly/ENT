@@ -67,29 +67,56 @@ export async function PUT(req: NextRequest) {
       id_filiere,
     } = await req.json();
 
-    // Validation des données
-    if (
-      !nom?.trim() ||
-      !prenom?.trim() ||
-      !email?.trim() ||
-      !sexe?.trim() ||
-      !mot_de_passe ||
-      !telephone?.trim() ||
-      !adresse?.trim() ||
-      !profil?.trim() ||
-      !matricule?.trim() ||
-      !date_naissance ||
-      !date_inscription ||
-      !id_filiere
-    ) {
+    // Afficher les données reçues
+    console.log("Données reçues:", {
+      nom,
+      prenom,
+      email,
+      sexe,
+      mot_de_passe,
+      telephone,
+      adresse,
+      profil,
+      matricule,
+      date_naissance,
+      date_inscription,
+      id_filiere,
+    });
+
+    // Vérifier les champs manquants
+    const champsManquants = [];
+    if (!nom?.trim()) champsManquants.push("nom");
+    if (!prenom?.trim()) champsManquants.push("prenom");
+    if (!email?.trim()) champsManquants.push("email");
+    if (!sexe?.trim()) champsManquants.push("sexe");
+    if (!telephone?.trim()) champsManquants.push("telephone");
+    if (!adresse?.trim()) champsManquants.push("adresse");
+    if (!profil?.trim()) champsManquants.push("profil");
+    if (!matricule?.trim()) champsManquants.push("matricule");
+    if (!date_naissance) champsManquants.push("date_naissance");
+    if (!date_inscription) champsManquants.push("date_inscription");
+    if (!id_filiere) champsManquants.push("id_filiere");
+
+    // Afficher les champs manquants
+    if (champsManquants.length > 0) {
+      console.error("Champs manquants :", champsManquants.join(", "));
       return NextResponse.json(
-        { message: "Veuillez remplir tous les champs correctement" },
+        {
+          message: "Veuillez remplir tous les champs correctement",
+          champsManquants,
+        },
         { status: 400 }
       );
     }
 
-    // Hash du mot de passe
-    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+    // Vérifier que le mot de passe n'est pas vide
+    let hashPass = mot_de_passe;
+    if (mot_de_passe && mot_de_passe.trim() !== "") {
+      hashPass = await bcrypt.hash(mot_de_passe, 10);
+    } else {
+      // Si le mot de passe est vide, ne pas tenter de le hacher
+      console.warn("Mot de passe vide, le mot de passe ne sera pas modifié.");
+    }
 
     // Mettre à jour l'étudiant et l'utilisateur associé
     const updatedEtudiant = await prisma.etudiants.update({
@@ -107,14 +134,17 @@ export async function PUT(req: NextRequest) {
             prenom,
             email,
             sexe,
-            mot_de_passe: hashPass,
+            mot_de_passe: hashPass === mot_de_passe ? undefined : hashPass, // Ne pas modifier le mot de passe si vide
             telephone,
             adresse,
-            profil,
+            profil: profil?.trim() ? profil : undefined, // Ne pas forcer un profil vide
           },
         },
       },
     });
+
+    // Afficher les données de l'étudiant mis à jour
+    console.log("Étudiant mis à jour:", updatedEtudiant);
 
     return NextResponse.json(
       {
@@ -131,6 +161,7 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
+
 
 // DELETE : Supprimer un étudiant
 export async function DELETE(request: NextRequest) {

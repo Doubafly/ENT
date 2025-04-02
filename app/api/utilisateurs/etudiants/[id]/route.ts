@@ -134,7 +134,7 @@ export async function PUT(req: NextRequest) {
             prenom,
             email,
             sexe,
-            mot_de_passe: hashPass === mot_de_passe ? undefined : hashPass, // Ne pas modifier le mot de passe si vide
+            mot_de_passe: hashPass, // Ne pas modifier le mot de passe si vide
             telephone,
             adresse,
             profil: profil?.trim() ? profil : undefined, // Ne pas forcer un profil vide
@@ -161,7 +161,6 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-
 
 // DELETE : Supprimer un étudiant
 export async function DELETE(request: NextRequest) {

@@ -60,66 +60,96 @@ export async function PUT(req: NextRequest) {
       mot_de_passe,
       telephone,
       adresse,
-      profil,
+      profil = "/profils/default.jpg",
       matricule,
       date_naissance,
       date_inscription,
       id_filiere,
     } = await req.json();
 
-    // Validation des données
-    if (
-      !nom?.trim() ||
-      !prenom?.trim() ||
-      !email?.trim() ||
-      !sexe?.trim() ||
-      !mot_de_passe ||
-      !telephone?.trim() ||
-      !adresse?.trim() ||
-      !profil?.trim() ||
-      !matricule?.trim() ||
-      !date_naissance ||
-      !date_inscription ||
-      !id_filiere
-    ) {
+    // Afficher les données reçues
+    console.log("Données reçues:", {
+      nom,
+      prenom,
+      email,
+      sexe,
+      mot_de_passe,
+      telephone,
+      adresse,
+      profil,
+      matricule,
+      date_naissance,
+      date_inscription,
+      id_filiere,
+    });
+
+    // Vérifier les champs manquants
+    const champsManquants = [];
+    if (!nom?.trim()) champsManquants.push("nom");
+    if (!prenom?.trim()) champsManquants.push("prenom");
+    if (!email?.trim()) champsManquants.push("email");
+    if (!sexe?.trim()) champsManquants.push("sexe");
+    if (!telephone?.trim()) champsManquants.push("telephone");
+    if (!adresse?.trim()) champsManquants.push("adresse");
+    if (!profil?.trim()) champsManquants.push("profil");
+    if (!matricule?.trim()) champsManquants.push("matricule");
+    if (!date_naissance) champsManquants.push("date_naissance");
+    if (!date_inscription) champsManquants.push("date_inscription");
+    if (!id_filiere) champsManquants.push("id_filiere");
+
+    // Afficher les champs manquants
+    if (champsManquants.length > 0) {
+      console.error("Champs manquants :", champsManquants.join(", "));
       return NextResponse.json(
-        { message: "Veuillez remplir tous les champs correctement" },
+        {
+          message: "Veuillez remplir tous les champs correctement",
+          champsManquants,
+        },
         { status: 400 }
       );
     }
 
-    // Hash du mot de passe
-    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+    // Vérifier que le mot de passe n'est pas vide
+    let hashPass = mot_de_passe;
+    if (mot_de_passe && mot_de_passe.trim() !== "") {
+      hashPass = await bcrypt.hash(mot_de_passe, 10);
+    } else {
+      // Si le mot de passe est vide, ne pas tenter de le hacher
+      console.warn("Mot de passe vide, le mot de passe ne sera pas modifié.");
+    }
 
-    // Mettre à jour l'étudiant et l'utilisateur associé
-    const updatedEtudiant = await prisma.etudiants.update({
-      where: {
-        id_utilisateur: id ? parseInt(id) : 0,
+    const idFiliereInt = parseInt(id_filiere);
+
+    await prisma.utilisateurs.update({
+      where: { id_utilisateur: id ? parseInt(id) : 0 },
+      data: {
+        nom: nom?.trim() || undefined,
+        prenom: prenom?.trim() || undefined,
+        mot_de_passe: hashPass === "" ? undefined : hashPass,
+        email: email?.trim() || undefined,
+        sexe: sexe?.trim() || undefined,
+        telephone: telephone?.trim() || undefined,
+        adresse: adresse?.trim() || undefined,
+        profil: profil?.trim() || undefined,
       },
+    });
+
+    // Mise à jour de l'étudiant
+    const updatedEtudiant = await prisma.etudiants.update({
+      where: { id_utilisateur: id ? parseInt(id) : 0 },
       data: {
         matricule,
         date_naissance: new Date(date_naissance),
         date_inscription: new Date(date_inscription),
-        id_filiere,
-        utilisateur: {
-          update: {
-            nom,
-            prenom,
-            email,
-            sexe,
-            mot_de_passe: hashPass,
-            telephone,
-            adresse,
-            profil,
-          },
-        },
+        id_filiere: idFiliereInt,
       },
     });
+    // Afficher les données de l'étudiant mis à jour
+    console.log("Étudiant mis à jour:");
 
     return NextResponse.json(
       {
         message: "Étudiant modifié avec succès",
-        updatedEtudiant,
       },
       { status: 200 }
     );

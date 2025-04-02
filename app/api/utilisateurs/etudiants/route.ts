@@ -62,6 +62,17 @@ export async function GET() {
 // POST : Créer un nouvel étudiant
 export async function POST(request: NextRequest) {
   try {
+    // Vérifier si le body est valide
+    const body = await request.json();
+    if (!body) {
+      return NextResponse.json(
+        { message: "Le corps de la requête est vide ou invalide" },
+        { status: 400 }
+      );
+    }
+
+    console.log("Données reçues :", body);
+
     const {
       nom,
       prenom,
@@ -74,7 +85,16 @@ export async function POST(request: NextRequest) {
       date_naissance,
       date_inscription,
       id_filiere,
-    } = await request.json();
+    } = body;
+
+    // Convertir id_filiere en entier
+    const filiereId = parseInt(id_filiere, 10);
+    if (isNaN(filiereId)) {
+      return NextResponse.json(
+        { message: "id_filiere doit être un nombre valide" },
+        { status: 400 }
+      );
+    }
 
     // Validation des données
     if (
@@ -96,8 +116,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier si l'email ou le matricule existe déjà
-    const existingUser = await prisma.utilisateurs.findUnique({
+    // Vérifier si l'email ou le matricule existent déjà
+    const existingUser = await prisma.utilisateurs.findFirst({
       where: { email },
     });
     if (existingUser) {
@@ -107,7 +127,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingMatricule = await prisma.etudiants.findUnique({
+    const existingMatricule = await prisma.etudiants.findFirst({
       where: { matricule },
     });
     if (existingMatricule) {
@@ -141,7 +161,7 @@ export async function POST(request: NextRequest) {
         matricule,
         date_naissance: new Date(date_naissance),
         date_inscription: new Date(date_inscription),
-        id_filiere,
+        id_filiere ,
         id_utilisateur: utilisateur.id_utilisateur,
       },
     });

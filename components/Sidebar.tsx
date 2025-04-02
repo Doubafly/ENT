@@ -41,10 +41,9 @@ const Sidebar = () => {
       ? EtudiantLinks
       : [];
   const pathname = usePathname();
-
   return (
     <section className="sidebar">
-      <nav className="flex flex-col gap-2">
+      <nav className="flex flex-col gap-2 h-full mb-3">
         <Link href="/" className="mb-6 cursor-pointer items-center gap-2">
           <Image
             src="/logo.ico"
@@ -55,36 +54,84 @@ const Sidebar = () => {
           />
           <h1 className="sidebar-logo">TECHNOLAB ISTA </h1>
         </Link>
-        {links.map((items) => {
-          const isActive =
-            pathname === items.path ||
-            (pathname && pathname.startsWith(`${users.type}/${items.path}/`));
-          return (
-            <Link
-              href={items.path}
-              key={items.title}
-              className={cn(
-                "sidebar-link",
-                { "bg-bank-gradient": isActive },
-                items.title === "Profil" ? "mt-10" : ""
-              )}
-            >
-              <div className="relative size-4">
-                <Image
-                  src={items.image}
-                  alt={items.title}
-                  width={24}
-                  height={24}
-                  className={cn({ "brightness-[3] invert-0": isActive })}
-                ></Image>
-              </div>
-              <p className={cn("sidebar-label", { "!text-white": isActive })}>
-                {items.title}
-              </p>
-            </Link>
-          );
-        })}
-        USER
+        <div className="flex flex-col gap-2 flex-grow">
+          {links
+            .filter(
+              (items) =>
+                items.title !== "Profil" &&
+                items.title !== "parametre" &&
+                items.title !== "Déconnexion"
+            )
+            .map((items) => {
+              const isActive =
+                pathname === items.path ||
+                (pathname &&
+                  pathname.startsWith(`${users.type}/${items.path}/`));
+              return (
+                <Link
+                  href={items.path}
+                  key={items.title}
+                  className={cn("sidebar-link", {
+                    "bg-bank-gradient": isActive,
+                  })}
+                >
+                  <div className="relative size-4">
+                    <Image
+                      src={items.image}
+                      alt={items.title}
+                      width={24}
+                      height={24}
+                      className={cn({ "brightness-[3] invert-0": isActive })}
+                    ></Image>
+                  </div>
+                  <p
+                    className={cn("sidebar-label", { "!text-white": isActive })}
+                  >
+                    {items.title}
+                  </p>
+                </Link>
+              );
+            })}
+        </div>
+        <div className="mt-auto">
+          {links
+            .filter(
+              (items) =>
+                items.title === "Profil" ||
+                items.title === "parametre" ||
+                items.title === "Déconnexion"
+            )
+            .map((items) => {
+              const isActive =
+                pathname === items.path ||
+                (pathname &&
+                  pathname.startsWith(`${users.type}/${items.path}/`));
+              return (
+                <Link
+                  href={items.path}
+                  key={items.title}
+                  className={cn("sidebar-link", {
+                    "bg-bank-gradient": isActive,
+                  })}
+                >
+                  <div className="relative size-4">
+                    <Image
+                      src={items.image}
+                      alt={items.title}
+                      width={24}
+                      height={24}
+                      className={cn({ "brightness-[3] invert-0": isActive })}
+                    ></Image>
+                  </div>
+                  <p
+                    className={cn("sidebar-label", { "!text-white": isActive })}
+                  >
+                    {items.title}
+                  </p>
+                </Link>
+              );
+            })}
+        </div>
       </nav>
     </section>
   );

@@ -60,7 +60,7 @@ export async function PUT(req: NextRequest) {
       mot_de_passe,
       telephone,
       adresse,
-      profil,
+      profil = "/profils/default.jpg",
       matricule,
       date_naissance,
       date_inscription,
@@ -118,38 +118,38 @@ export async function PUT(req: NextRequest) {
       console.warn("Mot de passe vide, le mot de passe ne sera pas modifié.");
     }
 
-    // Mettre à jour l'étudiant et l'utilisateur associé
-    const updatedEtudiant = await prisma.etudiants.update({
-      where: {
-        id_utilisateur: id ? parseInt(id) : 0,
+    const idFiliereInt = parseInt(id_filiere);
+
+    await prisma.utilisateurs.update({
+      where: { id_utilisateur: id ? parseInt(id) : 0 },
+      data: {
+        nom: nom?.trim() || undefined,
+        prenom: prenom?.trim() || undefined,
+        mot_de_passe: hashPass === "" ? undefined : hashPass,
+        email: email?.trim() || undefined,
+        sexe: sexe?.trim() || undefined,
+        telephone: telephone?.trim() || undefined,
+        adresse: adresse?.trim() || undefined,
+        profil: profil?.trim() || undefined,
       },
+    });
+
+    // Mise à jour de l'étudiant
+    const updatedEtudiant = await prisma.etudiants.update({
+      where: { id_utilisateur: id ? parseInt(id) : 0 },
       data: {
         matricule,
         date_naissance: new Date(date_naissance),
         date_inscription: new Date(date_inscription),
-        id_filiere,
-        utilisateur: {
-          update: {
-            nom,
-            prenom,
-            email,
-            sexe,
-            mot_de_passe: hashPass, // Ne pas modifier le mot de passe si vide
-            telephone,
-            adresse,
-            profil: profil?.trim() ? profil : undefined, // Ne pas forcer un profil vide
-          },
-        },
+        id_filiere: idFiliereInt,
       },
     });
-
     // Afficher les données de l'étudiant mis à jour
-    console.log("Étudiant mis à jour:", updatedEtudiant);
+    console.log("Étudiant mis à jour:");
 
     return NextResponse.json(
       {
         message: "Étudiant modifié avec succès",
-        updatedEtudiant,
       },
       { status: 200 }
     );

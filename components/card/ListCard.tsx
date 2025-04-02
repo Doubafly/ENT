@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal";
+import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Import du modal pour les enseignants
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
+  specialite?: string;
   id_utilisateur: number;
   id: number;
   image: string;
@@ -27,12 +29,21 @@ export interface User {
 // Définition de l'interface des props pour le composant UserCard
 interface UserCardProps {
   item: User;
-  onEdit: (user: User) => void;
+  type: "etudiant" | "enseignant"; // Ajout d'un type pour différencier
+  onrecharge: () => void;
+  onEdit: (id_utilisateur: number, updatedData: any) => void;
   onDelete: (user: User) => void;
   onSelect: (user: User) => void;
 }
 
-const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
+const UserCard = ({
+  item,
+  type,
+  onEdit,
+  onDelete,
+  onSelect,
+  onrecharge,
+}: UserCardProps) => {
   // États pour gérer la visibilité des modaux
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false); // Modal de mise à jour
 
@@ -44,12 +55,14 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
   // Fonction qui ferme le modal de mise à jour
   const handleCloseModal = () => {
     setIsUpdateModalOpen(false); // Ferme le modal de mise à jour
+    onrecharge();
   };
 
   // Fonction asynchrone pour gérer la mise à jour des informations utilisateur
   const handleUpdate = async (id: number, updatedData: any): Promise<void> => {
     console.log("Mise à jour de l'utilisateur :", id, updatedData); // Affiche l'id et les données mises à jour
-    onEdit({ ...item, ...updatedData }); // Appelle la fonction de mise à jour
+    // Soumettre les données mises à jour
+    await onEdit(id, updatedData); // Appelle la fonction de mise à jour
     handleCloseModal(); // Ferme le modal après la mise à jour
   };
   const formatDate = (date: string | Date): string => {
@@ -60,7 +73,6 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
-
   };
   return (
     <div
@@ -75,7 +87,7 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">
         <div className="w-[102px] h-[115px] relative rounded-full overflow-hidden border">
           <Image
-           src={item.image || "/profils/default.jpg"}
+            src={item.image || "/profils/default.jpg"}
             alt={`Photo de ${item.nom}`}
             fill
             sizes="100px"
@@ -96,14 +108,13 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
             {item.adresse}
           </p>
           <p className="flex gap-1 items-center text-sm">
-            
             <Image
               src="/icons/calendar.png"
               alt="Date"
               width={12}
               height={12}
             />
-            { formatDate(item.date_naissance)} {/* Utilisation de formatDate */}
+            {formatDate(item.date_naissance)} {/* Utilisation de formatDate */}
           </p>
           <p className="flex gap-1 items-center text-sm">
             <Image
@@ -142,42 +153,57 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       {/* Modal de mise à jour des informations utilisateur */}
       {isUpdateModalOpen && (
         <>
-        {console.log("Date de naissance :", item.date_naissance)}
-        {console.log("Date d'inscription :", item.date_inscription)}
-        
-        <UpdateEtudiantModal
-          etudiant={{
-            id: item.id,
-            id_utilisateur: item.id_utilisateur,
-            utilisateurs: {
-              nom: item.nom,
-              prenom: item.prenom,
-              email: item.email,
-              telephone: item.tel,
-              adresse: item.adresse,
-              profil: item.image,
-              sexe: item.sexe,
-             
-            },
-            matricule: item.matricule, // Added matricule property
-            filieres: {
-              id_filiere: item.filiere.id_filiere,
-              nom: item.filiere.nom,
-            },
-            date_naissance: formatDate(item.date_naissance), // Formatez ici
-            date_inscription: formatDate(item.date_inscription), // Formatez ici
-          }}
-          
-          onClose={handleCloseModal} // Ferme le modal de mise à jour
-          onUpdate={handleUpdate} // Appelle la fonction de mise à jour des données
-        />
+          {type === "etudiant" ? (
+            <UpdateEtudiantModal
+              etudiant={{
+                id: item.id,
+                id_utilisateur: item.id_utilisateur,
+                utilisateurs: {
+                  nom: item.nom,
+                  prenom: item.prenom,
+                  email: item.email,
+                  telephone: item.tel,
+                  adresse: item.adresse,
+                  profil: item.image,
+                  sexe: item.sexe,
+                },
+                matricule: item.matricule, // Added matricule property
+                filieres: {
+                  id_filiere: item.filiere.id_filiere,
+                  nom: item.filiere.nom,
+                },
+                date_naissance: formatDate(item.date_naissance), // Formatez ici
+                date_inscription: formatDate(item.date_inscription), // Formatez ici
+              }}
+              onClose={handleCloseModal} // Ferme le modal de mise à jour
+              onUpdate={handleUpdate} // Appelle la fonction de mise à jour des données
+            />
+          ) : (
+            <UpdateEnseignantModal
+              enseignant={{
+                id: item.id,
+                id_utilisateur: item.id_utilisateur,
+                utilisateurs: {
+                  nom: item.nom,
+                  prenom: item.prenom,
+                  email: item.email,
+                  telephone: item.tel,
+                  adresse: item.adresse,
+                  profil: item.image,
+                  sexe: item.sexe,
+                },
+                specialite: item.specialite || "",
+                date_naissance: formatDate(item.date_naissance),
+                date_inscription: formatDate(item.date_inscription),
+              }}
+              onClose={handleCloseModal}
+              onUpdate={handleUpdate}
+            />
+          )}
         </>
       )}
-      
     </div>
   );
 };
 
 export default UserCard;
-
-

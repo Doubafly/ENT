@@ -1,115 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-type Filiere = {
-  id_filiere: number;
-  nom: string;
-};
-
-type UpdateEtudiantModalProps = {
-  etudiant: {
-    id: number;
-    id_utilisateur: number;
-    utilisateurs: {
-      nom: string;
-      prenom: string;
-      email: string;
-      sexe: string;
-      telephone: string;
-      adresse: string;
-      profil: string;
-    };
-    matricule: string;
-    date_naissance: string;
-    date_inscription: string;
-    filieres: {
-      id_filiere: number;
-      nom: string;
-    };
-  };
-  onClose: () => void;
-  onUpdate: (id_utilisateur: number, updatedData: any) => Promise<void>;
-};
-
-export default function UpdateEtudiantModal({
-  etudiant,
+export default function UpdateEnseignantModal({
+  enseignant,
   onClose,
   onUpdate,
-}: UpdateEtudiantModalProps) {
+}: {
+  enseignant: any;
+  onClose: () => void;
+  onUpdate: (id_utilisateur: number, updatedData: any) => void;
+}) {
   const [formData, setFormData] = useState({
-    nom: "",
-    prenom: "",
-    email: "",
-    sexe: "",
-    telephone: "",
-    adresse: "",
-    profil: "/profils/default.jpg",
-    matricule: "",
-    date_naissance: "",
-    date_inscription: "",
-    id_filiere: 0,
-    mot_de_passe: "",
+    nom: enseignant.nom || "",
+    prenom: enseignant.prenom || "",
+    matricule: enseignant.matricule,
+    email: enseignant.email || "",
+    telephone: enseignant.tel || "",
+    adresse: enseignant.adresse || "",
+    profil: enseignant.profil,
+    sexe: enseignant.sexe || "",
+    date_inscription: enseignant.date_inscription,
+    mot_de_passe: enseignant.mot_de_passe,
+    specialite: enseignant.specialite || "",
+    date_naissance: enseignant.date_naissance || "",
   });
-
-  const [filieres, setFilieres] = useState<Filiere[]>([]);
-  const [idFiliere, setIdFiliere] = useState(0);
-
-  // Fonction pour formater une date en yyyy-MM-dd (nécessaire pour l'input date)
-  const formatDateToInput = (date: string) => {
-    if (!date) return "";
-
-    if (date.includes("-") && date.length === 10 && date[4] === "-") {
-      return date; // Format déjà correct
-    }
-
-    const [day, month, year] = date.split("-");
-    return `${year}-${month}-${day}`;
-  };
-
-  useEffect(() => {
-    // Mise à jour des données de l'étudiant à partir de la prop `etudiant`
-    if (etudiant) {
-      setFormData({
-        nom: etudiant.utilisateurs.nom,
-        prenom: etudiant.utilisateurs.prenom,
-        email: etudiant.utilisateurs.email,
-        sexe: etudiant.utilisateurs.sexe === "M" ? "Homme" : "Femme",
-        telephone: etudiant.utilisateurs.telephone,
-        adresse: etudiant.utilisateurs.adresse,
-        profil: etudiant.utilisateurs.profil || "/profils/default.jpg",
-        matricule: etudiant.matricule,
-        date_naissance: formatDateToInput(etudiant.date_naissance),
-        date_inscription: formatDateToInput(etudiant.date_inscription),
-        id_filiere: etudiant.filieres?.id_filiere || 0,
-        mot_de_passe: "",
-      });
-      setIdFiliere(etudiant.filieres?.id_filiere || 0);
-    }
-  }, [etudiant]);
-
-  // Récupérer les filières
-  useEffect(() => {
-    const fetchFilieres = async () => {
-      try {
-        const response = await fetch("/api/filieres");
-        const data = await response.json();
-        setFilieres(data.filieres);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des filières :", error);
-      }
-    };
-    fetchFilieres();
-  }, []);
+  console.log(formData);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "filiere" ? Number(value) : value, // Convertir la filière en nombre
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,58 +49,8 @@ export default function UpdateEtudiantModal({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    try {
-      let profilPath = formData.profil;
-
-      // Vérifiez si une nouvelle image a été sélectionnée
-      if (formData.profil.startsWith("data:image")) {
-        const formDataImage = new FormData();
-        const blob = await fetch(formData.profil).then((res) => res.blob());
-        const file = new File([blob], `${etudiant.id_utilisateur}.jpg`, {
-          type: blob.type,
-        });
-
-        formDataImage.append("image", file);
-        formDataImage.append("userId", etudiant.id_utilisateur.toString());
-
-        // Envoyer l'image à l'API
-        const response = await fetch("/api/files/uploads", {
-          method: "POST",
-          body: formDataImage,
-        });
-
-        if (!response.ok) {
-          throw new Error("Erreur lors du téléchargement de l'image");
-        }
-
-        const data = await response.json();
-        profilPath = `${data.filePath}?t=${new Date().getTime()}`; // Ajoutez un timestamp pour éviter le cache
-      }
-
-      // Préparer les données avant soumission
-      const updatedData: Partial<typeof formData> = {
-        ...formData,
-        profil: profilPath, // Utiliser le chemin mis à jour
-        id_filiere: idFiliere, // Ajoute la filière sélectionnée
-        sexe: formData.sexe === "Homme" ? "M" : "F",
-        date_naissance: formData.date_naissance
-          ? formatDateToInput(formData.date_naissance)
-          : "", // Formatage de la date
-        date_inscription: formData.date_inscription
-          ? formatDateToInput(formData.date_inscription)
-          : "", // Formatage de la date
-      };
-
-      // Soumettre les données mises à jour
-      await onUpdate(etudiant.id, updatedData);
-
-      // Fermer la modal après mise à jour
-      onClose();
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour :", error);
-      alert("Une erreur est survenue lors de la mise à jour.");
-    }
+    onUpdate(enseignant.id_utilisateur, formData);
+    onClose();
   };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -187,7 +59,7 @@ export default function UpdateEtudiantModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold mb-4 text-center">
-          Modifier l'étudiant
+          Modifier l'enseigants
         </h2>
         <form
           onSubmit={handleSubmit}
@@ -359,7 +231,7 @@ export default function UpdateEtudiantModal({
               </div>
             </div>
 
-            {/* Filière */}
+            {/* Filière
             <div>
               <label className="block font-medium">Filière</label>
               <select
@@ -376,7 +248,7 @@ export default function UpdateEtudiantModal({
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
           </div>
 
           {/* Boutons */}

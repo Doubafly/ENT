@@ -1,14 +1,13 @@
+import { FilieresNiveau } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
-import { FilieresNiveau } from "@prisma/client";
 
 // GET : Récupérer toutes les filières avec leurs relations complètes
 export async function GET(request: NextRequest) {
   try {
     const id = request.nextUrl.pathname.split("/").pop();
-    
+
     const filieres = await prisma.filieres.findMany({
-      where: id ? { id_filiere: parseInt(id) } : {},
       include: {
         annexe: true,
         etudiants: {
@@ -17,10 +16,10 @@ export async function GET(request: NextRequest) {
               select: {
                 nom: true,
                 prenom: true,
-                email: true
-              }
-            }
-          }
+                email: true,
+              },
+            },
+          },
         },
         filiere_module: {
           include: {
@@ -29,14 +28,14 @@ export async function GET(request: NextRequest) {
               include: {
                 enseignant: {
                   include: {
-                    utilisateur: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    utilisateur: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (id && (!filieres || filieres.length === 0)) {
@@ -47,7 +46,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: id ? "Filière récupérée" : "Filières récupérées", data: filieres },
+      {
+        message: id ? "Filière récupérée" : "Filières récupérées",
+        data: filieres,
+      },
       { status: 200 }
     );
   } catch (error: any) {
@@ -62,7 +64,8 @@ export async function GET(request: NextRequest) {
 // POST : Créer une nouvelle filière avec validation complète
 export async function POST(request: NextRequest) {
   try {
-    const { nom, description, niveau, montant_annuel, id_annexe } = await request.json();
+    const { nom, description, niveau, montant_annuel, id_annexe } =
+      await request.json();
 
     // Validation renforcée
     if (!nom || !niveau || montant_annuel === undefined) {
@@ -80,7 +83,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérification de l'unicité
-    const filiereExistante = await prisma.filieres.findFirst({ where: { nom } });
+    const filiereExistante = await prisma.filieres.findFirst({
+      where: { nom },
+    });
     if (filiereExistante) {
       return NextResponse.json(
         { message: "Une filière avec ce nom existe déjà" },
@@ -90,7 +95,9 @@ export async function POST(request: NextRequest) {
 
     // Vérification de l'annexe si fournie
     if (id_annexe) {
-      const annexeExistante = await prisma.annexes.findUnique({ where: { id_annexe } });
+      const annexeExistante = await prisma.annexes.findUnique({
+        where: { id_annexe },
+      });
       if (!annexeExistante) {
         return NextResponse.json(
           { message: "L'annexe spécifiée n'existe pas" },
@@ -106,11 +113,11 @@ export async function POST(request: NextRequest) {
         description: description || null,
         niveau,
         montant_annuel,
-        id_annexe: id_annexe || null
+        id_annexe: id_annexe || null,
       },
       include: {
-        annexe: true
-      }
+        annexe: true,
+      },
     });
 
     return NextResponse.json(
@@ -130,7 +137,8 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const id = request.nextUrl.pathname.split("/").pop();
-    const { nom, description, niveau, montant_annuel, id_annexe } = await request.json();
+    const { nom, description, niveau, montant_annuel, id_annexe } =
+      await request.json();
 
     // Validation de base
     if (!id || isNaN(parseInt(id))) {
@@ -142,7 +150,7 @@ export async function PUT(request: NextRequest) {
 
     // Vérification de l'existence
     const filiereExistante = await prisma.filieres.findUnique({
-      where: { id_filiere: parseInt(id) }
+      where: { id_filiere: parseInt(id) },
     });
 
     if (!filiereExistante) {
@@ -155,7 +163,7 @@ export async function PUT(request: NextRequest) {
     // Vérification de l'unicité si le nom change
     if (nom && nom !== filiereExistante.nom) {
       const nomDejaUtilise = await prisma.filieres.findFirst({
-        where: { nom, NOT: { id_filiere: parseInt(id) } }
+        where: { nom, NOT: { id_filiere: parseInt(id) } },
       });
       if (nomDejaUtilise) {
         return NextResponse.json(
@@ -168,7 +176,7 @@ export async function PUT(request: NextRequest) {
     // Vérification de l'annexe
     if (id_annexe) {
       const annexeExistante = await prisma.annexes.findUnique({
-        where: { id_annexe }
+        where: { id_annexe },
       });
       if (!annexeExistante) {
         return NextResponse.json(
@@ -183,14 +191,21 @@ export async function PUT(request: NextRequest) {
       where: { id_filiere: parseInt(id) },
       data: {
         nom: nom || filiereExistante.nom,
-        description: description !== undefined ? description : filiereExistante.description,
+        description:
+          description !== undefined
+            ? description
+            : filiereExistante.description,
         niveau: niveau || filiereExistante.niveau,
-        montant_annuel: montant_annuel !== undefined ? montant_annuel : filiereExistante.montant_annuel,
-        id_annexe: id_annexe !== undefined ? id_annexe : filiereExistante.id_annexe
+        montant_annuel:
+          montant_annuel !== undefined
+            ? montant_annuel
+            : filiereExistante.montant_annuel,
+        id_annexe:
+          id_annexe !== undefined ? id_annexe : filiereExistante.id_annexe,
       },
       include: {
-        annexe: true
-      }
+        annexe: true,
+      },
     });
 
     return NextResponse.json(
@@ -224,8 +239,8 @@ export async function DELETE(request: NextRequest) {
       where: { id_filiere: parseInt(id) },
       include: {
         etudiants: { select: { id: true } },
-        filiere_module: { select: { id_filiere_module: true } }
-      }
+        filiere_module: { select: { id_filiere_module: true } },
+      },
     });
 
     if (!filiereExistante) {
@@ -238,9 +253,9 @@ export async function DELETE(request: NextRequest) {
     // Vérification des dépendances
     if (filiereExistante.etudiants.length > 0) {
       return NextResponse.json(
-        { 
+        {
           message: "Impossible de supprimer: des étudiants sont inscrits",
-          count: filiereExistante.etudiants.length
+          count: filiereExistante.etudiants.length,
         },
         { status: 400 }
       );
@@ -248,9 +263,9 @@ export async function DELETE(request: NextRequest) {
 
     if (filiereExistante.filiere_module.length > 0) {
       return NextResponse.json(
-        { 
+        {
           message: "Impossible de supprimer: des modules sont associés",
-          count: filiereExistante.filiere_module.length
+          count: filiereExistante.filiere_module.length,
         },
         { status: 400 }
       );
@@ -258,7 +273,7 @@ export async function DELETE(request: NextRequest) {
 
     // Suppression
     await prisma.filieres.delete({
-      where: { id_filiere: parseInt(id) }
+      where: { id_filiere: parseInt(id) },
     });
 
     return NextResponse.json(

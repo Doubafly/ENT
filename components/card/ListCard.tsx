@@ -1,21 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
 import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal";
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
   id: number;
-  image: string;
-  nom: string;
-  prenom: string;
-  email: string;
-  adresse: string;
-  date: string;
-  tel: string;
-  filiere: string;
-  matricule: string;
+  matricule: string; // Matricule de l'utilisateur
+  id_utilisateur: number; // ID de l'utilisateur
+  date_naissance: string;
+  date_inscription: string;
+  id_filiere: number;
+  utilisateur: {
+    nom: string; // Nom de l'utilisateur
+    prenom: string; // Prénom de l'utilisateur
+    email: string; // Email de l'utilisateur
+    profil: string; // URL de la photo de profil
+    adresse: string; // Adresse de l'utilisateur
+    telephone: string; // Numéro de téléphone de l'utilisateur
+  };
 }
 
 // Définition de l'interface des props pour le composant UserCard
@@ -32,7 +36,6 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null); // Utilisateur à supprimer
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false); // Modal de mise à jour
   const [selectedUser, setSelectedUser] = useState<User | null>(null); // Utilisateur sélectionné pour la mise à jour
-
   // Fonction qui ouvre le modal de confirmation de suppression
   const handleDeleteClick = (user: User) => {
     setUserToDelete(user); // Stocke l'utilisateur à supprimer
@@ -78,18 +81,18 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">
         <div className="w-[100px] h-[100px] relative rounded-full overflow-hidden border">
           <Image
-            src={item.image}
-            alt={`Photo de ${item.nom}`}
+            src={item.utilisateur?.profil || "/profils/default.jpg"} // Utilise une image par défaut si pas de profil
+            alt={`Photo de ${item.utilisateur.nom}`}
             fill
             sizes="100px"
             className="object-cover w-full h-full"
           />
         </div>
         <h3 className="text-center text-sm font-semibold mt-2">
-          {item.nom} {item.prenom}{" "}
+          {item.utilisateur.nom} {item.utilisateur.prenom}{" "}
           {/* Affiche le nom et prénom de l'utilisateur */}
         </h3>
-        <p className="text-gray-500 text-xs">{item.email}</p>{" "}
+        <p className="text-gray-500 text-xs">{item.utilisateur.email}</p>{" "}
         {/* Affiche l'email de l'utilisateur */}
       </div>
 
@@ -98,7 +101,8 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
         <div className="flex-1 flex flex-col gap-2 text-xs text-gray-700">
           <p className="flex gap-1 items-center">
             <Image src="/icons/book.png" alt="Adresse" width={12} height={12} />
-            {item.adresse} {/* Affiche l'adresse de l'utilisateur */}
+            {item.utilisateur.adresse}{" "}
+            {/* Affiche l'adresse de l'utilisateur */}
           </p>
           <p className="flex gap-1 items-center">
             <Image
@@ -107,7 +111,8 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
               width={12}
               height={12}
             />
-            {item.date} {/* Affiche la date associée à l'utilisateur */}
+            {item.date_naissance}{" "}
+            {/* Affiche la date associée à l'utilisateur */}
           </p>
           <p className="flex gap-1 items-center">
             <Image
@@ -116,7 +121,8 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
               width={12}
               height={12}
             />
-            {item.tel} {/* Affiche le numéro de téléphone de l'utilisateur */}
+            {item.utilisateur.telephone}{" "}
+            {/* Affiche le numéro de téléphone de l'utilisateur */}
           </p>
         </div>
 
@@ -177,15 +183,15 @@ const UserCard = ({ item, onEdit, onDelete, onSelect }: UserCardProps) => {
           etudiant={{
             id: selectedUser.id, // Passe l'id de l'utilisateur pour la mise à jour
             utilisateurs: {
-              nom: selectedUser.nom,
-              prenom: selectedUser.prenom,
-              email: selectedUser.email,
-              telephone: selectedUser.tel,
-              adresse: selectedUser.adresse,
-              profil: selectedUser.image,
+              nom: selectedUser.utilisateur.nom,
+              prenom: selectedUser.utilisateur.prenom,
+              email: selectedUser.utilisateur.email,
+              telephone: selectedUser.utilisateur.telephone,
+              adresse: selectedUser.utilisateur.adresse,
+              profil: selectedUser.utilisateur.profil,
             },
             filieres: {
-              nom: selectedUser.filiere,
+              nom: "Default Filiere Name", // Remplacez par la valeur appropriée
             },
           }}
           onClose={handleCloseModal} // Ferme le modal de mise à jour

@@ -1,7 +1,7 @@
 "use client";
 import ListCard, { User } from "@/components/card/ListCard";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import Configuration from "../note/Configuration2";
 
 interface Classe {
@@ -27,14 +27,14 @@ export default function ClasseList() {
   const [classes, setClasses] = useState<Classe[]>([]);
   const [enseignants, setEnseignants] = useState<User[]>(enseignantsData);
   const [etudiants, setEtudiants] = useState<User[]>(etudiantsData);
-  
+
   // États pour l'UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-  
+
   // États pour les modales
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -42,7 +42,7 @@ export default function ClasseList() {
   const [showStudents, setShowStudents] = useState(false);
   const [showSubjects, setShowSubjects] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
-  
+
   // États pour les formulaires
   const [newTeacher, setNewTeacher] = useState("");
   const [newStudent, setNewStudent] = useState("");
@@ -55,41 +55,41 @@ export default function ClasseList() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [filieresRes] = await Promise.all([
-          fetch('/api/filieres')
-        ]);
-        
-        if (!filieresRes.ok) throw new Error('Erreur de chargement des filières');
-        
+        const [filieresRes] = await Promise.all([fetch("/api/filieres")]);
+
+        if (!filieresRes.ok)
+          throw new Error("Erreur de chargement des filières");
+
         const filieresData = await filieresRes.json();
-        setClasses(filieresData.data.map((f: any) => ({
-          ...f,
-          enseignants: f.enseignants || [],
-          effectif: f.etudiants?.length || 0
-        })));
-        
+        setClasses(
+          filieresData.data.map((f: any) => ({
+            ...f,
+            enseignants: f.enseignants || [],
+            effectif: f.etudiants?.length || 0,
+          }))
+        );
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchData();
   }, []);
 
   // Fonctions API
   const createFiliere = async (data: any) => {
-    const res = await fetch('/api/filieres', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res = await fetch("/api/filieres", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nom: data.nom,
         description: data.description,
         niveau: data.niveau,
         montant_annuel: data.montant_annuel,
-        id_annexe: data.id_annexe
-      })
+        id_annexe: data.id_annexe,
+      }),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
@@ -97,16 +97,16 @@ export default function ClasseList() {
 
   const updateFiliere = async (id: number, data: any) => {
     const res = await fetch(`/api/filieres/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   };
 
   const deleteFiliere = async (id: number) => {
-    const res = await fetch(`/api/filieres/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/filieres/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   };
@@ -120,19 +120,22 @@ export default function ClasseList() {
         niveau: "Licence",
         montant_annuel: 0,
         id_annexe: null,
-        enseignants: newClassTeachers
-      };
-      
-      const created = await createFiliere(newClass);
-      setClasses(prev => [...prev, {
-        ...created.data,
         enseignants: newClassTeachers,
-        effectif: 0
-      }]);
+      };
+
+      const created = await createFiliere(newClass);
+      setClasses((prev) => [
+        ...prev,
+        {
+          ...created.data,
+          enseignants: newClassTeachers,
+          effectif: 0,
+        },
+      ]);
       setShowAddModal(false);
       resetForm();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur inconnue');
+      alert(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
 
@@ -140,58 +143,71 @@ export default function ClasseList() {
     try {
       const { id_filiere, ...updateData } = updatedClass;
       const data = await updateFiliere(id_filiere, updateData);
-      setClasses(prev => prev.map(c => 
-        c.id_filiere === id_filiere ? { ...data.data, enseignants: c.enseignants } : c
-      ));
+      setClasses((prev) =>
+        prev.map((c) =>
+          c.id_filiere === id_filiere
+            ? { ...data.data, enseignants: c.enseignants }
+            : c
+        )
+      );
       setShowModal(false);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur inconnue');
+      alert(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
 
   const handleDeleteClass = async (id: number) => {
     try {
       await deleteFiliere(id);
-      setClasses(prev => prev.filter(c => c.id_filiere !== id));
+      setClasses((prev) => prev.filter((c) => c.id_filiere !== id));
       if (id === selectedClassId) {
         setShowModal(false);
         setSelectedClassId(null);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Erreur inconnue');
+      alert(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
 
   // Gestion des enseignants/étudiants
   const handleAddTeacher = () => {
     if (!newTeacher.trim() || !selectedClassId) return;
-    
+
     const trimmedTeacher = newTeacher.trim();
-    setClasses(prev => prev.map(c =>
-      c.id_filiere === selectedClassId
-        ? { ...c, enseignants: [...(c.enseignants || []), trimmedTeacher] }
-        : c
-    ));
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id_filiere === selectedClassId
+          ? { ...c, enseignants: [...(c.enseignants || []), trimmedTeacher] }
+          : c
+      )
+    );
     setNewTeacher("");
   };
 
   const handleRemoveTeacher = (teacher: string, classId: number) => {
-    setClasses(prev => prev.map(c =>
-      c.id_filiere === classId
-        ? { ...c, enseignants: (c.enseignants || []).filter(t => t !== teacher) }
-        : c
-    ));
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id_filiere === classId
+          ? {
+              ...c,
+              enseignants: (c.enseignants || []).filter((t) => t !== teacher),
+            }
+          : c
+      )
+    );
   };
 
   const handleAddStudent = () => {
     if (!newStudent.trim() || !selectedClassId) return;
-    
+
     const trimmedStudent = newStudent.trim();
-    setClasses(prev => prev.map(c =>
-      c.id_filiere === selectedClassId
-        ? { ...c, effectif: (c.effectif || 0) + 1 }
-        : c
-    ));
+    setClasses((prev) =>
+      prev.map((c) =>
+        c.id_filiere === selectedClassId
+          ? { ...c, effectif: (c.effectif || 0) + 1 }
+          : c
+      )
+    );
     setNewStudent("");
   };
 
@@ -205,15 +221,16 @@ export default function ClasseList() {
 
   const addTeacherToNewClass = () => {
     if (tempTeacher.trim() && !newClassTeachers.includes(tempTeacher.trim())) {
-      setNewClassTeachers(prev => [...prev, tempTeacher.trim()]);
+      setNewClassTeachers((prev) => [...prev, tempTeacher.trim()]);
       setTempTeacher("");
     }
   };
 
   // Filtrage et pagination
-  const filteredClasses = classes.filter(c =>
-    c.nom.toLowerCase().includes(search.toLowerCase()) ||
-    c.niveau.toLowerCase().includes(search.toLowerCase())
+  const filteredClasses = classes.filter(
+    (c) =>
+      c.nom.toLowerCase().includes(search.toLowerCase()) ||
+      c.niveau.toLowerCase().includes(search.toLowerCase())
   );
 
   const paginatedClasses = filteredClasses.slice(
@@ -222,7 +239,7 @@ export default function ClasseList() {
   );
 
   const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
-  const selectedClass = classes.find(c => c.id_filiere === selectedClassId);
+  const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
 
   if (loading) return <div className="p-10">Chargement en cours...</div>;
   if (error) return <div className="p-10 text-red-500">Erreur: {error}</div>;
@@ -260,7 +277,10 @@ export default function ClasseList() {
         </thead>
         <tbody>
           {paginatedClasses.map((classe) => (
-            <tr key={classe.id_filiere} className="border-b hover:bg-gray-50 transition duration-150">
+            <tr
+              key={classe.id_filiere}
+              className="border-b hover:bg-gray-50 transition duration-150"
+            >
               <td className="p-3">{classe.nom}</td>
               <td className="p-3">{classe.niveau}</td>
               <td className="p-3">{classe.montant_annuel} €</td>
@@ -274,14 +294,24 @@ export default function ClasseList() {
                   className="text-blue-500 hover:text-blue-700 transition duration-200"
                   title="Voir les détails"
                 >
-                  <Image src="/icons/eye.png" alt="Détails" width={20} height={20} />
+                  <Image
+                    src="/icons/eye.png"
+                    alt="Détails"
+                    width={20}
+                    height={20}
+                  />
                 </button>
                 <button
                   onClick={() => handleDeleteClass(classe.id_filiere)}
                   className="text-red-500 hover:text-red-700 transition duration-200"
                   title="Supprimer"
                 >
-                  <Image src="/icons/delete.png" alt="Supprimer" width={20} height={20} />
+                  <Image
+                    src="/icons/delete.png"
+                    alt="Supprimer"
+                    width={20}
+                    height={20}
+                  />
                 </button>
               </td>
             </tr>
@@ -292,7 +322,7 @@ export default function ClasseList() {
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">
         <button
-          onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
@@ -302,7 +332,7 @@ export default function ClasseList() {
           Page {currentPage} sur {totalPages}
         </div>
         <button
-          onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
           disabled={currentPage === totalPages}
           className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
@@ -312,29 +342,51 @@ export default function ClasseList() {
 
       {/* Modale de détails */}
       {showModal && selectedClass && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setShowModal(false)}>
-          <div className="bg-white p-6 rounded-lg w-full max-w-5xl shadow-xl overflow-y-auto max-h-screen" onClick={e => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4 text-blue-500">Détails de la classe</h2>
-            
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white p-6 rounded-lg w-full max-w-5xl shadow-xl overflow-y-auto max-h-screen"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold mb-4 text-blue-500">
+              Détails de la classe
+            </h2>
+
             <div className="space-y-6">
               {/* Section Nom et Niveau */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Nom</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Nom
+                  </label>
                   <input
                     type="text"
                     className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={selectedClass.nom}
-                    onChange={(e) => handleUpdateClass({ ...selectedClass, nom: e.target.value })}
+                    onChange={(e) =>
+                      handleUpdateClass({
+                        ...selectedClass,
+                        nom: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Niveau</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Niveau
+                  </label>
                   <input
                     type="text"
                     className="border border-gray-300 p-2 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={selectedClass.niveau}
-                    onChange={(e) => handleUpdateClass({ ...selectedClass, niveau: e.target.value })}
+                    onChange={(e) =>
+                      handleUpdateClass({
+                        ...selectedClass,
+                        niveau: e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
@@ -345,26 +397,45 @@ export default function ClasseList() {
                   onClick={() => setShowTeachers(!showTeachers)}
                   className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
                 >
-                  <span className="text-lg font-semibold text-blue-500">Enseignants ({selectedClass.enseignants?.length || 0})</span>
-                  <span className="text-blue-500">{showTeachers ? '▲' : '▼'}</span>
+                  <span className="text-lg font-semibold text-blue-500">
+                    Enseignants ({selectedClass.enseignants?.length || 0})
+                  </span>
+                  <span className="text-blue-500">
+                    {showTeachers ? "▲" : "▼"}
+                  </span>
                 </button>
-                
+
                 {showTeachers && (
                   <div className="mt-4 space-y-4">
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {(selectedClass.enseignants || []).map((teacher, index) => (
-                        <li key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <span>{teacher}</span>
-                          <button
-                            onClick={() => handleRemoveTeacher(teacher, selectedClass.id_filiere)}
-                            className="text-red-500 hover:text-red-700"
+                      {(selectedClass.enseignants || []).map(
+                        (teacher, index) => (
+                          <li
+                            key={index}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                           >
-                            <Image src="/icons/delete.png" alt="Supprimer" width={16} height={16} />
-                          </button>
-                        </li>
-                      ))}
+                            <span>{teacher}</span>
+                            <button
+                              onClick={() =>
+                                handleRemoveTeacher(
+                                  teacher,
+                                  selectedClass.id_filiere
+                                )
+                              }
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Image
+                                src="/icons/delete.png"
+                                alt="Supprimer"
+                                width={16}
+                                height={16}
+                              />
+                            </button>
+                          </li>
+                        )
+                      )}
                     </ul>
-                    
+
                     <div className="mt-4">
                       <div className="flex gap-2">
                         <input
@@ -392,24 +463,30 @@ export default function ClasseList() {
                   onClick={() => setShowStudents(!showStudents)}
                   className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
                 >
-                  <span className="text-lg font-semibold text-blue-500">Étudiants ({selectedClass.effectif || 0})</span>
-                  <span className="text-blue-500">{showStudents ? '▲' : '▼'}</span>
+                  <span className="text-lg font-semibold text-blue-500">
+                    Étudiants ({selectedClass.effectif || 0})
+                  </span>
+                  <span className="text-blue-500">
+                    {showStudents ? "▲" : "▼"}
+                  </span>
                 </button>
-                
+
                 {showStudents && (
                   <div className="mt-4 space-y-4">
+                    Je suis là {selectedClass.nom}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {etudiants.slice(0, selectedClass.effectif || 0).map((etudiant) => (
-                        <ListCard
-                          key={etudiant.id}
-                          item={etudiant}
-                          onDelete={() => {}}
-                          onEdit={() => {}}
-                          onSelect={() => {}}
-                        />
-                      ))}
+                      {selectedClass.etudiants
+                        ?.slice(0, selectedClass.effectif || 0)
+                        .map((etudiant: User) => (
+                          <ListCard
+                            key={etudiant.id}
+                            item={etudiant}
+                            onDelete={() => {}}
+                            onEdit={() => {}}
+                            onSelect={() => {}}
+                          />
+                        ))}
                     </div>
-                    
                     <div className="mt-4">
                       <div className="flex gap-2">
                         <input
@@ -437,10 +514,14 @@ export default function ClasseList() {
                   onClick={() => setShowSubjects(!showSubjects)}
                   className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
                 >
-                  <span className="text-lg font-semibold text-blue-500">Matières</span>
-                  <span className="text-blue-500">{showSubjects ? '▲' : '▼'}</span>
+                  <span className="text-lg font-semibold text-blue-500">
+                    Matières
+                  </span>
+                  <span className="text-blue-500">
+                    {showSubjects ? "▲" : "▼"}
+                  </span>
                 </button>
-                
+
                 {showSubjects && (
                   <div className="mt-4">
                     <Configuration classes={classe} />
@@ -469,10 +550,16 @@ export default function ClasseList() {
 
       {/* Modale d'ajout */}
       {showAddModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white p-6 rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="bg-white p-6 rounded-lg w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-xl font-bold mb-4">Ajouter une classe</h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block mb-1">Nom complet</label>
@@ -484,7 +571,7 @@ export default function ClasseList() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block mb-1">Abréviation</label>
                 <input
@@ -495,23 +582,35 @@ export default function ClasseList() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block mb-1">Enseignants</label>
                 <div className="space-y-2">
                   {newClassTeachers.map((teacher, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                    >
                       <span>{teacher}</span>
                       <button
                         type="button"
-                        onClick={() => setNewClassTeachers(prev => prev.filter(t => t !== teacher))}
+                        onClick={() =>
+                          setNewClassTeachers((prev) =>
+                            prev.filter((t) => t !== teacher)
+                          )
+                        }
                         className="text-red-500 hover:text-red-700"
                       >
-                        <Image src="/icons/delete.png" alt="Supprimer" width={16} height={16} />
+                        <Image
+                          src="/icons/delete.png"
+                          alt="Supprimer"
+                          width={16}
+                          height={16}
+                        />
                       </button>
                     </div>
                   ))}
-                  
+
                   <div className="flex gap-2 mt-2">
                     <input
                       type="text"
@@ -531,7 +630,7 @@ export default function ClasseList() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex justify-end mt-6 gap-2">
               <button
                 type="button"

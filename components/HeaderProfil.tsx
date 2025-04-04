@@ -9,7 +9,16 @@ import FormulaireModule from "./formulaires/FormulaireModule";
 import ParametrePage from "@/app/(root)/admin/parametre/page";
 import FormulaireFiliere from "./formulaires/FormulaireFiliere";
 
-export default function UserProfile({ user }) {
+interface UserProfileProps {
+  user: {
+    prenom: string;
+    nom: string;
+    type: string;
+    profil?: string;
+  };
+}
+
+export default function UserProfile({ user }: UserProfileProps) {
   const [notificationCount, setNotificationCount] = useState(1);
   const [isRoleOpen, setIsRoleOpen] = useState(false);
   const [isAnnexeOpen, setIsAnnexeOpen] = useState(false);

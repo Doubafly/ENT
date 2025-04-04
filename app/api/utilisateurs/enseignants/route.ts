@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "Utilisateur et enseignant créés avec succès", enseignant },
+      { message: "succès", enseignant },
       { status: 201 }
     );
   } catch (error: any) {

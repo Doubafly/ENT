@@ -19,11 +19,21 @@ export async function GET() {
                 semestre: true,
                 enseignant: {
                   select: {
+                    id: true,
+                    specialite: true,
+                    matricule: true,
                     utilisateur: {
                       select: {
+                        id_utilisateur: true,
                         nom: true,
                         prenom: true,
+                        mot_de_passe: true,
                         email: true,
+                        sexe: true,
+                        telephone: true,
+                        adresse: true,
+                        profil: true,
+                        date_creation: true,
                       },
                     },
                   },
@@ -45,11 +55,20 @@ export async function GET() {
         },
         etudiants: {
           select: {
+            id: true,
             matricule: true,
+            date_inscription: true,
+            date_naissance: true,
             utilisateur: {
               select: {
+                id_utilisateur: true,
                 nom: true,
                 prenom: true,
+                email: true,
+                sexe: true,
+                profil: true,
+                telephone: true,
+                adresse: true,
               },
             },
             notes: {

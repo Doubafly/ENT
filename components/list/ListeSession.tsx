@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { FaPlus, FaEdit, FaTrash } from "react-icons/fa"; // Importation des icônes
+import { FaEdit, FaPlus, FaTrash } from "react-icons/fa"; // Importation des icônes
+import FormulaireSession from "../formulaires/FormulaireSession";
+// Adjust the path as necessary
 
 const ListeSession = () => {
   const [roles, setRoles] = useState([
@@ -7,8 +9,8 @@ const ListeSession = () => {
     { id: 2, Session: "2022-2222" },
     { id: 3, Session: "2023-2022" },
     { id: 4, Session: "2023-2022" },
-    { id: 5, Session: "2023-2022"},
-    { id: 6, Session: "2023-2022" }
+    { id: 5, Session: "2023-2022" },
+    { id: 6, Session: "2023-2022" },
   ]);
 
   const [selectedSession, setSelectedSession] = useState<Role | null>(null);
@@ -18,7 +20,6 @@ const ListeSession = () => {
   interface Role {
     id: number;
     Session: string;
-    
   }
 
   // Pagination
@@ -26,7 +27,7 @@ const ListeSession = () => {
   const indexOfLastRole = currentPage * itemsPerPage;
   const indexOfFirstRole = indexOfLastRole - itemsPerPage;
   const currentRoles = roles.slice(indexOfFirstRole, indexOfLastRole);
-
+  const [isAdding, setIsAdding] = useState(false);
   const handleSelect = (role: Role) => {
     setSelectedSession(role.id === selectedSession?.id ? null : role);
   };
@@ -39,7 +40,9 @@ const ListeSession = () => {
   };
 
   const handlePageChange = (direction: number) => {
-    setCurrentPage((prev) => Math.min(Math.max(prev + direction, 1), totalPages));
+    setCurrentPage((prev) =>
+      Math.min(Math.max(prev + direction, 1), totalPages)
+    );
   };
 
   return (
@@ -52,19 +55,19 @@ const ListeSession = () => {
             <tr className="bg-gray-100">
               <th className="border p-2">id</th>
               <th className="border p-2">Session</th>
-              
             </tr>
           </thead>
           <tbody>
             {currentRoles.map((role) => (
               <tr
                 key={role.id}
-                className={`cursor-pointer hover:bg-blue-100 ${selectedSession?.id === role.id ? "bg-blue-200" : ""}`}
+                className={`cursor-pointer hover:bg-blue-100 ${
+                  selectedSession?.id === role.id ? "bg-blue-200" : ""
+                }`}
                 onClick={() => handleSelect(role)}
               >
                 <td className="border p-2">{role.id}</td>
                 <td className="border p-2">{role.Session}</td>
-                
               </tr>
             ))}
           </tbody>
@@ -96,12 +99,17 @@ const ListeSession = () => {
 
       {/* Boutons d'action à droite avec icônes */}
       <div className="w-1/6 flex flex-col items-end space-y-4 mt-10 ml-auto">
-        <button className="bg-green-600 text-white px-3 py-1.5 w-full rounded-lg flex items-center justify-center hover:bg-green-700 text-sm">
+        <button
+          className="bg-green-600 text-white px-3 py-1.5 w-full rounded-lg flex items-center justify-center hover:bg-green-700 text-sm"
+          onClick={() => setIsAdding(true)}
+        >
           <FaPlus className="mr-2" /> Ajouter
         </button>
         <button
           className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
-            selectedSession ? "bg-yellow-600 hover:bg-yellow-700 text-white" : "bg-gray-400 text-gray-600 cursor-not-allowed"
+            selectedSession
+              ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
           }`}
           disabled={!selectedSession}
         >
@@ -109,7 +117,9 @@ const ListeSession = () => {
         </button>
         <button
           className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
-            selectedSession ? "bg-red-600 hover:bg-red-700 text-white" : "bg-gray-400 text-gray-600 cursor-not-allowed"
+            selectedSession
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
           }`}
           onClick={handleDelete}
           disabled={!selectedSession}
@@ -117,6 +127,32 @@ const ListeSession = () => {
           <FaTrash className="mr-2" /> Supprimer
         </button>
       </div>
+      {/* Affichage du formulaire dans une boîte modale */}
+      {isAdding && (
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+          onClick={() => setIsAdding(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 shadow-lg w-96"
+            onClick={(e) => e.stopPropagation()}
+          >
+            La liste de session
+            <FormulaireSession
+              onCancel={() => setIsAdding(false)}
+              title="Ajouter une Session"
+              onSubmit={async (formData: FormData) => {
+                const session = formData.get("Session") as string;
+                setRoles([
+                  ...roles,
+                  { id: roles.length + 1, Session: session },
+                ]);
+                setIsAdding(false);
+              }}
+              />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

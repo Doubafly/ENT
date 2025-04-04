@@ -12,20 +12,19 @@ export default function UpdateEnseignantModal({
   onUpdate: (id_utilisateur: number, updatedData: any) => void;
 }) {
   const [formData, setFormData] = useState({
-    nom: enseignant.nom || "",
-    prenom: enseignant.prenom || "",
+    nom: enseignant.utilisateurs.nom || "",
+    prenom: enseignant.utilisateurs.prenom || "",
     matricule: enseignant.matricule,
-    email: enseignant.email || "",
-    telephone: enseignant.tel || "",
-    adresse: enseignant.adresse || "",
-    profil: enseignant.profil,
-    sexe: enseignant.sexe || "",
-    date_inscription: enseignant.date_inscription,
-    mot_de_passe: enseignant.mot_de_passe,
+    email: enseignant.utilisateurs.email || "",
+    telephone: enseignant.utilisateurs.telephone || "",
+    adresse: enseignant.utilisateurs.adresse || "",
+    profil: enseignant.utilisateurs.profil,
+    sexe: enseignant.utilisateurs.sexe || "",
+    date_inscription: enseignant.utilisateurs.date_inscription,
+    mot_de_passe: enseignant.utilisateurs.mot_de_passe,
     specialite: enseignant.specialite || "",
-    date_naissance: enseignant.date_naissance || "",
+    date_naissance: enseignant.utilisateurs.date_naissance || "",
   });
-  console.log(formData);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -49,8 +48,49 @@ export default function UpdateEnseignantModal({
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(enseignant.id_utilisateur, formData);
-    onClose();
+
+    try {
+      let profilPath = formData.profil;
+
+      // Vérifiez si une nouvelle image a été sélectionnée
+      if (formData.profil.startsWith("data:image")) {
+        const formDataImage = new FormData();
+        const blob = await fetch(formData.profil).then((res) => res.blob());
+        const file = new File([blob], `${enseignant.id_utilisateur}.jpg`, {
+          type: blob.type,
+        });
+
+        formDataImage.append("image", file);
+        formDataImage.append("userId", enseignant.id_utilisateur.toString());
+
+        // Envoyer l'image à l'API
+        const response = await fetch("/api/files/uploads", {
+          method: "POST",
+          body: formDataImage,
+        });
+
+        if (!response.ok) {
+          throw new Error("Erreur lors du téléchargement de l'image");
+        }
+
+        const data = await response.json();
+        profilPath = `${data.filePath}?t=${new Date().getTime()}`; // Ajoutez un timestamp pour éviter le cache
+      }
+
+      // Préparer les données avant soumission
+      const updatedData: Partial<typeof formData> = {
+        ...formData,
+        profil: profilPath, // Utiliser le chemin mis à jour
+      };
+      console.log(updatedData);
+      // Soumettre les données mises à jour
+      onUpdate(enseignant.id_utilisateur, updatedData);
+      // Fermer la modal après mise à jour
+      onClose();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour :", error);
+      alert("Une erreur est survenue lors de la mise à jour.");
+    }
   };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -177,31 +217,18 @@ export default function UpdateEnseignantModal({
                 required
               />
             </div>
-
-            {/* Date de Naissance */}
+            {/* specialite */}
             <div>
-              <label className="block font-medium">Date de Naissance</label>
+              <label className="block font-medium">Matricule</label>
               <input
-                type="date"
-                name="date_naissance"
-                value={formData.date_naissance}
+                type="text"
+                name="matricule"
+                value={formData.specialite}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
+                required
               />
             </div>
-
-            {/* Date d'Inscription */}
-            <div>
-              <label className="block font-medium">Date d'Inscription</label>
-              <input
-                type="date"
-                name="date_inscription"
-                value={formData.date_inscription}
-                onChange={handleChange}
-                className="w-full p-2 border rounded"
-              />
-            </div>
-
             {/* Sexe */}
             <div>
               <label className="block font-medium">Sexe</label>
@@ -211,7 +238,7 @@ export default function UpdateEnseignantModal({
                     type="radio"
                     name="sexe"
                     value="Homme"
-                    checked={formData.sexe === "Homme"}
+                    checked={formData.sexe === "M"}
                     onChange={handleChange}
                     className="mr-2"
                   />
@@ -222,7 +249,7 @@ export default function UpdateEnseignantModal({
                     type="radio"
                     name="sexe"
                     value="Femme"
-                    checked={formData.sexe === "Femme"}
+                    checked={formData.sexe === "F"}
                     onChange={handleChange}
                     className="mr-2"
                   />

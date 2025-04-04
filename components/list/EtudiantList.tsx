@@ -12,6 +12,7 @@ export default function EtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [sessionFilter, setSessionFilter] = useState(""); // État pour le filtre par session
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedEtudiant, setSelectedEtudiant] = useState<User | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -43,6 +44,7 @@ export default function EtudiantList() {
     try {
       const response = await fetch("/api/utilisateurs/etudiants");
       const data = await response.json();
+      console.log(data);
 
       if (response.ok) {
         const formattedEtudiants = data.etudiants.map((etudiant: any) => ({
@@ -62,6 +64,7 @@ export default function EtudiantList() {
           },
           date_naissance: formatDate(etudiant.date_naissance),
           date_inscription: formatDate(etudiant.date_inscription),
+          notes: etudiant.notes || [], // Ajout des notes pour le filtre par session
         }));
 
         setEtudiants(formattedEtudiants);
@@ -162,7 +165,15 @@ export default function EtudiantList() {
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) &&
       (classFilter ? etudiant.filiere.nom === classFilter : true) &&
-      (yearFilter ? formatDate(etudiant.date_inscription) === yearFilter : true)
+      (yearFilter
+        ? formatDate(etudiant.date_inscription) === yearFilter
+        : true) &&
+      (sessionFilter
+        ? etudiant.notes.some(
+            (note: any) =>
+              note.cours.sessions.annee_academique === sessionFilter
+          )
+        : true)
     );
   });
 
@@ -202,6 +213,28 @@ export default function EtudiantList() {
           {[...new Set(etudiants.map((e) => e.filiere.nom))].map((filiere) => (
             <option key={filiere} value={filiere}>
               {filiere}
+            </option>
+          ))}
+        </select>
+        <select
+          title="filtre-session"
+          value={sessionFilter}
+          onChange={(e) => {
+            setSessionFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-1/4 p-3 border rounded-lg text-sm"
+        >
+          <option value="">Filtrer par session</option>
+          {[
+            ...new Set(
+              etudiants.flatMap((e) =>
+                e.notes.map((note: any) => note.cours.sessions.annee_academique)
+              )
+            ),
+          ].map((session) => (
+            <option key={session} value={session}>
+              {session}
             </option>
           ))}
         </select>

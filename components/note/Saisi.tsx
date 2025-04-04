@@ -101,7 +101,6 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
 
   console.log(classes);
-
   const handleClassChange = (classId: number) => {
     setSelectedClass(classId);
     setSelectedSemester(null);

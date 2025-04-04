@@ -46,8 +46,8 @@ const handleSelect = (filiere: Filiere) => {
   };
 
   // Fonction pour ajouter une filière
-  const handleAddFiliere = () => {
-  
+  const handleAddFiliere = async (formData: FormData): Promise<void> => {
+    // Add your logic to handle form data here
     setIsAdding(false); // Ferme le formulaire après l'ajout
   };
 

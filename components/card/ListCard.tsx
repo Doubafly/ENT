@@ -7,6 +7,7 @@ import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Imp
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
+  notes: any;
   specialite?: string;
   id_utilisateur: number;
   id: number;
@@ -60,7 +61,6 @@ const UserCard = ({
 
   // Fonction asynchrone pour gérer la mise à jour des informations utilisateur
   const handleUpdate = async (id: number, updatedData: any): Promise<void> => {
-    console.log("Mise à jour de l'utilisateur :", id, updatedData); // Affiche l'id et les données mises à jour
     // Soumettre les données mises à jour
     await onEdit(id, updatedData); // Appelle la fonction de mise à jour
     handleCloseModal(); // Ferme le modal après la mise à jour
@@ -107,15 +107,16 @@ const UserCard = ({
             <Image src="/icons/book.png" alt="Adresse" width={12} height={12} />
             {item.adresse}
           </p>
-          <p className="flex gap-1 items-center text-sm">
+          {/* <p className="flex gap-1 items-center text-sm">
             <Image
               src="/icons/calendar.png"
               alt="Date"
               width={12}
               height={12}
             />
-            {formatDate(item.date_naissance)} {/* Utilisation de formatDate */}
-          </p>
+            {formatDate(item.date_naissance)}  
+          </p> 
+          */}
           <p className="flex gap-1 items-center text-sm">
             <Image
               src="/icons/eye.png"
@@ -192,6 +193,7 @@ const UserCard = ({
                   profil: item.image,
                   sexe: item.sexe,
                 },
+                matricule: item.matricule || "",
                 specialite: item.specialite || "",
                 date_naissance: formatDate(item.date_naissance),
                 date_inscription: formatDate(item.date_inscription),

@@ -16,17 +16,20 @@ export default function Page() {
     <Box sx={{ padding: 2 }}>
       {/* Conteneur des onglets aligné à droite */}
       <Box sx={{ display: "flex", marginLeft: "50px" }}>
-        <Tabs value={tabIndex} onChange={(_, newIndex) => setTabIndex(newIndex)}>
+        <Tabs
+          value={tabIndex}
+          onChange={(_, newIndex) => setTabIndex(newIndex)}
+        >
           <Tab label="Etudiants" />
           <Tab label="Absences" />
-          <Tab label="Configuration Groupes" />
+          {/* <Tab label="Configuration Groupes" /> */}
         </Tabs>
       </Box>
 
       {/* Contenu selon l'onglet actif */}
       {tabIndex === 0 && <EtudiantList />}
       {tabIndex === 1 && <AbscenceEtudiantList />}
-      {tabIndex === 2 && <GroupConfigProf />}
+      {/* {tabIndex === 2 && <GroupConfigProf />} */}
     </Box>
   );
 }

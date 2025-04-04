@@ -5,7 +5,7 @@ import Configuration from "./configuration";
 import Resultat from "./resultat";
 import { Tabs, Tab, Box } from "@mui/material";
 
-interface NoteRegistreProps {  
+interface NoteRegistreProps {
   classes: any;
 }
 
@@ -24,14 +24,14 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
           >
             <Tab label="Saisi" />
             <Tab label="Resultat" />
-            <Tab label="Configuration " />
+            {/* <Tab label="Configuration " /> */}
           </Tabs>
         </Box>
 
         {/* Contenu selon l'onglet actif */}
         {tabIndex === 0 && <Saisi classes={classes} />}
         {tabIndex === 1 && <Resultat />}
-        {tabIndex === 2 && <Configuration classes={classes} />}
+        {/* {tabIndex === 2 && <Configuration classes={classes} />} */}
       </Box>
     </div>
   );

@@ -14,6 +14,7 @@ export default function page() {
       try {
         const response = await fetch("/api/filieres");
         const data = await response.json();
+        console.log(data);
 
         if (data.filieres) {
           // Transformer les données API en structure attendue
@@ -33,24 +34,25 @@ export default function page() {
               coefficients: filiere.filiere_module.map(
                 (mod: any) => mod.coefficient
               ), // Récupérer tous les coefficients des modules
-              semestres: filiere.filiere_module.flatMap((mod: any) =>
-                mod.cours.map((cours: any) => ({
-                  id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique basé sur la filière et le semestre
-                  name: cours.semestre, // Correction : Prendre le semestre ici
-                  modules: [
-                    {
-                      id: mod.id_module,
-                      name: mod.module.nom,
-                      students: filiere.etudiants.map((etudiant: any) => ({
-                        id: etudiant.matricule,
-                        name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
-                        note_class: etudiant.notes?.note_class || 0,
-                        note_exam: etudiant.notes?.note_exam || 0,
-                        coefficient: mod.coefficient, // Associer le coefficient au module
-                      })),
-                    },
-                  ],
-                }))
+              semestres: filiere.filiere_module.flatMap(
+                (mod: any, Index: number) =>
+                  mod.cours.map((cours: any) => ({
+                    id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique basé sur la filière et le semestre
+                    name: cours.semestre, // Correction : Prendre le semestre ici
+                    modules: [
+                      {
+                        id: mod.id_module,
+                        name: mod.module.nom,
+                        students: filiere.etudiants.map((etudiant: any) => ({
+                          id: etudiant.matricule,
+                          name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
+                          note_class: etudiant.notes[Index]?.note_class || 0,
+                          note_exam: etudiant.notes[Index]?.note_exam || 0,
+                          coefficient: mod.coefficient, // Associer le coefficient au module
+                        })),
+                      },
+                    ],
+                  }))
               ),
             };
           });

@@ -7,6 +7,7 @@ import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Imp
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
+  notes: any;
   specialite?: string;
   id_utilisateur: number;
   id: number;
@@ -192,6 +193,7 @@ const UserCard = ({
                   profil: item.image,
                   sexe: item.sexe,
                 },
+                matricule: item.matricule || "",
                 specialite: item.specialite || "",
                 date_naissance: formatDate(item.date_naissance),
                 date_inscription: formatDate(item.date_inscription),

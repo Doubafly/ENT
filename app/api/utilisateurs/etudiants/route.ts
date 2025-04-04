@@ -31,6 +31,11 @@ export async function GET() {
                     module: true, // Informations du module
                   },
                 },
+                sessions: {
+                  select: {
+                    annee_academique: true,
+                  },
+                },
               },
             },
           },
@@ -161,7 +166,7 @@ export async function POST(request: NextRequest) {
         matricule,
         date_naissance: new Date(date_naissance),
         date_inscription: new Date(date_inscription),
-        id_filiere ,
+        id_filiere,
         id_utilisateur: utilisateur.id_utilisateur,
       },
     });

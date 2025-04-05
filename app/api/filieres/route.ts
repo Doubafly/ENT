@@ -2,13 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 import { FilieresNiveau } from "@prisma/client";
 
-// GET : Récupérer toutes les filières avec leurs relations complètes
+// GET : Récupérer toutes les filières ou une seule si ID fourni
 export async function GET(request: NextRequest) {
   try {
-    const id = request.nextUrl.pathname.split("/").pop();
+    // Récupération de l'ID depuis les paramètres de la route
+    const pathParts = request.nextUrl.pathname.split('/');
+    const id = pathParts[pathParts.length - 1];
     
+    // Si le dernier élément est "filieres", c'est qu'on veut toutes les filières
+    const isSingleFiliere = id !== "filieres" && !isNaN(parseInt(id));
+
     const filieres = await prisma.filieres.findMany({
-      where: id ? { id_filiere: parseInt(id) } : {},
+      where: isSingleFiliere ? { id_filiere: parseInt(id) } : {},
       include: {
         annexe: true,
         etudiants: {
@@ -39,7 +44,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    if (id && (!filieres || filieres.length === 0)) {
+    if (isSingleFiliere && (!filieres || filieres.length === 0)) {
       return NextResponse.json(
         { message: "Filière non trouvée" },
         { status: 404 }
@@ -47,7 +52,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { message: id ? "Filière récupérée" : "Filières récupérées", data: filieres },
+      { 
+        message: isSingleFiliere ? "Filière récupérée" : "Filières récupérées", 
+        data: isSingleFiliere ? filieres[0] : filieres 
+      },
       { status: 200 }
     );
   } catch (error: any) {

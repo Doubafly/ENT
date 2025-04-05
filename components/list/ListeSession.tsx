@@ -1,160 +1,241 @@
-import { useState } from "react";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa"; // Importation des icônes
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import FormulaireSession from "../formulaires/FormulaireSession";
-// Adjust the path as necessary
+import { ConfirmDialog } from "../ConfirmDialog";
 
-const ListeSession = () => {
-  const [roles, setRoles] = useState([
-    { id: 1, Session: "2023-2022" },
-    { id: 2, Session: "2022-2222" },
-    { id: 3, Session: "2023-2022" },
-    { id: 4, Session: "2023-2022" },
-    { id: 5, Session: "2023-2022" },
-    { id: 6, Session: "2023-2022" },
-  ]);
+type Session = {
+  id_sessions: number;
+  annee_academique: string;
+};
 
-  const [selectedSession, setSelectedSession] = useState<Role | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 3; // Nombre d'éléments par page
+const ListeSessions: React.FC = () => {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<Session | null>(null);
+  const [editFormData, setEditFormData] = useState<Omit<Session, "id_sessions">>({
+    annee_academique: "",
+  });
+  const itemsPerPage: number = 5;
 
-  interface Role {
-    id: number;
-    Session: string;
-  }
-
-  // Pagination
-  const totalPages = Math.ceil(roles.length / itemsPerPage);
-  const indexOfLastRole = currentPage * itemsPerPage;
-  const indexOfFirstRole = indexOfLastRole - itemsPerPage;
-  const currentRoles = roles.slice(indexOfFirstRole, indexOfLastRole);
-  const [isAdding, setIsAdding] = useState(false);
-  const handleSelect = (role: Role) => {
-    setSelectedSession(role.id === selectedSession?.id ? null : role);
-  };
-
-  const handleDelete = () => {
-    if (selectedSession) {
-      setRoles(roles.filter((role) => role.id !== selectedSession.id));
-      setSelectedSession(null);
+  // Charger les sessions depuis l'API
+  const fetchSessions = async () => {
+    try {
+      const response = await fetch("/api/sessions");
+      if (!response.ok) throw new Error("Erreur lors du chargement des sessions");
+      const data = await response.json();
+      setSessions(data.sessions || []);
+    } catch (error) {
+      console.error("Erreur:", error);
     }
   };
 
-  const handlePageChange = (direction: number) => {
-    setCurrentPage((prev) =>
-      Math.min(Math.max(prev + direction, 1), totalPages)
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const handleDeleteClick = (session: Session) => {
+    setSessionToDelete(session);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleCreateSuccess = () => {
+    fetchSessions(); // Recharge les sessions après création
+    setIsFormOpen(false);
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(sessions.length / itemsPerPage);
+  const indexOfLastSession = currentPage * itemsPerPage;
+  const indexOfFirstSession = indexOfLastSession - itemsPerPage;
+  const currentSessions = sessions.slice(indexOfFirstSession, indexOfLastSession);
+
+  const handleSelect = (session: Session) => {
+    setSelectedSession(
+      session.id_sessions === selectedSession?.id_sessions ? null : session
     );
   };
 
-  return (
-    <div className="bg-white p-6 rounded-xl shadow-lg flex">
-      {/* Tableau des rôles */}
-      <div className="w-3/4">
-        <h2 className="text-xl font-semibold mb-4">Liste des Rôles</h2>
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">id</th>
-              <th className="border p-2">Session</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentRoles.map((role) => (
-              <tr
-                key={role.id}
-                className={`cursor-pointer hover:bg-blue-100 ${
-                  selectedSession?.id === role.id ? "bg-blue-200" : ""
-                }`}
-                onClick={() => handleSelect(role)}
-              >
-                <td className="border p-2">{role.id}</td>
-                <td className="border p-2">{role.Session}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  const handleDelete = async () => {
+    if (!sessionToDelete) return;
 
-        {/* Pagination */}
-        {roles.length > itemsPerPage && (
-          <div className="flex justify-between items-center mt-4">
-            <button
-              onClick={() => handlePageChange(-1)}
-              disabled={currentPage === 1}
-              className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
-            >
-              Précédent
-            </button>
-            <span className="text-gray-700 font-medium">
-              Page {currentPage} sur {totalPages}
-            </span>
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={currentPage === totalPages}
-              className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
-            >
-              Suivant
-            </button>
-          </div>
-        )}
+    try {
+      const response = await fetch(`/api/sessions/${sessionToDelete.id_sessions}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Erreur lors de la suppression");
+
+      setSessions(sessions.filter(s => s.id_sessions !== sessionToDelete.id_sessions));
+      setSelectedSession(null);
+    } catch (error) {
+      console.error("Erreur:", error);
+    } finally {
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  // Modification - Préparation du formulaire
+  const handleEditClick = () => {
+    if (!selectedSession) return;
+
+    setEditFormData({
+      annee_academique: selectedSession.annee_academique,
+    });
+    setIsEditMode(true);
+    setIsFormOpen(true);
+  };
+
+  // Soumission des modifications
+  const handleEditSubmit = async (formData: { annee_academique: string }) => {
+    if (!selectedSession) return;
+
+    try {
+      const response = await fetch(`/api/sessions/${selectedSession.id_sessions}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) throw new Error("Erreur lors de la modification");
+
+      fetchSessions(); // Recharge les données
+      setIsFormOpen(false);
+      setIsEditMode(false);
+      setSelectedSession(null);
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
+
+  return (
+    <div className="bg-white text-gray-800 p-6 rounded-xl shadow-lg flex items-start">
+      <div className="w-3/4">
+        <h2 className="text-xl font-semibold mb-4">Liste des Sessions Académiques</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full border border-gray-300 rounded-lg">
+            <thead>
+              <tr className="bg-gray-200 text-gray-700">
+                <th className="p-3 text-left">ID</th>
+                <th className="p-3 text-left">Année Académique</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentSessions.map((session) => (
+                <tr
+                  key={session.id_sessions}
+                  className={`cursor-pointer border-b ${
+                    selectedSession?.id_sessions === session.id_sessions
+                      ? "bg-blue-200"
+                      : "hover:bg-gray-100"
+                  }`}
+                  onClick={() => handleSelect(session)}
+                >
+                  <td className="p-3">{session.id_sessions}</td>
+                  <td className="p-3">{session.annee_academique}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
+          >
+            Précédent
+          </button>
+          <span className="text-gray-700 font-medium">
+            Page {currentPage} sur {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
+          >
+            Suivant
+          </button>
+        </div>
       </div>
 
-      {/* Boutons d'action à droite avec icônes */}
-      <div className="w-1/6 flex flex-col items-end space-y-4 mt-10 ml-auto">
+      <div className="w-1/6 flex flex-col items-start space-y-4 mt-11 ml-auto">
         <button
           className="bg-green-600 text-white px-3 py-1.5 w-full rounded-lg flex items-center justify-center hover:bg-green-700 text-sm"
-          onClick={() => setIsAdding(true)}
+          onClick={() => {
+            setIsEditMode(false);
+            setIsFormOpen(true);
+          }}
         >
-          <FaPlus className="mr-2" /> Ajouter
+          <FaPlus className="mr-1" /> Ajouter
         </button>
+
         <button
           className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
             selectedSession
-              ? "bg-yellow-600 hover:bg-yellow-700 text-white"
+              ? "bg-yellow-600 text-white hover:bg-yellow-700"
+              : "bg-gray-400 text-gray-600 cursor-not-allowed"
+          }`}
+          disabled={!selectedSession}
+          onClick={handleEditClick}
+        >
+          <FaEdit className="mr-1" /> Modifier
+        </button>
+
+        <button
+          onClick={() => selectedSession && handleDeleteClick(selectedSession)}
+          className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
+            selectedSession
+              ? "bg-red-600 text-white hover:bg-red-700"
               : "bg-gray-400 text-gray-600 cursor-not-allowed"
           }`}
           disabled={!selectedSession}
         >
-          <FaEdit className="mr-2" /> Modifier
+          <FaTrash className="mr-1" /> Supprimer
         </button>
-        <button
-          className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
-            selectedSession
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-gray-400 text-gray-600 cursor-not-allowed"
-          }`}
-          onClick={handleDelete}
-          disabled={!selectedSession}
-        >
-          <FaTrash className="mr-2" /> Supprimer
-        </button>
-      </div>
-      {/* Affichage du formulaire dans une boîte modale */}
-      {isAdding && (
-        <div
-          className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
-          onClick={() => setIsAdding(false)}
-        >
+
+        {isFormOpen && (
           <div
-            className="bg-white rounded-lg p-6 shadow-lg w-96"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center"
+            onClick={() => setIsFormOpen(false)}
           >
-            La liste de session
-            <FormulaireSession
-              onCancel={() => setIsAdding(false)}
-              title="Ajouter une Session"
-              onSubmit={async (formData: FormData) => {
-                const session = formData.get("Session") as string;
-                setRoles([
-                  ...roles,
-                  { id: roles.length + 1, Session: session },
-                ]);
-                setIsAdding(false);
-              }}
+            <div
+              className="bg-white rounded-lg p-6 shadow-lg w-96"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FormulaireSession
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setIsEditMode(false);
+                }}
+                title={isEditMode ? "Modifier la Session" : "Créer une Session"}
+                onSubmit={isEditMode ? handleEditSubmit : handleCreateSuccess}
+                isEditMode={isEditMode}
+                initialData={editFormData}
               />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+
+        <ConfirmDialog
+          isOpen={showDeleteConfirm}
+          title="Confirmer la suppression"
+          message={`Êtes-vous sûr de vouloir supprimer définitivement la session "${sessionToDelete?.annee_academique}" ?`}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+          confirmText="Supprimer"
+          cancelText="Annuler"
+        />
+      </div>
     </div>
   );
 };
 
-export default ListeSession;
+export default ListeSessions;

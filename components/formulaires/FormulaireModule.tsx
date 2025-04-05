@@ -1,94 +1,161 @@
 "use client";
+
 import { useState } from "react";
 
-type RegisterFormProps = {
-  onSubmit: (formData: FormData) => Promise<void>;
-  onCancel: () => void;
-  title?: string;
+type ModuleFormData = {
+  nom: string;
+  code: string;
+  description: string;
+  credit: number;
+  volumeHoraire: number;
 };
 
-const FormulaireModule = ({
-  onSubmit,
-  onCancel,
-  title = "Créer un Module",
+type RegisterFormProps = {
+  onCancel: () => void;
+  title: string;
+  apiUrl?: string;
+  onSuccess?: () => void;
+};
+
+const FormulaireModule = ({ 
+  onCancel, 
+  title, 
+  apiUrl = "/api/modules", 
+  onSuccess 
 }: RegisterFormProps) => {
+  const [formData, setFormData] = useState<ModuleFormData>({
+    nom: "",
+    code: "",
+    description: "",
+    credit: 0,
+    volumeHoraire: 0,
+  });
+
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "credit" || name === "volumeHoraire" 
+        ? Number(value) 
+        : value
+    }));
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
-
-    const formData = new FormData(event.currentTarget);
+    setIsSubmitting(true);
 
     try {
-      await onSubmit(formData);
+      // Validation
+      if (!formData.nom.trim() || !formData.code.trim()) {
+        throw new Error("Nom et code sont obligatoires");
+      }
+
+      // Appel API
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de la création");
+      }
+
+      // Succès
       setSuccess("Module créé avec succès !");
-      setTimeout(() => {
-        setSuccess(null);
-        onCancel(); // Fermer après succès
-      }, 1500);
-    } catch (err) {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setFormData({ 
+        nom: "", 
+        code: "", 
+        description: "", 
+        credit: 0, 
+        volumeHoraire: 0 
+      });
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      setTimeout(() => setSuccess(null), 5000);
+
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la création");
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
-    // Fond noir fixe
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      {/* Conteneur du formulaire */}
-      <div
-        className="bg-white p-6 rounded-lg shadow-lg w-[450px]"
-        onClick={(e) => e.stopPropagation()} // Empêche la fermeture au clic sur le formulaire
-      >
+      <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
         <form onSubmit={handleSubmit} className="space-y-4">
           <h1 className="text-xl font-bold">{title}</h1>
+          
+          {/* Messages d'état */}
+          {error && (
+            <div className="p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="p-3 bg-green-100 text-green-700 rounded">
+              {success}
+            </div>
+          )}
 
-          {error && <p className="text-red-500">{error}</p>}
-          {success && <p className="text-green-500">{success}</p>}
-
-          <div className="flex flex-col gap-4 mt-6">
-            <div className="flex gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">Nom Module :</label>
-                <input
-                  type="text"
-                  name="nom"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Code Module :</label>
-                <input
-                  type="text"
-                  name="code"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-gray-700 mb-2">Nom :</label>
+              <input
+                type="text"
+                name="nom"
+                value={formData.nom}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+              />
             </div>
 
-            <div className="flex gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">Description :</label>
-                <input
-                  type="text"
-                  name="description"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-2">Crédit :</label>
-                <input
-                  type="number"
-                  name="credit"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
+            <div>
+              <label className="block text-gray-700 mb-2">Code :</label>
+              <input
+                type="text"
+                name="code"
+                value={formData.code}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">Description :</label>
+              <input
+                type="text"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">Crédits :</label>
+              <input
+                type="number"
+                name="credit"
+                value={formData.credit}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
+              />
             </div>
 
             <div>
@@ -96,21 +163,24 @@ const FormulaireModule = ({
               <input
                 type="number"
                 name="volumeHoraire"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
+                value={formData.volumeHoraire}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border rounded-lg"
               />
             </div>
           </div>
 
           <div className="flex justify-between mt-6">
-
             <button
               type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              disabled={isSubmitting}
+              className={`bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ${
+                isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Créer
+              {isSubmitting ? "En cours..." : "Créer"}
             </button>
-            
+
             <button
               type="button"
               onClick={onCancel}

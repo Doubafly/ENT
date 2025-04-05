@@ -24,7 +24,7 @@ export async function GET() {
           },
         },
       },
-    });
+    }); 
     return NextResponse.json(
       { message: "Annexes récupérées avec succès", annexes },
       { status: 200 }
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     const { nom, adresse, ville, region } = await request.json();
 
     if (!nom || !adresse || !ville || !region) {
-      return new Response(
-        JSON.stringify({ message: "Tous les champs sont obligatoires" }),
+      return NextResponse.json(
+        { message: "Tous les champs sont obligatoires" },
         { status: 400 }
       );
     }
@@ -58,11 +58,25 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return new Response(JSON.stringify(annexe), { status: 201 });
-  } catch (e) {
-    return new Response(
-      JSON.stringify({ message: "Une erreur est survenue" }),
-      { status: 500 }
-    );
+      // Réponse de succès standardisée
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Annexe créée avec succès",
+          data: annexe
+        },
+        { status: 201 }
+      );
+  
+    } catch (e: any) {
+      // Erreur serveur
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Erreur serveur",
+          error: e.message
+        },
+        { status: 500 }
+      );
+    }
   }
-} 

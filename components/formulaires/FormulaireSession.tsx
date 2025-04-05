@@ -9,7 +9,7 @@ type SessionFormProps = {
 };
 
 const FormulaireSession = ({
-  onSubmit,
+  onSubmit, 
   onCancel,
   title = "Créer une Session",
   isEditMode = false,

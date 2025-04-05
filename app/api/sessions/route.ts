@@ -38,7 +38,7 @@ export async function GET() {
                     prenom: true,
                   },
                 },
-              },
+              }, 
             },
           },
         },

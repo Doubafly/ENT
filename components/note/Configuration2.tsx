@@ -65,7 +65,7 @@ interface FiliereData {
   enseignants: Enseignant[];
 }
 
-export default function Configuration({ filiereId }: { filiereId: number }) {
+export default function Configuration({ filiereId }: { filiereId: number | null }) {
   const [data, setData] = useState<FiliereData | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState({

@@ -544,7 +544,7 @@ export default function ClasseList() {
 
                 {showSubjects && (
                   <div className="mt-4">
-                    <Configuration filiereId={1} />
+                    <Configuration filiereId={selectedClassId} />
                   </div>
                 )}
               </div>

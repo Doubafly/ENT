@@ -3,7 +3,6 @@ import ListCard, { User } from "@/components/card/ListCard";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Configuration from "../note/Configuration2";
-import EnseignantList from "../list/EnseignantList";
 
 interface Classe {
   id_filiere: number;
@@ -472,24 +471,6 @@ export default function ClasseList() {
                         />
                       ))}
                     </ul>
-
-                    <div className="mt-4">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Ajouter un enseignant"
-                          className="flex-1 border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          value={newTeacher}
-                          onChange={(e) => setNewTeacher(e.target.value)}
-                        />
-                        <button
-                          // onClick={handleAddTeacher}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                        >
-                          Ajouter
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
@@ -563,7 +544,7 @@ export default function ClasseList() {
 
                 {showSubjects && (
                   <div className="mt-4">
-                    <Configuration classes={classe} />
+                    <Configuration filiereId={1} />
                   </div>
                 )}
               </div>
@@ -650,23 +631,6 @@ export default function ClasseList() {
                       </button>
                     </div>
                   ))}
-
-                  <div className="flex gap-2 mt-2">
-                    <input
-                      type="text"
-                      placeholder="Ajouter un enseignant"
-                      className="flex-1 border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={tempTeacher}
-                      onChange={(e) => setTempTeacher(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      onClick={addTeacherToNewClass}
-                      className="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                    >
-                      +
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>

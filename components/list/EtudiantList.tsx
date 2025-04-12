@@ -59,8 +59,10 @@ export default function EtudiantList() {
           adresse: etudiant.utilisateur.adresse,
           matricule: etudiant.matricule,
           filiere: {
-            id_filiere: etudiant.filiere.id_filiere,
-            nom: etudiant.filiere.nom,
+          id_filiere: etudiant.filiere.id_filiere,
+          nom: etudiant.filiere.nom, 
+          filiere_module:etudiant.filiere.filiere_module,
+
           },
           date_naissance: formatDate(etudiant.date_naissance),
           date_inscription: formatDate(etudiant.date_inscription),
@@ -186,6 +188,7 @@ export default function EtudiantList() {
 
   // console.log("Liste des étudiants affichée :", currentEtudiants);
 
+  console.log(etudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
@@ -225,12 +228,16 @@ export default function EtudiantList() {
           }}
           className="w-1/4 p-3 border rounded-lg text-sm"
         >
+        
           <option value="">Filtrer par session</option>
           {[
             ...new Set(
               etudiants.flatMap((e) =>
-                e.notes.map((note: any) => note.cours.sessions.annee_academique)
-              )
+                e.filiere.filiere_module.map((note: any) =>
+                  note.cours.map(
+                    (sessions: any) => sessions.semestre)
+
+                  ) )
             ),
           ].map((session) => (
             <option key={session} value={session}>

@@ -81,10 +81,12 @@ const RegisterFormEtudiant = ({
           filiere: {
             id_filiere: etudiant.filiere?.id_filiere || 0,
             nom: etudiant.filiere?.nom || "Non assigné",
+            filiere_module: etudiant.filiere ?.filiere_module,
           },
           date_naissance: etudiant.date_naissance || "",
           date_inscription: etudiant.date_inscription,
           id: 0,
+          notes: undefined
         });
 
         setSuccess("Étudiant créé avec succès !");

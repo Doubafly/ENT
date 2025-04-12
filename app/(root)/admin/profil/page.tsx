@@ -10,12 +10,14 @@ export default function HomePage() {
     nom: string;
     prenom: string;
     type: "Etudiant" | "Enseignant" | "Admin";
+    profil: string;
   }>({
     id: "",
     email: "",
     nom: "",
     prenom: "",
     type: "Etudiant",
+    profil: "",
   });
 
   useEffect(() => {

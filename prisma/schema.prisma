@@ -97,6 +97,7 @@ model FiliereModule {
   id_module         Int
   volume_horaire    Int?
   code_module       String
+  coefficient       Int      @default(1)
   cours             Cours[]
   filiere           Filieres @relation(fields: [id_filiere], references: [id_filiere])
   module            Modules  @relation(fields: [id_module], references: [id_module])

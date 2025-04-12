@@ -15,41 +15,41 @@ type Annexe = {
   nom: string;
 };
 
-type RegisterFormProps = {
+type FiliereFormProps = {
   onCancel: () => void;
   title: string;
   apiUrl?: string;
   onSuccess?: () => void;
-  initialData?: FiliereFormData;
 };
 
 const FormulaireFiliere = ({ 
   onCancel, 
   title, 
   apiUrl = "/api/filieres", 
-  onSuccess,
-  initialData = {
+  onSuccess
+}: FiliereFormProps) => {
+  const [formData, setFormData] = useState<FiliereFormData>({
     nom: "",
     description: "",
     niveau: "",
-    montant_annuel: 0
-  }
-}: RegisterFormProps) => {
-  const [formData, setFormData] = useState<FiliereFormData>(initialData);
+    montant_annuel: 0,
+    id_annexe: undefined
+  });
+
   const [annexes, setAnnexes] = useState<Annexe[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingAnnexes, setIsLoadingAnnexes] = useState(true);
 
-  // Charger les annexes au montage du composant
+  // Charger les annexes au montage
   useEffect(() => {
     const fetchAnnexes = async () => {
       try {
         const response = await fetch("/api/annexes");
         if (!response.ok) throw new Error("Erreur de chargement des annexes");
         const data = await response.json();
-        setAnnexes(data.annexes);
+        setAnnexes(data.annexes || []);
       } catch (err) {
         console.error("Erreur:", err);
         setError("Impossible de charger les annexes");
@@ -83,48 +83,33 @@ const FormulaireFiliere = ({
         throw new Error("Nom, niveau et montant valide sont obligatoires");
       }
 
-      // Préparation des données pour l'API
-      const payload = {
-        ...formData,
-        id_annexe: formData.id_annexe || null // Convertit 0 en null
-      };
-
-      // Appel API
-      const method = initialData.nom ? "PUT" : "POST";
-      const url = initialData.nom ? `${apiUrl}/${initialData.id_annexe}` : apiUrl;
-
-      const response = await fetch(url, {
-        method,
+      const response = await fetch(apiUrl, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur lors de l'envoi");
+        throw new Error(errorData.message || "Erreur lors de la création");
       }
 
-      // Succès
-      setSuccess(initialData.nom ? "Filière modifiée avec succès !" : "Filière créée avec succès !");
+      setSuccess("Filière créée avec succès !");
+      setFormData({ 
+        nom: "", 
+        description: "", 
+        niveau: "", 
+        montant_annuel: 0,
+        id_annexe: undefined
+      });
       
       if (onSuccess) {
         onSuccess();
       }
 
-      if (!initialData.nom) {
-        setFormData({ 
-          nom: "", 
-          description: "", 
-          niveau: "", 
-          montant_annuel: 0,
-          id_annexe: undefined
-        });
-      }
-
       setTimeout(() => setSuccess(null), 5000);
-
     } catch (err: any) {
-      setError(err.message || "Erreur lors de l'opération");
+      setError(err.message || "Erreur lors de la création");
       setTimeout(() => setError(null), 5000);
     } finally {
       setIsSubmitting(false);
@@ -183,8 +168,8 @@ const FormulaireFiliere = ({
               >
                 <option value="">Sélectionnez un niveau</option>
                 <option value="Licence">Licence</option>
-                <option value="MASTER">Master</option>
-                <option value="DOCTORAT">Doctorat</option>
+                <option value="Master">Master</option>
+                <option value="Doctorat">Doctorat</option>
               </select>
             </div>
 
@@ -231,7 +216,7 @@ const FormulaireFiliere = ({
                 isSubmitting || isLoadingAnnexes ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              {isSubmitting ? "En cours..." : initialData.nom ? "Modifier" : "Créer"}
+              {isSubmitting ? "En cours..." : "Créer"}
             </button>
 
             <button

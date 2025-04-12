@@ -5,6 +5,7 @@ interface Student {
   name: string;
   note_class?: number;
   note_exam?: number;
+  coefficient?: number;
 }
 
 interface Module {
@@ -14,7 +15,7 @@ interface Module {
 }
 
 interface Semestre {
-  id: number;
+  id: string; // Correction : ID sous forme "id_filiere-Semestre1"
   name: string;
   modules: Module[];
 }
@@ -33,6 +34,10 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
   students,
   moduleKey,
 }) => {
+  function submitNote() {
+    alert("merci le monde");
+  }
+
   return (
     <>
       <table className="w-full border-collapse border border-gray-300">
@@ -41,10 +46,11 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
             <th className="border p-2">Étudiant</th>
             <th className="border p-2">Note Classe</th>
             <th className="border p-2">Note Examen</th>
+            <th className="border p-2">coefficient</th>
           </tr>
         </thead>
         <tbody>
-          {students.map(({ id, name, note_class, note_exam }) => (
+          {students.map(({ id, name, note_class, note_exam, coefficient }) => (
             <tr key={id} className="border">
               <td className="p-2 border">{name}</td>
               <td className="p-2 border">
@@ -65,11 +71,23 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
                   title="Note Examen"
                 />
               </td>
+              <td className="p-2 border">
+                <input
+                  type="number"
+                  className="border p-1 w-full"
+                  defaultValue={coefficient}
+                  key={`${moduleKey}-${id}-coefficient`}
+                  title="Note Examen"
+                />
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <button className="float-right mt-4 border sidebar-link bg-green-100">
+      <button
+        className="float-right mt-4 border sidebar-link bg-green-100"
+        onClick={submitNote}
+      >
         {" "}
         Valider
       </button>
@@ -78,21 +96,22 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number }> = ({
 };
 
 const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
-  const [selectedClass, setSelectedClass] = useState<number | null>(1);
-  const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
+  const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
 
+  console.log(classes);
   const handleClassChange = (classId: number) => {
-    // alert("bombe");
     setSelectedClass(classId);
     setSelectedSemester(null);
     setSelectedModule(null);
   };
 
-  const handleSemesterChange = (semesterId: number) => {
+  const handleSemesterChange = (semesterId: string) => {
     setSelectedSemester(semesterId);
     setSelectedModule(null);
   };
+
   return (
     <div className="mt-4">
       <div className="md:flex">
@@ -105,9 +124,6 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
             title="Sélectionner une classe"
             className="p-2 border rounded w-full"
             onChange={(e) => handleClassChange(Number(e.target.value))}
-            onClick={(e) =>
-              handleClassChange(Number((e.target as HTMLSelectElement).value))
-            }
           >
             <option value="">-- Choisir --</option>
             {classes.map((cls) => (
@@ -127,12 +143,7 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
             <select
               title="Sélectionner un semestre"
               className="p-2 border rounded w-full"
-              onChange={(e) => handleSemesterChange(Number(e.target.value))}
-              onClick={(e) =>
-                handleSemesterChange(
-                  Number((e.target as HTMLSelectElement).value)
-                )
-              }
+              onChange={(e) => handleSemesterChange(e.target.value)}
             >
               <option value="">-- Choisir --</option>
               {classes
@@ -156,9 +167,6 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
               title="Sélectionner un module"
               className="p-2 border rounded w-full"
               onChange={(e) => setSelectedModule(Number(e.target.value))}
-              onClick={(e) =>
-                setSelectedModule(Number((e.target as HTMLSelectElement).value))
-              }
             >
               <option value="">-- Choisir --</option>
               {classes
@@ -193,4 +201,5 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
     </div>
   );
 };
+
 export default Saisi;

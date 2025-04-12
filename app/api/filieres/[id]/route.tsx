@@ -19,14 +19,44 @@ export async function GET(request: NextRequest) {
       include: {
         annexe: {
           select: {
-            id_annexe: true,
             nom: true,
             ville: true,
           },
         },
+
+        filiere_module: {
+          include: {
+            cours: {
+              select: {
+                semestre: true,
+                enseignant: {
+                  select: {
+                    utilisateur: {
+                      select: {
+                        nom: true,
+                        prenom: true,
+                        email: true,
+                      },
+                    },
+                  },
+                },
+                sessions: {
+                  select: {
+                    annee_academique: true,
+                  },
+                },
+              },
+            },
+            module: {
+              select: {
+                nom: true,
+                description: true,
+              },
+            },
+          },
+        },
         etudiants: {
           select: {
-            id: true,
             matricule: true,
             utilisateur: {
               select: {
@@ -34,22 +64,10 @@ export async function GET(request: NextRequest) {
                 prenom: true,
               },
             },
-          },
-          take: 10, // Limite pour éviter une réponse trop lourde
-        },
-        filiere_module: {
-          include: {
-            module: {
+            notes: {
               select: {
-                id_module: true,
-                nom: true,
-                description: true,
-              },
-            },
-            cours: {
-              select: {
-                id_cours: true,
-                semestre: true,
+                note_class: true,
+                note_exam: true,
               },
             },
           },

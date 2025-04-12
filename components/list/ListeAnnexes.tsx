@@ -9,8 +9,8 @@ type Annexe = {
   id_annexe: number;
   nom: string;
   adresse: string;
-  ville: string;
-  region: string;
+  ville?: string;
+  region?: string;
 };
 
 const ListeAnnexes: React.FC = () => {
@@ -25,7 +25,7 @@ const ListeAnnexes: React.FC = () => {
     nom: "",
     adresse: "",
     ville: "",
-    region: "", 
+    region: ""
   });
   const itemsPerPage: number = 5;
 
@@ -35,16 +35,14 @@ const ListeAnnexes: React.FC = () => {
   };
 
   const handleCreateSuccess = () => {
-    fetchAnnexes(); // Recharge les annexes après création
-  
+    setAnnexes([...annexes]);
   };
 
-  // 🔹 Fonction pour charger les annexes depuis la BD
+  // Fonction pour charger les annexes depuis l'API
   const fetchAnnexes = async () => {
     try {
       const response = await fetch("/api/annexes");
-      if (!response.ok)
-        throw new Error("Erreur lors du chargement des annexes");
+      if (!response.ok) throw new Error("Erreur lors du chargement des annexes");
       const result = await response.json();
       if (!Array.isArray(result.annexes)) {
         throw new Error("Les données récupérées ne sont pas un tableau !");
@@ -55,7 +53,7 @@ const ListeAnnexes: React.FC = () => {
     }
   };
 
-  // 🔹 Charger les annexes au montage du composant
+  // Charger les annexes au montage du composant
   useEffect(() => {
     fetchAnnexes();
   }, []);
@@ -63,10 +61,7 @@ const ListeAnnexes: React.FC = () => {
   const totalPages = Math.ceil(annexes.length / itemsPerPage);
   const indexOfLastAnnexe = currentPage * itemsPerPage;
   const indexOfFirstAnnexe = indexOfLastAnnexe - itemsPerPage;
-  console.log("Annexes:", annexes); // Debug
-  const currentAnnexes = Array.isArray(annexes)
-    ? annexes.slice(indexOfFirstAnnexe, indexOfLastAnnexe)
-    : [];
+  const currentAnnexes = annexes.slice(indexOfFirstAnnexe, indexOfLastAnnexe);
 
   const handleSelect = (annexe: Annexe) => {
     setSelectedAnnexe(
@@ -84,22 +79,14 @@ const ListeAnnexes: React.FC = () => {
 
       if (!response.ok) throw new Error("Erreur lors de la suppression");
 
-      setAnnexes(
-        annexes.filter((a) => a.id_annexe !== annexeToDelete.id_annexe)
-      );
+      setAnnexes(annexes.filter(a => a.id_annexe !== annexeToDelete.id_annexe));
       setSelectedAnnexe(null);
-
-      // Option: Ajouter une notification toast ici
-      console.log("Suppression réussie");
     } catch (error) {
       console.error("Erreur:", error);
-      // Option: Ajouter une notification d'erreur
     } finally {
       setShowDeleteConfirm(false);
     }
   };
-
-  
 
   // Modification - Préparation du formulaire
   const handleEditClick = () => {
@@ -108,8 +95,8 @@ const ListeAnnexes: React.FC = () => {
     setEditFormData({
       nom: selectedAnnexe.nom,
       adresse: selectedAnnexe.adresse,
-      ville: selectedAnnexe.ville,
-      region: selectedAnnexe.region,
+      ville: selectedAnnexe.ville || "",
+      region: selectedAnnexe.region || ""
     });
     setIsEditMode(true);
   };
@@ -130,7 +117,7 @@ const ListeAnnexes: React.FC = () => {
 
       const updatedAnnexe = await response.json();
       setAnnexes(
-        annexes.map((a) =>
+        annexes.map(a =>
           a.id_annexe === selectedAnnexe.id_annexe ? updatedAnnexe.annexe : a
         )
       );
@@ -146,7 +133,10 @@ const ListeAnnexes: React.FC = () => {
   // Gestion des changements dans le formulaire de modification
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setEditFormData((prev) => ({ ...prev, [name]: value }));
+    setEditFormData(prev => ({ 
+      ...prev, 
+      [name]: value
+    }));
   };
 
   return (
@@ -168,16 +158,16 @@ const ListeAnnexes: React.FC = () => {
                 <tr
                   key={annexe.id_annexe}
                   className={`cursor-pointer border-b ${
-                    selectedAnnexe?.id_annexe === annexe.id_annexe
+                    selectedAnnexe?.id_annexe === annexe?.id_annexe
                       ? "bg-blue-200"
                       : "hover:bg-gray-100"
                   }`}
                   onClick={() => handleSelect(annexe)}
                 >
-                  <td className="p-3">{annexe.nom}</td>
-                  <td className="p-3">{annexe.adresse}</td>
-                  <td className="p-3">{annexe.ville}</td>
-                  <td className="p-3">{annexe.region}</td>
+                     <td className="p-3">{annexe.nom || "-"}</td>
+                  <td className="p-3">{annexe.adresse || "-"}</td>
+                  <td className="p-3">{annexe.ville || "-"}</td>
+                  <td className="p-3">{annexe.region || "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -195,9 +185,7 @@ const ListeAnnexes: React.FC = () => {
             Page {currentPage} sur {totalPages}
           </span>
           <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={currentPage === totalPages}
             className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
           >
@@ -210,11 +198,11 @@ const ListeAnnexes: React.FC = () => {
         <button
           className="bg-green-600 text-white px-3 py-1.5 w-full rounded-lg flex items-center justify-center hover:bg-green-700 text-sm"
           onClick={() => setIsAnnexeOpen(true)}
-          
         >
           <FaPlus className="mr-1" /> Ajouter
         </button>
-        {isEditMode && isEditMode && (
+
+        {isEditMode && (
           <div className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center">
             <div
               className="bg-white rounded-lg p-6 shadow-lg w-96"
@@ -224,7 +212,6 @@ const ListeAnnexes: React.FC = () => {
                 <h1 className="text-xl font-bold">Modifier l'Annexe</h1>
 
                 <div className="flex flex-col gap-4">
-                  {/* Champ Nom */}
                   <div>
                     <label className="block text-gray-700 mb-2">Nom :</label>
                     <input
@@ -237,11 +224,8 @@ const ListeAnnexes: React.FC = () => {
                     />
                   </div>
 
-                  {/* Champ Adresse */}
                   <div>
-                    <label className="block text-gray-700 mb-2">
-                      Adresse :
-                    </label>
+                    <label className="block text-gray-700 mb-2">Adresse :</label>
                     <input
                       type="text"
                       name="adresse"
@@ -252,7 +236,6 @@ const ListeAnnexes: React.FC = () => {
                     />
                   </div>
 
-                  {/* Champ Ville */}
                   <div>
                     <label className="block text-gray-700 mb-2">Ville :</label>
                     <input
@@ -264,7 +247,6 @@ const ListeAnnexes: React.FC = () => {
                     />
                   </div>
 
-                  {/* Champ Région */}
                   <div>
                     <label className="block text-gray-700 mb-2">Région :</label>
                     <input
@@ -276,7 +258,6 @@ const ListeAnnexes: React.FC = () => {
                     />
                   </div>
 
-                  {/* Boutons */}
                   <div className="flex justify-between mt-6">
                     <button
                       type="submit"
@@ -300,7 +281,8 @@ const ListeAnnexes: React.FC = () => {
             </div>
           </div>
         )}
-        {isAnnexeOpen && (
+
+        {isAnnexeOpen && !isEditMode && (
           <div
             className="fixed inset-0 z-50 bg-gray-800 bg-opacity-50 flex justify-center items-center"
             onClick={() => setIsAnnexeOpen(false)}
@@ -312,12 +294,12 @@ const ListeAnnexes: React.FC = () => {
               <FormulaireAnnexe
                 onCancel={() => setIsAnnexeOpen(false)}
                 title="Création d'une Nouvelle Annexe"
-                onSuccess={handleCreateSuccess} 
-                // apiUrl est optionnel, utilise "/api/annexes" par défaut
+                onSuccess={handleCreateSuccess}
               />
             </div>
           </div>
         )}
+
         <button
           className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
             selectedAnnexe
@@ -329,6 +311,7 @@ const ListeAnnexes: React.FC = () => {
         >
           <FaEdit className="mr-1" /> Modifier
         </button>
+
         <button
           onClick={() => selectedAnnexe && handleDeleteClick(selectedAnnexe)}
           className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
@@ -340,7 +323,7 @@ const ListeAnnexes: React.FC = () => {
         >
           <FaTrash className="mr-1" /> Supprimer
         </button>
-        { /*    //pour la confirmation de la suppression cest un composant que jai cree qui reutilisable partout */}
+
         <ConfirmDialog
           isOpen={showDeleteConfirm}
           title="Confirmer la suppression"

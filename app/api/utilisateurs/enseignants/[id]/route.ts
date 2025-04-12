@@ -79,7 +79,6 @@ export async function PUT(req: NextRequest) {
       !prenom?.trim() ||
       !email?.trim() ||
       !sexe?.trim() ||
-      !mot_de_passe ||
       !telephone?.trim() ||
       !adresse?.trim() ||
       !profil?.trim() ||
@@ -91,9 +90,14 @@ export async function PUT(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Hash du mot de passe
-    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+    // Vérifier que le mot de passe n'est pas vide
+    let hashPass = mot_de_passe;
+    if (mot_de_passe && mot_de_passe.trim() !== "") {
+      hashPass = await bcrypt.hash(mot_de_passe, 10);
+    } else {
+      // Si le mot de passe est vide, ne pas tenter de le hacher
+      console.warn("Mot de passe vide, le mot de passe ne sera pas modifié.");
+    }
 
     const updatedEnseignant = await prisma.enseignants.update({
       where: {
@@ -108,7 +112,7 @@ export async function PUT(req: NextRequest) {
             prenom,
             email,
             sexe,
-            mot_de_passe: hashPass,
+            mot_de_passe: hashPass === "" ? undefined : hashPass,
             telephone,
             adresse,
             profil,

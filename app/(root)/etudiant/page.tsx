@@ -62,11 +62,6 @@ export default function Home() {
         const nombreModulesValides = notesEtudiant.filter((note: { commentaire: string; }) => note.commentaire === "valide").length;
         const nombreModulesNonValides = notesEtudiant.filter((note: { commentaire: string; }) => note.commentaire !== "valide").length;
   
-        console.log("Cours filtrés :", coursFiltres);
-        console.log("Notes de l'étudiant :", notesEtudiant);
-        console.log("Modules valides :", nombreModulesValides);
-        console.log("Modules non valides :", nombreModulesNonValides);
-  
         setStatData([
           { link: "/icons/teach.png", value: nombreModules, nom: "Nombre Module" },
           { link: "/icons/friends.png", value: "0", nom: "Nombre Abscence" },

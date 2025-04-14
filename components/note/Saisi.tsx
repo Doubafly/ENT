@@ -212,8 +212,8 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
                   <input
                     type="number"
                     className="border p-1 w-full"
-                    value={(((note_class || 0) + ((note_exam || 0) * 2)) / 3).toFixed(2)}
-                    readOnly
+                    defaultValue={((note_class || 0) + ((note_exam || 0) * 2))/3}
+               
                     key={`${moduleKey}-${id}-coefficient`}
                     title="Coefficient"
                   />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
 import FormulaireFiliere from "../formulaires/FormulaireFiliere";
 import { ConfirmDialog } from "../ConfirmDialog";
 
@@ -21,7 +21,6 @@ type Filiere = {
 type Annexe = {
   id_annexe: number;
   nom: string;
- 
 };
 
 enum FilieresNiveau {
@@ -35,15 +34,15 @@ const ListeFilieres: React.FC = () => {
   const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [annexes, setAnnexes] = useState<Annexe[]>([]);
   const [selectedFiliere, setSelectedFiliere] = useState<Filiere | null>(null);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [isFiliereOpen, setIsFiliereOpen] = useState<boolean>(false);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isFiliereOpen, setIsFiliereOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [filiereToDelete, setFiliereToDelete] = useState<Filiere | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const itemsPerPage: number = 5;
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const itemsPerPage = 5;
 
   const [editFormData, setEditFormData] = useState<{
     nom: string;
@@ -59,43 +58,45 @@ const ListeFilieres: React.FC = () => {
     id_annexe: null
   });
 
-  // Charger les filières et annexes
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const [filieresRes, annexesRes] = await Promise.all([
-          fetch("/api/filieres"),
-          fetch("/api/annexes")
-        ]);
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [filieresRes, annexesRes] = await Promise.all([
+        fetch("/api/filieres"),
+        fetch("/api/annexes")
+      ]);
 
-        if (!filieresRes.ok) throw new Error("Erreur lors du chargement des filières");
-        if (!annexesRes.ok) throw new Error("Erreur lors du chargement des annexes");
+      if (!filieresRes.ok) throw new Error("Erreur lors du chargement des filières");
+      if (!annexesRes.ok) throw new Error("Erreur lors du chargement des annexes");
 
-        const filieresData = await filieresRes.json();
-        const annexesData = await annexesRes.json();
+      const filieresData = await filieresRes.json();
+      const annexesData = await annexesRes.json();
 
-        if (!Array.isArray(filieresData.filieres)) {
-          throw new Error("Format de données invalide pour les filières");
-        }
-
-        setFilieres(filieresData.filieres);
-        setAnnexes(annexesData.annexes || []);
-      } catch (err) {
-        console.error("Erreur:", err);
-        setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue");
-      } finally {
-        setIsLoading(false);
+      if (!Array.isArray(filieresData.filieres)) {
+        throw new Error("Format de données invalide pour les filières");
       }
-    };
 
+      setFilieres(filieresData.filieres);
+      setAnnexes(annexesData.annexes || []);
+    } catch (err) {
+      console.error("Erreur:", err);
+      setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
   const handleCreateSuccess = () => {
-    setFilieres([...filieres]); // Example: Resetting to the current state
+    fetchData();
+    setSuccessMessage("Filière créée avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
+    setIsFiliereOpen(false);
   };
 
   const handleSelect = (filiere: Filiere) => {
@@ -104,16 +105,17 @@ const ListeFilieres: React.FC = () => {
     );
   };
 
-  const handleDeleteClick = (filiere: Filiere) => {
-    setFiliereToDelete(filiere);
+  const handleDeleteClick = () => {
     setShowDeleteConfirm(true);
   };
 
   const handleDelete = async () => {
-    if (!filiereToDelete) return;
+    if (!selectedFiliere) return;
+    setIsProcessing(true);
+    setError(null);
 
     try {
-      const response = await fetch(`/api/filieres/${filiereToDelete.id_filiere}`, {
+      const response = await fetch(`/api/filieres/${selectedFiliere.id_filiere}`, {
         method: "DELETE",
       });
 
@@ -122,14 +124,16 @@ const ListeFilieres: React.FC = () => {
         throw new Error(errorData.message || "Erreur lors de la suppression");
       }
 
-      setFilieres(filieres.filter(f => f.id_filiere !== filiereToDelete.id_filiere));
+      await fetchData();
       setSelectedFiliere(null);
+      setSuccessMessage("Filière supprimée avec succès");
     } catch (error) {
       console.error("Erreur:", error);
-      alert(error instanceof Error ? error.message : "Erreur lors de la suppression");
+      setError(error instanceof Error ? error.message : "Erreur lors de la suppression");
     } finally {
+      setIsProcessing(false);
       setShowDeleteConfirm(false);
-      setFiliereToDelete(null);
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
@@ -149,9 +153,10 @@ const ListeFilieres: React.FC = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFiliere) return;
+    setIsProcessing(true);
+    setError(null);
 
     try {
-      // Validation des données
       if (!editFormData.nom.trim()) {
         throw new Error("Le nom de la filière est obligatoire");
       }
@@ -176,26 +181,21 @@ const ListeFilieres: React.FC = () => {
         throw new Error(errorData.message || "Erreur lors de la modification");
       }
 
-      const updatedFiliere = await response.json();
-      
-      setFilieres(
-        filieres.map(f =>
-          f.id_filiere === selectedFiliere.id_filiere 
-            ? { ...f, ...updatedFiliere.filiere } 
-            : f
-        )
-      );
-
+      await fetchData();
+      setSuccessMessage("Filière modifiée avec succès");
       setIsFiliereOpen(false);
       setIsEditMode(false);
       setSelectedFiliere(null);
     } catch (error) {
       console.error("Erreur détaillée:", error);
-      alert(
+      setError(
         error instanceof Error 
           ? error.message 
           : "Une erreur est survenue lors de la modification"
       );
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
@@ -214,24 +214,25 @@ const ListeFilieres: React.FC = () => {
 
   // Pagination
   const totalPages = Math.ceil(filieres.length / itemsPerPage);
-  const indexOfLastFiliere = currentPage * itemsPerPage;
-  const indexOfFirstFiliere = indexOfLastFiliere - itemsPerPage;
-  const currentFilieres = filieres.slice(indexOfFirstFiliere, indexOfLastFiliere);
+  const currentFilieres = filieres.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <FaSpinner className="animate-spin text-2xl text-blue-500" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-        <strong>Erreur!</strong> {error}
+      <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded">
+        <strong>Erreur !</strong> {error}
         <button 
-          onClick={() => window.location.reload()}
+          onClick={fetchData}
           className="ml-4 bg-red-500 text-white px-3 py-1 rounded"
         >
           Réessayer
@@ -242,6 +243,12 @@ const ListeFilieres: React.FC = () => {
 
   return (
     <div className="bg-white text-gray-800 p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-6">
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {successMessage}
+        </div>
+      )}
+
       <div className="w-full md:w-3/4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Liste des Filières</h2>
@@ -281,7 +288,7 @@ const ListeFilieres: React.FC = () => {
                       {filiere.niveau.replace("Master1", "Master 1").replace("Master2", "Master 2")}
                     </td>
                     <td className="p-3">
-                      {filiere.montant_annuel.toLocaleString()} €
+                      {filiere.montant_annuel.toLocaleString()} CFA
                     </td>
                     <td className="p-3">
                       {filiere.annexe?.nom || "-"}
@@ -302,9 +309,9 @@ const ListeFilieres: React.FC = () => {
         {filieres.length > 0 && (
           <div className="flex justify-between items-center mt-4">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300 transition-colors"
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300"
             >
               Précédent
             </button>
@@ -312,9 +319,9 @@ const ListeFilieres: React.FC = () => {
               Page {currentPage} sur {totalPages}
             </span>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300 transition-colors"
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300"
             >
               Suivant
             </button>
@@ -324,14 +331,14 @@ const ListeFilieres: React.FC = () => {
 
       <div className="w-full md:w-1/4 space-y-4">
         <button
-          className="bg-green-600 text-white px-4 py-2 w-full rounded-lg flex items-center justify-center hover:bg-green-700 transition-colors"
+          className="bg-green-600 text-white px-4 py-2 w-full rounded-lg flex items-center justify-center hover:bg-green-700"
           onClick={() => setIsFiliereOpen(true)}
         >
           <FaPlus className="mr-2" /> Ajouter
         </button>
 
         <button
-          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
+          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center ${
             selectedFiliere
               ? "bg-yellow-500 text-white hover:bg-yellow-600"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -343,8 +350,8 @@ const ListeFilieres: React.FC = () => {
         </button>
 
         <button
-          onClick={() => selectedFiliere && handleDeleteClick(selectedFiliere)}
-          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
+          onClick={handleDeleteClick}
+          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center ${
             selectedFiliere
               ? "bg-red-500 text-white hover:bg-red-600"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -445,7 +452,7 @@ const ListeFilieres: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Montant annuel (€) *
+                    Montant annuel (CFA) *
                   </label>
                   <input
                     type="number"
@@ -494,6 +501,9 @@ const ListeFilieres: React.FC = () => {
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
+                  {isProcessing ? (
+                    <FaSpinner className="animate-spin inline-block mr-2" />
+                  ) : null}
                   Enregistrer
                 </button>
               </div>
@@ -510,10 +520,10 @@ const ListeFilieres: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <FormulaireFiliere
-                onCancel={() => setIsFiliereOpen(false)}
-                title="Création d'une Nouvelle Filière"
-                onSuccess={handleCreateSuccess}
-              />
+              onCancel={() => setIsFiliereOpen(false)}
+              title="Création d'une Nouvelle Filière"
+              onSuccess={handleCreateSuccess}
+            />
           </div>
         </div>
       )}
@@ -521,12 +531,11 @@ const ListeFilieres: React.FC = () => {
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="Confirmer la suppression"
-        message={`Êtes-vous sûr de vouloir supprimer la filière "${filiereToDelete?.nom}" ? Cette action est irréversible.`}
+        message={`Êtes-vous sûr de vouloir supprimer la filière "${selectedFiliere?.nom}" ? Cette action est irréversible.`}
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteConfirm(false)}
-        confirmText="Supprimer"
+        confirmText={isProcessing ? "Suppression..." : "Supprimer"}
         cancelText="Annuler"
-        
       />
     </div>
   );

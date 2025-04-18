@@ -29,7 +29,7 @@ export async function GET(
             montant_annuel: true,
             niveau: true,
             id_filiere: true,
-          }, 
+          },
         },
       },
     });
@@ -52,31 +52,43 @@ export async function GET(
 
 export async function PUT(request: NextRequest) {
   try {
+    const {
+      id_filiere_module,
+      syllabus,
+      id_module,
+      id_filiere,
+      code_module,
+      volume_horaire,
+    } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
-    const body = await request.json();
-    
-    if (!id || isNaN(parseInt(id))) {
-      return NextResponse.json(
-        { message: "ID invalide ou manquant" },
-        { status: 400 }
-      );
+    if (
+      !id_filiere_module ||
+      !syllabus ||
+      !id_module ||
+      !id_filiere ||
+      !code_module ||
+      !volume_horaire
+    ) {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
+        status: 400,
+      });
     }
-
-    const updated = await prisma.filiereModule.update({
-      where: { id_filiere_module: parseInt(id) },
-      data: body,
+    const filiereModule = await prisma.filiereModule.update({
+      where: { id_filiere_module: id ? parseInt(id) : 0 },
+      data: {
+        syllabus,
+        id_module,
+        id_filiere,
+        code_module,
+        volume_horaire,
+      },
     });
-
-    return NextResponse.json(
-      { message: "Association mise à jour", filiere_module: updated },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Erreur:", error);
-    return NextResponse.json(
-      { message: "Une erreur est survenue" },
-      { status: 500 }
-    );
+    return  NextResponse.json({ message: "succes", filiereModule }, {
+      status: 200,
+    });
+  } catch (e) {
+    return  NextResponse.json({ message: "Une erreur est survenue" },
+      { status: 500 });
   }
 }
 

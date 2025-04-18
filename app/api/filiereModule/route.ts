@@ -38,17 +38,21 @@ export async function GET() {
 } 
 
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { id_module, id_filiere, code_module, volume_horaire, syllabus } = await request.json();
-
-    if (!id_module || !id_filiere || !code_module) {
-      return NextResponse.json(
-        { message: "Paramètres manquants" },
-        { status: 400 }
-      );
+    const { syllabus, id_module, id_filiere, volume_horaire, code_module } =
+      await request.json();
+    if (
+      !syllabus ||
+      !id_module ||
+      !id_filiere ||
+      !volume_horaire ||
+      !code_module
+    ) {
+      return  NextResponse.json({ message: "Paramètres manquants" }, {
+        status: 400,
+      });
     }
-
     const filiereModule = await prisma.filiereModule.create({
       data: {
         syllabus,
@@ -62,17 +66,12 @@ export async function POST(request: Request) {
         },
       },
     });
-
-    return NextResponse.json(
-      { message: "success", filiereModule },
-      { status: 201 }
-    );
-
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Erreur serveur" },
-      { status: 500 }
-    );
+    return  NextResponse.json({ message: "succes", filiereModule }, {
+      status: 201
+    });
+  } catch (e) {
+    return  NextResponse.
+      json({ message: "Une erreur est survenue" },
+      { status: 500 });
   }
 }

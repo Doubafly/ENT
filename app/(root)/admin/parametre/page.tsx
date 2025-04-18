@@ -32,11 +32,11 @@ const ParametrePage = () => {
       icon: <FaCog />,
       description: "Gérer les paramètres système",
     },
-    {
-      id: "Roles",
-      icon: <FaUser />,
-      description: "Gérer les differents Roles",
-    },
+    // {
+    //   id: "Roles",
+    //   icon: <FaUser />,
+    //   description: "Gérer les differents Roles",
+    // },
     {
       id: "Annexes",
       icon: <FaBuilding />,

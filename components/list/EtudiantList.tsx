@@ -185,9 +185,10 @@ console.log(filteredEtudiants);
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
+ // Bref résumé de la liste des étudiants
   // console.log("Liste des étudiants affichée :", currentEtudiants);
 
+  console.log(etudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
@@ -227,7 +228,9 @@ console.log(filteredEtudiants);
           }}
           className="w-1/4 p-3 border rounded-lg text-sm"
         >
+        
           <option value="">Filtrer par session</option>
+
           {[...new Set(
             etudiants.flatMap((etudiant) =>
               etudiant.filiere.filiere_module.flatMap((fm) =>

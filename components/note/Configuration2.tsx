@@ -94,7 +94,8 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
           fetch(`/api/filieres/${filiereId}/modules`),
           fetch("/api/sessions"),
         ]);
-
+        console.log(filiereResponse);
+        
         if (!filiereResponse.ok)
           throw new Error("Erreur de chargement des données de la filière");
         if (!sessionsResponse.ok)

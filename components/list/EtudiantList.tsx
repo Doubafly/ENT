@@ -161,23 +161,23 @@ export default function EtudiantList() {
   };
 
   // Filtrage des étudiants
-  const filteredEtudiants = etudiants.filter((etudiant) => {
-    return (
-      `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (classFilter ? etudiant.filiere.nom === classFilter : true) &&
-      (yearFilter
-        ? formatDate(etudiant.date_inscription) === yearFilter
-        : true) &&
-      (sessionFilter
-        ? etudiant.notes.some(
-            (note: any) =>
-              note.cours.sessions.annee_academique === sessionFilter
+const filteredEtudiants = etudiants.filter((etudiant) => {
+  return (
+    `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()) &&
+    (classFilter ? etudiant.filiere.nom === classFilter : true) &&
+    (sessionFilter
+      ? etudiant.filiere.filiere_module.some((fm: any) =>
+          fm.cours.some(
+            (cour: any) => cour.sessions.annee_academique === sessionFilter
           )
-        : true)
-    );
-  });
+        )
+      : true)
+  );
+});
+console.log(filteredEtudiants);
+
 
   // Pagination
   const totalPages = Math.ceil(filteredEtudiants.length / itemsPerPage);
@@ -230,21 +230,21 @@ export default function EtudiantList() {
         >
         
           <option value="">Filtrer par session</option>
-          {[
-            ...new Set(
-              etudiants.flatMap((e) =>
-                e.filiere.filiere_module.map((note: any) =>
-                  note.cours.map(
-                    (sessions: any) => sessions.semestre)
 
-                  ) )
-            ),
-          ].map((session) => (
-            <option key={session} value={session}>
-              {session}
+          {[...new Set(
+            etudiants.flatMap((etudiant) =>
+              etudiant.filiere.filiere_module.flatMap((fm) =>
+                fm.cours.map((cour) => cour.sessions.annee_academique)
+              )
+            )
+          )].sort().map((annee) => (
+            <option key={annee} value={annee}>
+              {annee}
             </option>
           ))}
+
         </select>
+
         <button
           onClick={() => setShowForm(true)}
           className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-sm rounded-lg mr-4"

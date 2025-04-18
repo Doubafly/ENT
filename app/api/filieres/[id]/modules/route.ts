@@ -97,7 +97,7 @@ export async function GET(
     console.error("Error fetching data:", e);
     return NextResponse.json(
       {
-        message: "Une erreur est survenue lors de la récupération des données",
+        message: "Une erreur est survenue lors de la récupération des données"+e,
       },
       { status: 500 }
     );

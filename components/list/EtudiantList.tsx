@@ -185,7 +185,7 @@ export default function EtudiantList() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
+ // Bref résumé de la liste des étudiants
   // console.log("Liste des étudiants affichée :", currentEtudiants);
 
   console.log(etudiants);

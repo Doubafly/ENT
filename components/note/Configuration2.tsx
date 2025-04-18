@@ -98,14 +98,12 @@ export default function Configuration({
       try {
         setLoading({ main: true, sessions: true, modules: true });
         setError("");
-
         const [filiereResponse, sessionsResponse, modulesResponse] =
           await Promise.all([
             fetch(`/api/filieres/${filiereId}/modules`),
             fetch("/api/sessions"),
             fetch("/api/modules"),
           ]);
-
         if (!filiereResponse.ok)
           throw new Error("Erreur de chargement des données de la filière");
         if (!sessionsResponse.ok)

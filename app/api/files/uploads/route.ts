@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Mettre à jour le profil de l'utilisateur dans la base de données
     await prisma.utilisateurs.update({
-      where: { id_utilisateur: parseInt(userId) }, // Assurez-vous que l'ID est un nombre
+      where: { id_utilisateur: parseInt(userId as string) }, // Assurez-vous que l'ID est un nombre
       data: { profil: `/profils/${fileName}` },
     });
 

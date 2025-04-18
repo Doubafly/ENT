@@ -14,7 +14,6 @@ export default function page() {
       try {
         const response = await fetch("/api/filieres");
         const data = await response.json();
-        console.log(data);
 
         if (data.filieres) {
           // Transformer les données API en structure attendue
@@ -28,32 +27,42 @@ export default function page() {
             } else {
               niveauLabel = `Autre ${filiere.nom}`;
             }
+          
+            // Regrouper les modules par semestre
+            const semestresMap = new Map();
+          
+            filiere.filiere_module.forEach((mod: any, Index: number) => {
+              mod.cours.forEach((cours: any) => {
+                const semestreId = `${filiere.id_filiere}-${cours.semestre}`;
+                if (!semestresMap.has(semestreId)) {
+                  semestresMap.set(semestreId, {
+                    id: semestreId,
+                    name: cours.semestre,
+                    modules: [],
+                  });
+                }
+                semestresMap.get(semestreId).modules.push({
+                  id: mod.id_module,
+                  name: mod.module.nom,
+                  students: filiere.etudiants.map((etudiant: any) => ({
+                    id: etudiant.id,
+                    matricule: etudiant.matricule,
+                    name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
+                    id_cours: cours.id_cours,
+                    id_note: etudiant.notes[Index]?.id_note || 0,
+                    note_class: etudiant.notes[Index]?.note_class || 0,
+                    note_exam: etudiant.notes[Index]?.note_exam || 0,
+                    coefficient: mod.coefficient, // Associer le coefficient au module
+                  })),
+                });
+              });
+            });
+          
             return {
               id: filiere.id_filiere,
               name: niveauLabel, // Intégration du niveau dans le nom de la classe
-              coefficients: filiere.filiere_module.map(
-                (mod: any) => mod.coefficient
-              ), // Récupérer tous les coefficients des modules
-              semestres: filiere.filiere_module.flatMap(
-                (mod: any, Index: number) =>
-                  mod.cours.map((cours: any) => ({
-                    id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique basé sur la filière et le semestre
-                    name: cours.semestre, // Correction : Prendre le semestre ici
-                    modules: [
-                      {
-                        id: mod.id_module,
-                        name: mod.module.nom,
-                        students: filiere.etudiants.map((etudiant: any) => ({
-                          id: etudiant.matricule,
-                          name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
-                          note_class: etudiant.notes[Index]?.note_class || 0,
-                          note_exam: etudiant.notes[Index]?.note_exam || 0,
-                          coefficient: mod.coefficient, // Associer le coefficient au module
-                        })),
-                      },
-                    ],
-                  }))
-              ),
+              coefficients: filiere.filiere_module.map((mod: any) => mod.coefficient), // Récupérer tous les coefficients des modules
+              semestres: Array.from(semestresMap.values()), // Convertir la Map en tableau
             };
           });
           setClasses(formattedClasses);

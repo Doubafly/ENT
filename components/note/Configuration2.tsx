@@ -31,6 +31,10 @@ interface Enseignant {
 interface Module {
   id_module: number;
   nom: string;
+  description?: string;
+  code_module: string;
+  coefficient?: number;
+  volume_horaire?: number;
 }
 
 interface Session {
@@ -65,19 +69,23 @@ interface FiliereData {
   enseignants: Enseignant[];
 }
 
-export default function Configuration({ filiereId }: { filiereId: number | null }) {
+export default function Configuration({
+  filiereId,
+}: {
+  filiereId: number | null;
+}) {
   const [data, setData] = useState<FiliereData | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [allModules, setAllModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState({
     main: true,
     sessions: true,
+    modules: true,
   });
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  const [selectedModule, setSelectedModule] = useState<FiliereModule | null>(
-    null
-  );
+  const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedEnseignant, setSelectedEnseignant] =
     useState<Enseignant | null>(null);
@@ -88,33 +96,41 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading({ main: true, sessions: true });
+        setLoading({ main: true, sessions: true, modules: true });
+        setError("");
 
-        const [filiereResponse, sessionsResponse] = await Promise.all([
-          fetch(`/api/filieres/${filiereId}/modules`),
-          fetch("/api/sessions"),
-        ]);
+        const [filiereResponse, sessionsResponse, modulesResponse] =
+          await Promise.all([
+            fetch(`/api/filieres/${filiereId}/modules`),
+            fetch("/api/sessions"),
+            fetch("/api/modules"),
+          ]);
 
         if (!filiereResponse.ok)
           throw new Error("Erreur de chargement des données de la filière");
         if (!sessionsResponse.ok)
           throw new Error("Erreur de chargement des sessions");
+        if (!modulesResponse.ok)
+          throw new Error("Erreur de chargement des modules");
 
-        const [filiereData, sessionsData] = await Promise.all([
+        const [filiereData, sessionsData, modulesData] = await Promise.all([
           filiereResponse.json(),
           sessionsResponse.json(),
+          modulesResponse.json(),
         ]);
 
         setData(filiereData.data);
         setSessions(sessionsData.data || []);
+        setAllModules(modulesData.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
+        console.error("Fetch error:", err);
       } finally {
-        setLoading({ main: false, sessions: false });
+        setLoading({ main: false, sessions: false, modules: false });
       }
     };
 
-    fetchData();
+    if (filiereId) fetchData();
   }, [filiereId]);
 
   const handleCreateCours = async () => {
@@ -124,33 +140,50 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
     }
 
     try {
+      // Trouver le FiliereModule correspondant
+      const filiereModule = data?.modules.find(
+        (fm) => fm.module.id_module === selectedModule.id_module
+      );
+
+      if (!filiereModule) {
+        setError("Ce module n'est pas associé à cette filière");
+        return;
+      }
+
       const response = await fetch("/api/cours", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_filiere_module: selectedModule.id_filiere_module,
+          id_filiere_module: filiereModule.id_filiere_module,
           id_professeur: selectedEnseignant.id,
           id_sessions: selectedSession.id_sessions,
           semestre,
         }),
       });
 
-      if (!response.ok) throw new Error("Erreur lors de la création du cours");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Erreur lors de la création du cours"
+        );
+      }
 
-      // Rechargement des données
+      // Rafraîchir les données
       const filiereResponse = await fetch(`/api/filieres/${filiereId}/modules`);
       const filiereData = await filiereResponse.json();
       setData(filiereData.data);
 
-      // Réinitialisation
-      setShowForm(false);
+      // Réinitialiser le formulaire
       setSelectedModule(null);
       setSelectedSession(null);
       setSelectedEnseignant(null);
+      setShowForm(false);
+      setError("");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Erreur lors de la création"
       );
+      console.error("Create course error:", err);
     }
   };
 
@@ -159,9 +192,13 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
 
     try {
       const response = await fetch(`/api/cours/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error("Erreur lors de la suppression");
 
-      // Mise à jour optimisée
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Erreur lors de la suppression");
+      }
+
+      // Mise à jour optimiste de l'état
       setData((prev) =>
         prev
           ? {
@@ -177,16 +214,19 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
       setError(
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
+      console.error("Delete error:", err);
     }
   };
 
-  if (loading.main)
+  if (loading.main) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
         <CircularProgress />
       </Box>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <Box p={2}>
         <Alert severity="error" onClose={() => setError("")}>
@@ -194,17 +234,22 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
         </Alert>
       </Box>
     );
-  if (!data)
+  }
+
+  if (!data) {
     return (
       <Box p={2}>
-        <Alert severity="warning">Aucune donnée disponible</Alert>
+        <Alert severity="warning">
+          Aucune donnée disponible pour cette filière
+        </Alert>
       </Box>
     );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
-        Gestion des Cours - {data.filiere.nom}
+        Gestion des Cours - {data.filiere.nom} ({data.filiere.niveau})
       </Typography>
 
       <Box mb={3}>
@@ -214,7 +259,7 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
           onClick={() => setShowForm(!showForm)}
           sx={{ mb: 2 }}
         >
-          {showForm ? "Masquer le formulaire" : "Créer un nouveau cours"}
+          {showForm ? "Masquer le formulaire" : "Ajouter un cours"}
         </Button>
 
         <Collapse in={showForm}>
@@ -223,18 +268,33 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
               Nouveau cours
             </Typography>
 
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
               <Autocomplete
-                options={data.modules}
+                options={allModules}
                 getOptionLabel={(option) =>
-                  `${option.module.nom} (${option.code_module})`
+                  `${option.nom} (${option.code_module})`
                 }
                 value={selectedModule}
                 onChange={(_, newValue) => setSelectedModule(newValue)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Module" required />
+                  <TextField
+                    {...params}
+                    label="Module"
+                    required
+                    helperText={selectedModule?.description}
+                  />
                 )}
                 fullWidth
+                loading={loading.modules}
+                isOptionEqualToValue={(option, value) =>
+                  option.id_module === value.id_module
+                }
               />
 
               <Autocomplete
@@ -282,9 +342,15 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
                   !selectedModule || !selectedSession || !selectedEnseignant
                 }
               >
-                Créer
+                Enregistrer
               </Button>
-              <Button variant="outlined" onClick={() => setShowForm(false)}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setShowForm(false);
+                  setError("");
+                }}
+              >
                 Annuler
               </Button>
             </Box>
@@ -293,14 +359,15 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
       </Box>
 
       <Typography variant="h6" gutterBottom>
-        Liste des cours
+        Liste des cours programmés
       </Typography>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Module</TableCell>
+              <TableCell>Code</TableCell>
               <TableCell>Session</TableCell>
               <TableCell>Semestre</TableCell>
               <TableCell>Enseignant</TableCell>
@@ -313,6 +380,7 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
                 module.cours?.map((cours) => (
                   <TableRow key={cours.id_cours}>
                     <TableCell>{module.module.nom}</TableCell>
+                    <TableCell>{module.code_module}</TableCell>
                     <TableCell>{cours.sessions.annee_academique}</TableCell>
                     <TableCell>{cours.semestre}</TableCell>
                     <TableCell>
@@ -332,9 +400,9 @@ export default function Configuration({ filiereId }: { filiereId: number | null 
 
             {data.modules.every((m) => !m.cours || m.cours.length === 0) && (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body1" color="textSecondary">
-                    Aucun cours programmé
+                    Aucun cours programmé pour cette filière
                   </Typography>
                 </TableCell>
               </TableRow>

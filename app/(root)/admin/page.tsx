@@ -22,11 +22,21 @@ export default function Home() {
         const cours = coursData.cours;
 
         // Nombre d'enseignants (un par cours)
-        const nombreEnseignants = cours.map((c: { enseignant: any; }) => c.enseignant).length;
+        console.log("cours", cours);
+        
+        // const nombreEnseignants = new Set(cours.map((c: { enseignant: any; }) => c.enseignant)).size;
+        const nombreEnseignants = new Set(cours.map(c => c.enseignant.id)).size;
 
-        // Nombre d'étudiants (on récupère tous les tableaux d’étudiants dans les filières, puis les aplatit manuellement)
-        const allEtudiantsArrays = cours.map((c: { filiere_module: { filiere: { etudiants: any; }; }; }) => c.filiere_module?.filiere?.etudiants || []);
-        const nombreEtudiants = allEtudiantsArrays.reduce((total:any, etudiants:any) => total + etudiants.length, 0);
+
+        // Étape 1 : Extraire tous les étudiants de toutes les filières
+        const allEtudiants = cours.flatMap(c => c.filiere_module?.filiere?.etudiants || []);
+
+        // Étape 2 : Filtrer les matricules uniques
+        const matriculesUniques = new Set(allEtudiants.map(e => e.matricule));
+
+        // Étape 3 : Nombre d’étudiants uniques
+        const nombreEtudiants = matriculesUniques.size;
+
 
         // Nombre de filières (un par cours)
         const nombreFilieres = cours.map((c: { filiere_module: { filiere: any; }; }) => c.filiere_module?.filiere).length;

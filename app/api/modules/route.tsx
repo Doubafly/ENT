@@ -1,28 +1,51 @@
-import { NextRequest, NextResponse} from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
 export async function GET() {
   try {
     const modules = await prisma.modules.findMany({
-      include: {
+      select: {
+        id_module: true,
+        nom: true,
+        description: true,
+        // Ajout des attributs manquants
         filiere_module: {
-          include: {
+          select: {
+            code_module: true,
+            coefficient: true,
+            volume_horaire: true,
             filiere: {
-              select:{
+              select: {
                 nom: true,
                 niveau: true,
-                montant_annuel: true,
               },
-            }, 
+            },
           },
         },
       },
     });
-    return  NextResponse.json({ message: "succes", modules }, {
-      status: 200,
-    });
+
+    // Formatage des données pour correspondre à l'interface attendue
+    const formattedModules = modules.map((module) => ({
+      id_module: module.id_module,
+      nom: module.nom,
+      description: module.description || undefined,
+      code_module: module.filiere_module[0]?.code_module || "",
+      coefficient: module.filiere_module[0]?.coefficient || 1,
+      volume_horaire: module.filiere_module[0]?.volume_horaire || undefined,
+    }));
+
+    return NextResponse.json(
+      {
+        message: "success",
+        data: formattedModules,
+      },
+      { status: 200 }
+    );
   } catch (e) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    console.error("Error fetching modules:", e);
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -31,22 +54,28 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const { nom, description } = await request.json();
-    if (!nom || !description) {
-      return  NextResponse.json({ message: "Paramètres manquants" }, {
-        status: 400,
-      });
+    if (!nom) {
+      return NextResponse.json(
+        { message: "Le nom du module est obligatoire" },
+        { status: 400 }
+      );
     }
+
     const module = await prisma.modules.create({
       data: {
         nom,
-        description,
+        description: description || null,
       },
     });
-    return  NextResponse.json({ message: "succes", module }, {
-      status: 201,
-    });
+
+    return NextResponse.json(
+      { message: "Module créé avec succès", data: module },
+      { status: 201 }
+    );
   } catch (error) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    console.error("Error creating module:", error);
+    return NextResponse.json(
+      { message: "Une erreur est survenue lors de la création du module" },
       { status: 500 }
     );
   }

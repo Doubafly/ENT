@@ -142,6 +142,8 @@ export default function Configuration({
       const filiereModule = data?.modules.find(
         (fm) => fm.module.id_module === selectedModule.id_module
       );
+      console.log(data);
+      
 
       if (!filiereModule) {
         setError("Ce module n'est pas associé à cette filière");

@@ -59,8 +59,10 @@ export default function EtudiantList() {
           adresse: etudiant.utilisateur.adresse,
           matricule: etudiant.matricule,
           filiere: {
-            id_filiere: etudiant.filiere.id_filiere,
-            nom: etudiant.filiere.nom,
+          id_filiere: etudiant.filiere.id_filiere,
+          nom: etudiant.filiere.nom, 
+          filiere_module:etudiant.filiere.filiere_module,
+
           },
           date_naissance: formatDate(etudiant.date_naissance),
           date_inscription: formatDate(etudiant.date_inscription),
@@ -159,23 +161,23 @@ export default function EtudiantList() {
   };
 
   // Filtrage des étudiants
-  const filteredEtudiants = etudiants.filter((etudiant) => {
-    return (
-      `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) &&
-      (classFilter ? etudiant.filiere.nom === classFilter : true) &&
-      (yearFilter
-        ? formatDate(etudiant.date_inscription) === yearFilter
-        : true) &&
-      (sessionFilter
-        ? etudiant.notes.some(
-            (note: any) =>
-              note.cours.sessions.annee_academique === sessionFilter
+const filteredEtudiants = etudiants.filter((etudiant) => {
+  return (
+    `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase()) &&
+    (classFilter ? etudiant.filiere.nom === classFilter : true) &&
+    (sessionFilter
+      ? etudiant.filiere.filiere_module.some((fm: any) =>
+          fm.cours.some(
+            (cour: any) => cour.sessions.annee_academique === sessionFilter
           )
-        : true)
-    );
-  });
+        )
+      : true)
+  );
+});
+console.log(filteredEtudiants);
+
 
   // Pagination
   const totalPages = Math.ceil(filteredEtudiants.length / itemsPerPage);
@@ -183,9 +185,10 @@ export default function EtudiantList() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
+ // Bref résumé de la liste des étudiants
   // console.log("Liste des étudiants affichée :", currentEtudiants);
 
+  console.log(etudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
@@ -225,19 +228,23 @@ export default function EtudiantList() {
           }}
           className="w-1/4 p-3 border rounded-lg text-sm"
         >
+        
           <option value="">Filtrer par session</option>
-          {[
-            ...new Set(
-              etudiants.flatMap((e) =>
-                e.notes.map((note: any) => note.cours.sessions.annee_academique)
+
+          {[...new Set(
+            etudiants.flatMap((etudiant) =>
+              etudiant.filiere.filiere_module.flatMap((fm) =>
+                fm.cours.map((cour) => cour.sessions.annee_academique)
               )
-            ),
-          ].map((session) => (
-            <option key={session} value={session}>
-              {session}
+            )
+          )].sort().map((annee) => (
+            <option key={annee} value={annee}>
+              {annee}
             </option>
           ))}
+
         </select>
+
         <button
           onClick={() => setShowForm(true)}
           className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-sm rounded-lg mr-4"

@@ -20,6 +20,7 @@ export interface User {
   date_inscription: string;
   tel: string;
   filiere: {
+    filiere_module: any;
     id_filiere: number;
     nom: string;
   };

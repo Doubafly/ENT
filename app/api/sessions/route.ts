@@ -5,6 +5,7 @@ import prisma from "../prisma";
 export async function GET() {
   try {
     const sessions = await prisma.sessions.findMany({
+
       select: {
         id_sessions: true,
         annee_academique: true,
@@ -42,27 +43,24 @@ export async function GET() {
             },
           },
         },
+
       },
     });
 
+    return NextResponse.json({
+      data: sessions.map((s) => ({
+        id_sessions: s.id_sessions,
+        annee_academique: s.annee_academique,
+      })),
+    });
+  } catch (error) {
+    console.error("Error fetching sessions:", error);
     return NextResponse.json(
-      { message: "Sessions récupérées avec succès", sessions },
-      { status: 200 }
-    );
-  } catch (e) {
-    if (e instanceof Error) {
-      return NextResponse.json(
-        { message: "Une erreur est survenue", erreur: e.message },
-        { status: 500 }
-      );
-    }
-    return NextResponse.json(
-      { message: "Une erreur inconnue est survenue" },
+      { message: "Erreur lors de la récupération des sessions" },
       { status: 500 }
     );
   }
 }
-
 // Création d'une session académique :: POST /api/sessions
 export async function POST(request: NextRequest) {
   try {

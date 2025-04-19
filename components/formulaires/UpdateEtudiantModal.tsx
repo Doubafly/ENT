@@ -94,7 +94,9 @@ export default function UpdateEtudiantModal({
       try {
         const response = await fetch("/api/filieres");
         const data = await response.json();
+
         setFilieres(data.filieres);
+        console.log(filieres);
       } catch (error) {
         console.error("Erreur lors de la récupération des filières :", error);
       }

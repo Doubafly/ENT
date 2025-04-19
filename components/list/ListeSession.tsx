@@ -57,8 +57,8 @@ const ListeSessions: React.FC = () => {
     try {
       const response = await fetch("/api/sessions");
       if (!response.ok) throw new Error("Échec du chargement des sessions");
-      const data = await response.json();
-      setSessions(data.sessions || []);
+      const { data } = await response.json(); // Modification ici pour extraire 'data'
+      setSessions(data || []);
     } catch (error) {
       console.error("Erreur:", error);
       setError(error instanceof Error ? error.message : "Erreur inconnue");
@@ -400,10 +400,9 @@ const ListeSessions: React.FC = () => {
         onCancel={() => setShowDeleteConfirm(false)}
         confirmText={isProcessing ? "Suppression..." : "Supprimer"}
         cancelText="Annuler"
-        
       />
     </div>
   );
 };
- 
+
 export default ListeSessions;

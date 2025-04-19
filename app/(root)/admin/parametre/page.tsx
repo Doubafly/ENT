@@ -25,7 +25,7 @@ const ParametrePage = () => {
     null
   );
 
-  // Données pour les sections
+  // Données pour les sections 
   const sections = [
     {
       id: "Système",
@@ -57,16 +57,16 @@ const ParametrePage = () => {
       icon: <FaSitemap />,
       description: "Gérer les differents Filieres",
     },
-    {
-      id: "Personnaliser",
-      icon: <FaPalette />,
-      description: "Personnaliser l'apparence",
-    },
-    {
-      id: "Confidentialité",
-      icon: <FaShieldAlt />,
-      description: "Contrôler la confidentialité",
-    },
+    // {
+    //   id: "Personnaliser",
+    //   icon: <FaPalette />,
+    //   description: "Personnaliser l'apparence",
+    // },
+    // {
+    //   id: "Confidentialité",
+    //   icon: <FaShieldAlt />,
+    //   description: "Contrôler la confidentialité",
+    // },
   ];
 
   const handleConfigure = (sectionId: string) => {
@@ -180,7 +180,7 @@ const ParametrePage = () => {
             </div>
           )}
 
-          {configurationAction === "Personnaliser" && (
+          {/* {configurationAction === "Personnaliser" && (
             <div className="bg-white text-gray-800 mt-6 p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">
                 Personnalisation de l'apparence
@@ -212,7 +212,7 @@ const ParametrePage = () => {
                 </button>
               </form>
             </div>
-          )}
+          )} */}
 
           {configurationAction === "Annexes" && (
             <div className="bg-white text-gray-800 mt-6 p-6 rounded-lg shadow-lg">
@@ -254,7 +254,7 @@ const ParametrePage = () => {
             </div>
           )}
 
-          {configurationAction === "Rôles" && (
+          {/* {configurationAction === "Rôles" && (
             <div className="bg-white text-gray-800 mt-6 p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4">Gestion des Rôles</h2>
               <form>
@@ -302,7 +302,7 @@ const ParametrePage = () => {
                 </button>
               </form>
             </div>
-          )}
+          )} */}
 
           {configurationAction && (
             <button

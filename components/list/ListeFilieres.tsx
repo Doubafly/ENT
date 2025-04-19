@@ -42,7 +42,7 @@ const ListeFilieres: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const itemsPerPage = 5;
+  const itemsPerPage = 4;
 
   const [editFormData, setEditFormData] = useState<{
     nom: string;

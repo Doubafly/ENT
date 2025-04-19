@@ -25,7 +25,7 @@ export async function GET() {
                 module: {
                   select: {
                     nom: true,
-                  },
+                  }, 
                 },
               },
             },

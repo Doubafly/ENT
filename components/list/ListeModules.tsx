@@ -38,8 +38,8 @@ const ListeModules: React.FC = () => {
     try {
       const response = await fetch("/api/modules");
       if (!response.ok) throw new Error("Échec du chargement des modules");
-      const data = await response.json();
-      setModules(data.modules || []);
+      const { data } = await response.json(); // Modification ici pour extraire 'data'
+      setModules(data || []);
     } catch (error) {
       console.error("Erreur:", error);
       setError(error instanceof Error ? error.message : "Erreur inconnue");
@@ -77,10 +77,6 @@ const ListeModules: React.FC = () => {
     try {
       const response = await fetch(`/api/modules/${selectedModule.id_module}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id_module: selectedModule.id_module })
       });
 
       if (!response.ok) {
@@ -126,7 +122,10 @@ const ListeModules: React.FC = () => {
         headers: { 
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify({
+          nom: editFormData.nom,
+          description: editFormData.description
+        }),
       });
 
       if (!response.ok) {
@@ -210,22 +209,30 @@ const ListeModules: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {currentModules.map((module) => (
-                <tr
-                  key={module.id_module}
-                  className={`cursor-pointer border-b ${
-                    selectedModule?.id_module === module.id_module
-                      ? "bg-blue-100"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => handleSelect(module)}
-                >
-                  <td className="p-3 font-medium">{module.nom}</td>
-                  <td className="p-3 text-gray-600">
-                    {module.description || "-"}
+              {currentModules.length > 0 ? (
+                currentModules.map((module) => (
+                  <tr
+                    key={module.id_module}
+                    className={`cursor-pointer border-b ${
+                      selectedModule?.id_module === module.id_module
+                        ? "bg-blue-100"
+                        : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => handleSelect(module)}
+                  >
+                    <td className="p-3 font-medium">{module.nom}</td>
+                    <td className="p-3 text-gray-600">
+                      {module.description || "-"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={2} className="p-4 text-center text-gray-500">
+                    Aucun module disponible
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -396,7 +403,6 @@ const ListeModules: React.FC = () => {
         onCancel={() => setShowDeleteConfirm(false)}
         confirmText={isProcessing ? "Suppression..." : "Supprimer"}
         cancelText="Annuler"
-        
       />
     </div>
   );

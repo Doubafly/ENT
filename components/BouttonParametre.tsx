@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 interface BoutonParametreProps {
   reglage: () => void;
-  onCreateRole: () => void;
+  onCreateSession: () => void;
   onCreateAnnexe: () => void;
   onCreateModule: () => void;
   onCreateFiliere: () => void;
@@ -12,7 +12,7 @@ interface BoutonParametreProps {
 
 const BoutonParametre: React.FC<BoutonParametreProps> = ({
   reglage,
-  onCreateRole,
+  onCreateSession,
   onCreateAnnexe,
   onCreateModule,
   onCreateFiliere,
@@ -52,10 +52,10 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
             className="w-full px-4 py-2 text-left hover:bg-gray-200"
             onClick={() => {
               setIsMenuOpen(false);
-              onCreateRole();
+              onCreateSession();
             }}
           >
-            Creer un Role
+            Creer une Session
           </button>
 
           <button

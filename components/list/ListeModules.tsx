@@ -1,173 +1,251 @@
 "use client";
-import { useState } from "react";
-import { FaEdit, FaPlus, FaTrash } from "react-icons/fa";
+
+import React, { useEffect, useState } from "react";
+import { FaPlus, FaEdit, FaTrash, FaSpinner } from "react-icons/fa";
 import FormulaireModule from "../formulaires/FormulaireModule";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 type Module = {
-  id: number;
+  id_module: number;
   nom: string;
-  code_module: string;
-  description: string;
-  credits: number;
-  volumeHoraire: number;
+  description: string | null;
 };
 
-const ListeModules = () => {
-  const [modules, setModules] = useState([
-    {
-      id: 1,
-      nom: "Mathématiques",
-      code_module: "MATH101",
-      description: "Algèbre et Analyse",
-      credits: 6,
-      volumeHoraire: 45,
-    },
-    {
-      id: 2,
-      nom: "Programmation",
-      code_module: "INFO102",
-      description: "Programmation en C",
-      credits: 4,
-      volumeHoraire: 30,
-    },
-    {
-      id: 3,
-      nom: "Base de Données",
-      code_module: "INFO201",
-      description: "SQL et Modélisation",
-      credits: 5,
-      volumeHoraire: 40,
-    },
-    {
-      id: 4,
-      nom: "Réseaux",
-      code_module: "INFO301",
-      description: "Réseaux Informatiques",
-      credits: 5,
-      volumeHoraire: 40,
-    },
-    {
-      id: 5,
-      nom: "Système d'exploitation",
-      code_module: "INFO202",
-      description: "Gestion des systèmes",
-      credits: 4,
-      volumeHoraire: 35,
-    },
-    {
-      id: 6,
-      nom: "Sécurité",
-      code_module: "INFO402",
-      description: "Sécurité informatique",
-      credits: 6,
-      volumeHoraire: 50,
-    },
-    {
-      id: 7,
-      nom: "Algorithmique",
-      code_module: "MATH202",
-      description: "Algorithmes avancés",
-      credits: 4,
-      volumeHoraire: 30,
-    },
-    {
-      id: 8,
-      nom: "Cloud Computing",
-      code_module: "INFO502",
-      description: "Introduction au Cloud",
-      credits: 4,
-      volumeHoraire: 40,
-    },
-  ]);
-
+const ListeModules: React.FC = () => {
+  const [modules, setModules] = useState<Module[]>([]);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isModuleOpen, setIsModuleOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(modules.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentModules = modules.slice(indexOfFirstItem, indexOfLastItem);
+  const [editFormData, setEditFormData] = useState<{
+    nom: string;
+    description: string | null;
+  }>({
+    nom: "",
+    description: null
+  });
 
-  const handleSelect = (module: Module) => {
-    setSelectedModule(module.id === selectedModule?.id ? null : module);
-  };
-
-  const handleDelete = () => {
-    if (selectedModule) {
-      setModules(modules.filter((module) => module.id !== selectedModule.id));
-      setSelectedModule(null);
+  const fetchModules = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/modules");
+      if (!response.ok) throw new Error("Échec du chargement des modules");
+      const data = await response.json();
+      setModules(data.modules || []);
+    } catch (error) {
+      console.error("Erreur:", error);
+      setError(error instanceof Error ? error.message : "Erreur inconnue");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handlePageChange = (direction: number) => {
-    setCurrentPage((prev) =>
-      Math.min(Math.max(prev + direction, 1), totalPages)
+  useEffect(() => {
+    fetchModules();
+  }, []);
+
+  const handleCreateSuccess = () => {
+    fetchModules();
+    setSuccessMessage("Module créé avec succès");
+    setTimeout(() => setSuccessMessage(null), 3000);
+    setIsModuleOpen(false);
+  };
+
+  const handleSelect = (module: Module) => {
+    setSelectedModule(prev => 
+      prev?.id_module === module.id_module ? null : module
     );
   };
 
-  const handleAddFiliere = async (formData: FormData): Promise<void> => {
-    // Add your logic to handle form data here
-    setIsAdding(false); // Ferme le formulaire après l'ajout
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
   };
 
+  const handleDelete = async () => {
+    if (!selectedModule) return;
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/modules/${selectedModule.id_module}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id_module: selectedModule.id_module })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Échec de la suppression");
+      }
+
+      await fetchModules();
+      setSelectedModule(null);
+      setSuccessMessage("Module supprimé avec succès");
+    } catch (error) {
+      console.error("Erreur:", error);
+      setError(error instanceof Error ? error.message : "Erreur de suppression");
+    } finally {
+      setIsProcessing(false);
+      setShowDeleteConfirm(false);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleEditClick = () => {
+    if (!selectedModule) return;
+    setEditFormData({
+      nom: selectedModule.nom,
+      description: selectedModule.description
+    });
+    setIsEditMode(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedModule) return;
+    setIsProcessing(true);
+    setError(null);
+
+    try {
+      if (!editFormData.nom.trim()) {
+        throw new Error("Le nom du module est obligatoire");
+      }
+
+      const response = await fetch(`/api/modules/${selectedModule.id_module}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editFormData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Échec de la modification");
+      }
+
+      await fetchModules();
+      setSuccessMessage("Module modifié avec succès");
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("Erreur:", error);
+      setError(error instanceof Error ? error.message : "Erreur de modification");
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  };
+
+  const handleEditChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(modules.length / itemsPerPage);
+  const currentModules = modules.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <FaSpinner className="animate-spin text-2xl text-blue-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 p-4 rounded">
+        <strong>Erreur !</strong> {error}
+        <button 
+          onClick={fetchModules}
+          className="ml-4 bg-red-500 text-white px-3 py-1 rounded"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white text-gray-800 p-6 rounded-xl shadow-lg flex items-start">
-      {/* Table & Pagination */}
-      <div className="w-4/4">
-        <h2 className="text-xl font-semibold mb-4">Liste des Modules</h2>
+    <div className="bg-white text-gray-800 p-6 rounded-xl shadow-lg flex flex-col md:flex-row gap-6">
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {successMessage}
+        </div>
+      )}
+
+      <div className="w-full md:w-3/4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Liste des Modules</h2>
+          <span className="text-sm text-gray-500">
+            {modules.length} module{modules.length !== 1 ? 's' : ''} au total
+          </span>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full border border-gray-300 rounded-lg">
             <thead>
               <tr className="bg-gray-200 text-gray-700">
                 <th className="p-3 text-left">Nom</th>
-                <th className="p-3 text-left">Code</th>
                 <th className="p-3 text-left">Description</th>
-                <th className="p-3 text-left">Crédits</th>
-                <th className="p-3 text-left">Volume Horaire</th>
               </tr>
             </thead>
             <tbody>
               {currentModules.map((module) => (
                 <tr
-                  key={module.id}
+                  key={module.id_module}
                   className={`cursor-pointer border-b ${
-                    selectedModule?.id === module.id
-                      ? "bg-blue-200"
-                      : "hover:bg-gray-100"
+                    selectedModule?.id_module === module.id_module
+                      ? "bg-blue-100"
+                      : "hover:bg-gray-50"
                   }`}
                   onClick={() => handleSelect(module)}
                 >
-                  <td className="p-3">{module.nom}</td>
-                  <td className="p-3">{module.code_module}</td>
-                  <td className="p-3">{module.description}</td>
-                  <td className="p-3">{module.credits}</td>
-                  <td className="p-3">{module.volumeHoraire}h</td>
+                  <td className="p-3 font-medium">{module.nom}</td>
+                  <td className="p-3 text-gray-600">
+                    {module.description || "-"}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
-        {modules.length > itemsPerPage && (
+        {modules.length > 0 && (
           <div className="flex justify-between items-center mt-4">
             <button
-              onClick={() => handlePageChange(-1)}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300"
             >
-              Precedent
+              Précédent
             </button>
             <span className="text-gray-700 font-medium">
               Page {currentPage} sur {totalPages}
             </span>
             <button
-              onClick={() => handlePageChange(1)}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="bg-gray-500 text-white px-3 py-1.5 rounded-lg disabled:opacity-50"
+              className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg disabled:opacity-50 hover:bg-gray-300"
             >
               Suivant
             </button>
@@ -175,54 +253,151 @@ const ListeModules = () => {
         )}
       </div>
 
-      {/* Boutons d'action a droite */}
-      <div className="w-1/6 flex flex-col items-start space-y-4 mt-10 ml-auto">
+      <div className="w-full md:w-1/4 space-y-4">
         <button
-          className="bg-green-600 text-white px-3 py-1.5 w-full rounded-lg flex items-center justify-center hover:bg-green-700 text-sm"
-          onClick={() => setIsAdding(true)}
+          className="bg-green-600 text-white px-4 py-2 w-full rounded-lg flex items-center justify-center hover:bg-green-700"
+          onClick={() => setIsModuleOpen(true)}
         >
-          <FaPlus className="mr-1" /> Ajouter
+          <FaPlus className="mr-2" /> Ajouter
         </button>
+
         <button
-          className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
+          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center ${
             selectedModule
-              ? "bg-yellow-600 text-white hover:bg-yellow-700"
-              : "bg-gray-400 text-gray-600 cursor-not-allowed"
+              ? "bg-yellow-500 text-white hover:bg-yellow-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+          disabled={!selectedModule}
+          onClick={handleEditClick}
+        >
+          <FaEdit className="mr-2" /> Modifier
+        </button>
+
+        <button
+          onClick={handleDeleteClick}
+          className={`w-full px-4 py-2 rounded-lg flex items-center justify-center ${
+            selectedModule
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
           disabled={!selectedModule}
         >
-          <FaEdit className="mr-1" /> Modifier
+          <FaTrash className="mr-2" /> Supprimer
         </button>
-        <button
-          className={`w-full px-3 py-1.5 rounded-lg flex items-center justify-center text-sm ${
-            selectedModule
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-gray-400 text-gray-600 cursor-not-allowed"
-          }`}
-          disabled={!selectedModule}
-          onClick={handleDelete}
-        >
-          <FaTrash className="mr-1" /> Supprimer
-        </button>
+
+        {selectedModule && (
+          <div className="p-4 border border-gray-200 rounded-lg">
+            <h3 className="font-medium mb-2">Détails du module</h3>
+            <p className="text-sm">
+              <span className="font-medium">Nom:</span> {selectedModule.nom}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Description:</span> {selectedModule.description || "Aucune"}
+            </p>
+          </div>
+        )}
       </div>
-      {/* Affichage du formulaire dans une boîte modale */}
-      {isAdding && (
-        <div
-          className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
-          onClick={() => setIsAdding(false)}
-        >
+
+      {/* Modal de modification */}
+      {isEditMode && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
           <div
-            className="bg-white rounded-lg p-6 shadow-lg w-96"
+            className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="flex justify-between items-center border-b pb-2">
+                <h2 className="text-xl font-bold">Modifier le module</h2>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setSelectedModule(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nom du module *
+                  </label>
+                  <input
+                    type="text"
+                    name="nom"
+                    value={editFormData.nom}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    value={editFormData.description || ""}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setSelectedModule(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de création */}
+      {isModuleOpen && !isEditMode && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center p-4">
+          <div
+            className="bg-white rounded-lg p-6 shadow-xl w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <FormulaireModule
-              title="Ajouter un module"
-              onSubmit={handleAddFiliere}
-              onCancel={() => setIsAdding(false)}
+              onCancel={() => setIsModuleOpen(false)}
+              title="Création d'un Nouveau Module"
+              onSuccess={handleCreateSuccess}
             />
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Confirmer la suppression"
+        message={`Êtes-vous sûr de vouloir supprimer le module "${selectedModule?.nom}" ? Cette action est irréversible.`}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        confirmText={isProcessing ? "Suppression..." : "Supprimer"}
+        cancelText="Annuler"
+        
+      />
     </div>
   );
 };

@@ -5,8 +5,45 @@ import prisma from "../prisma";
 export async function GET() {
   try {
     const sessions = await prisma.sessions.findMany({
-      orderBy: {
-        annee_academique: "desc",
+
+      select: {
+        id_sessions: true,
+        annee_academique: true,
+        cours: {
+          select: {
+            id_cours: true,
+            semestre: true,
+            filiere_module: {
+              select: {
+                code_module: true,
+                volume_horaire: true,
+                filiere: {
+                  select: {
+                    nom: true,
+                  },
+                },
+                module: {
+                  select: {
+                    nom: true,
+                  },
+                },
+              },
+            },
+            enseignant: {
+              select: {
+                id: true,
+                specialite: true,
+                utilisateur: {
+                  select: {
+                    nom: true,
+                    prenom: true,
+                  },
+                },
+              }, 
+            },
+          },
+        },
+
       },
     });
 

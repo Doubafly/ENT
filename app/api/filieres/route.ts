@@ -11,7 +11,7 @@ export async function GET() {
             nom: true,
             ville: true,
           },
-        },
+        }, 
         filiere_module: {
           include: {
             cours: {

@@ -54,7 +54,7 @@ export async function GET() {
             id: true,
             specialite: true,
             utilisateur: {
-              select: {
+              select: { 
                 nom: true,
                 prenom: true,
                 email: true,

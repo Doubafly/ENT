@@ -35,6 +35,7 @@ export default function Home() {
         console.log("Nombre d'enseignants :", nombreEnseignants);
         console.log("Nombre d'étudiants :", nombreEtudiants);
         console.log("Nombre de filières :", nombreFilieres);
+        
 
         // Mise à jour des statistiques
         setStatData([

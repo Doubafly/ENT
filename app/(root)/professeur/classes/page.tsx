@@ -1,9 +1,11 @@
-import ClasseList from "@/components/table/ListeClasse";
+import ClasseList from "@/components/table/ListeClasse2";
 
 const ClassePage = () => {
-  return <div>
-    <ClasseList/>
-  </div>;
+  return (
+    <div>
+      <ClasseList />
+    </div>
+  );
 };
 
 export default ClassePage;

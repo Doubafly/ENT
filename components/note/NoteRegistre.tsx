@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Saisi from "./Saisi";
-import Configuration from "./configuration";
+import Configuration from "./configuration2";
 import Resultat from "./resultat";
 import { Tabs, Tab, Box } from "@mui/material";
 

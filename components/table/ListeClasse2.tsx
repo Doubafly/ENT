@@ -2,7 +2,7 @@
 import ListCard, { User } from "@/components/card/ListCard";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import Configuration from "../note/configuration";
+import Configuration from "../note/configuration2";
 
 interface Classe {
   id_filiere: number;

@@ -51,7 +51,6 @@ const [modal, setModal] = useState<{
   message: string;
   status: "success" | "error" | "info";
 } | null>(null);
-
 // Effet pour synchroniser notes avec students quand students change
 useEffect(() => {
   if (students && students.length > 0) {
@@ -69,14 +68,6 @@ useEffect(() => {
     );
   }
 }, [students]);
-
-// useEffect(() => {
-//   console.log("Notes:", notes);
-//   console.log("Notes:", students);
-
-
-// }, [students, notes]);
-
 const handleInputChange = (
   id: string | number,
   field: "note_class" | "note_exam",
@@ -170,7 +161,8 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
         </thead>
         <tbody>
           {students.map(({ id,name, note_class, note_exam, coefficient }) => {
-          
+          const note =
+          ((Number(note_class) || 0) + (Number(note_exam) || 0) * 2) / 3;
             return (
               <tr key={id} className="border">
                 <td className="p-2 border">{name}</td>
@@ -201,9 +193,9 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
                 <td className="p-2 border">
                   <input
                     type="number"
-                    className="border p-1 w-full"
                     defaultValue={coefficient}
-               
+                    className="border p-1 w-full bg-gray-100 text-gray-500 cursor-not-allowed"
+                    readOnly
                     key={`${moduleKey}-${id}-coefficient`}
                     title="Coefficient"
                   />
@@ -211,9 +203,9 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
                 <td className="p-2 border">
                   <input
                     type="number"
-                    className="border p-1 w-full"
-                    defaultValue={((note_class || 0) + ((note_exam || 0) * 2))/3}
-               
+                    className="border p-1 w-full bg-gray-100 text-gray-500 cursor-not-allowed"
+                    readOnly
+                    defaultValue={note.toFixed(2)}
                     key={`${moduleKey}-${id}-coefficient`}
                     title="Coefficient"
                   />

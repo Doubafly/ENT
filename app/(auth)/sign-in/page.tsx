@@ -12,8 +12,6 @@ export default function Page() {
     message: string;
     status: "success" | "error" | "info";
   } | null>(null);
-  const [isFocused1, setIsFocused1] = useState(false);
-  const [isFocused2, setIsFocused2] = useState(false);
 
   const handleSub = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

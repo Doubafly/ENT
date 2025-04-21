@@ -1,5 +1,4 @@
 "use client";
-import HeaderBox from "@/components/HeaderBox";
 import UserProfile from "@/components/HeaderProfil";
 import { useEffect, useState } from "react";
 import MobileNav from "@/components/MobileNav";

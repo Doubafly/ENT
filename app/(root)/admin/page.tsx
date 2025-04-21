@@ -25,21 +25,26 @@ export default function Home() {
         console.log("cours", cours);
         
         // const nombreEnseignants = new Set(cours.map((c: { enseignant: any; }) => c.enseignant)).size;
-        const nombreEnseignants = new Set(cours.map(c => c.enseignant.id)).size;
+        const nombreEnseignants = new Set(cours.map((c: { enseignant: { id: any; }; }) => c.enseignant.id)).size;
 
 
         // Étape 1 : Extraire tous les étudiants de toutes les filières
-        const allEtudiants = cours.flatMap(c => c.filiere_module?.filiere?.etudiants || []);
+        const allEtudiants = cours.flatMap((c: { filiere_module: { filiere: { etudiants: any; }; }; }) => c.filiere_module?.filiere?.etudiants || []);
 
         // Étape 2 : Filtrer les matricules uniques
-        const matriculesUniques = new Set(allEtudiants.map(e => e.matricule));
-
-        // Étape 3 : Nombre d’étudiants uniques
+        const matriculesUniques = new Set(allEtudiants.map((e: { matricule: any; }) => e.matricule));
+        // Étape 3 : Compter le nombre d'étudiants uniques
         const nombreEtudiants = matriculesUniques.size;
 
+        // Extraire toutes les filières
+        const allFilieres = cours.map((c: { filiere_module: { filiere: any; }; }) => c.filiere_module?.filiere);
 
-        // Nombre de filières (un par cours)
-        const nombreFilieres = cours.map((c: { filiere_module: { filiere: any; }; }) => c.filiere_module?.filiere).length;
+        // Extraire les ID uniques
+        const filiereIdsUniques = new Set(allFilieres.map((f: { id_filiere: any; }) => f.id_filiere));
+
+        // Nombre de filières uniques
+        const nombreFilieres = filiereIdsUniques.size;
+
 
         // Affichage
         console.log("Nombre d'enseignants :", nombreEnseignants);
@@ -49,9 +54,9 @@ export default function Home() {
 
         // Mise à jour des statistiques
         setStatData([
-          { link: "/icons/text-books.png", value: nombreFilieres, nom: "Nombre Filiere" },
-          { link: "/icons/friends.png", value: nombreEtudiants, nom: "Nombre etudiant" },
-          { link: "/icons/Training.png", value: nombreEnseignants, nom: "Nombre enseignant" },
+          { link: "/icons/text-books.png", value: nombreFilieres.toString(), nom: "Nombre Filiere" },
+          { link: "/icons/friends.png", value: nombreEtudiants.toString(), nom: "Nombre etudiant" },
+          { link: "/icons/Training.png", value: nombreEnseignants.toString(), nom: "Nombre enseignant" },
         ]);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques :", error);

@@ -1,203 +1,200 @@
-import { useState } from "react";
+import { Delete } from "@mui/icons-material";
 import {
+  Alert,
   Box,
-  Button,
-  MenuItem,
-  Select,
+  CircularProgress,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Typography,
-  List,
-  ListItem,
-  ListItemButton,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 
-interface Student {
+interface Enseignant {
   id: number;
-  name: string;
-  note_class?: number;
-  note_exam?: number;
+  nom: string;
+  prenom: string;
+  specialite: string;
 }
 
 interface Module {
-  id: number;
-  name: string;
-  students: Student[];
+  id_module: number;
+  nom: string;
+  description?: string;
 }
 
-interface Semestre {
-  id: number;
-  name: string;
-  modules: Module[];
+interface Session {
+  id_sessions: number;
+  annee_academique: string;
 }
 
-interface Classe {
-  id: number;
-  name: string;
-  semestres: Semestre[];
+interface Cours {
+  id_cours: number;
+  semestre: "Semestre1" | "Semestre2";
+  sessions: Session;
+  enseignant: Enseignant;
 }
 
-interface NoteEntryProps {
-  classes: Classe[];
+interface FiliereModule {
+  id_filiere_module: number;
+  module: Module;
+  coefficient: number;
+  volume_horaire?: number;
+  code_module?: string;
+  cours?: Cours[];
 }
 
-const Configuration: React.FC<NoteEntryProps> = ({ classes }) => {
-  const [selectedClass, setSelectedClass] = useState(1);
-  const [selectedFormateur, setSelectedFormateur] = useState("");
-  const [selectedMatiere, setSelectedMatiere] = useState("");
-  const [matieres, setMatieres] = useState([
-    { id: 1, name: "JAVA", formateur: "Monsieur Konaté" },
-    { id: 2, name: "C++", formateur: "Mosieur Niangado" },
-    { id: 3, name: "PHP", formateur: " Monsieur Madibaba" },
-  ]);
-  const formateurs = ["Moussa CISSE", "Moussa BAGAYOKO", "KASONGUE"];
-  const matieresOptions = ["JAVA", "C++", "PHP", "Statistique"];
+interface FiliereData {
+  filiere: {
+    id: number;
+    nom: string;
+    niveau: string;
+  };
+  modules: FiliereModule[];
+  enseignants: Enseignant[];
+  allModules: Module[];
+}
 
-  const handleAdd = () => {
-    if (selectedMatiere && selectedFormateur) {
-      setMatieres([
-        ...matieres,
-        {
-          id: matieres.length + 1,
-          name: selectedMatiere,
-          formateur: selectedFormateur,
-        },
-      ]);
-      setSelectedMatiere("");
-      setSelectedFormateur("");
+export default function Configuration({
+  filiereId,
+}: {
+  filiereId: number | null;
+}) {
+  const [data, setData] = useState<FiliereData | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState({
+    main: true,
+    sessions: true,
+  });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading({ main: true, sessions: true });
+        setError("");
+
+        if (!filiereId) {
+          throw new Error("Aucune filière sélectionnée");
+        }
+
+        const [filiereResponse, sessionsResponse] = await Promise.all([
+          fetch(`/api/filieres/${filiereId}/modules`),
+          fetch("/api/sessions"),
+        ]);
+
+        if (!filiereResponse.ok) {
+          throw new Error("Erreur de chargement des données de la filière");
+        }
+        if (!sessionsResponse.ok) {
+          throw new Error("Erreur de chargement des sessions");
+        }
+
+        const [filiereData, sessionsData] = await Promise.all([
+          filiereResponse.json(),
+          sessionsResponse.json(),
+        ]);
+
+        setData(filiereData.data);
+        setSessions(sessionsData.data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      } finally {
+        setLoading({ main: false, sessions: false });
+      }
+    };
+
+    if (filiereId) {
+      fetchData();
     }
-  };
+  }, [filiereId]);
 
-  const handleDelete = (id: number) => {
-    setMatieres(matieres.filter((matiere) => matiere.id !== id));
-  };
+  if (loading.main) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box p={2}>
+        <Alert severity="error" onClose={() => setError("")}>
+          {error}
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Box p={2}>
+        <Alert severity="warning">Aucune donnée disponible</Alert>
+      </Box>
+    );
+  }
 
   return (
-    <Box display="flex" gap={2} p={2}>
-      {/* Liste des classes à gauche */}
-      <Paper sx={{ width: "25%", height: "400px", overflow: "auto" }}>
-        <Typography variant="h6" textAlign="center" p={1}>
-          Nom de Classe
-        </Typography>
-        <List>
-          {classes.map((classe) => (
-            <ListItem key={classe.id}>
-              <ListItemButton
-                selected={selectedClass === classe.id}
-                onClick={() => setSelectedClass(classe.id)}
-              >
-                {classe.name}
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Paper>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" gutterBottom>
+        Mes matières enseignés - {data.filiere.nom}
+      </Typography>
 
-      {/* Section centrale avec filtres et table */}
-      <Box flex={1}>
-        {/* Filtres */}
-        <Box display="flex" gap={2} mb={2}>
-          <Select
-            value={selectedFormateur}
-            onChange={(e) => setSelectedFormateur(e.target.value)}
-            displayEmpty
-          >
-            <MenuItem value="" disabled>
-              Formateur
-            </MenuItem>
-            {formateurs.map((formateur) => (
-              <MenuItem key={formateur} value={formateur}>
-                {formateur}
-              </MenuItem>
-            ))}
-          </Select>
-          <Select
-            value={selectedMatiere}
-            onChange={(e) => setSelectedMatiere(e.target.value)}
-            displayEmpty
-          >
-            <MenuItem value="" disabled>
-              Matière
-            </MenuItem>
-            {matieresOptions.map((matiere) => (
-              <MenuItem key={matiere} value={matiere}>
-                {matiere}
-              </MenuItem>
-            ))}
-          </Select>
-          <input
-            className=" border rounded max-w-40"
-            placeholder="Coefficient"
-            type="number"
-          />
-          <Button variant="contained" onClick={handleAdd}>
-            Ajouter
-          </Button>
-        </Box>
+      <Typography variant="h6" gutterBottom>
+        Liste des cours
+      </Typography>
 
-        {/* Table des matières */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Module</TableCell>
+              <TableCell>Code</TableCell>
+              <TableCell>Session</TableCell>
+              <TableCell>Semestre</TableCell>
+              <TableCell>Enseignant</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {data.modules.flatMap(
+              (module) =>
+                module.cours?.map((cours) => (
+                  <TableRow key={cours.id_cours}>
+                    <TableCell>{module.module.nom}</TableCell>
+                    <TableCell>{module.code_module}</TableCell>
+                    <TableCell>{cours.sessions.annee_academique}</TableCell>
+                    <TableCell>{cours.semestre}</TableCell>
+                    <TableCell>
+                      {cours.enseignant.nom} {cours.enseignant.prenom}
+                    </TableCell>
+                    <TableCell>
+                      <IconButton color="error">
+                        <Delete />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                )) || []
+            )}
+
+            {data.modules.every((m) => !m.cours || m.cours.length === 0) && (
               <TableRow>
-                <TableCell>Matières de Formations</TableCell>
-                <TableCell>Formateurs de Matières</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body1" color="textSecondary">
+                    Aucun cours programmé
+                  </Typography>
+                </TableCell>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {matieres.map((matiere) => (
-                <TableRow key={matiere.id}>
-                  <TableCell>{matiere.name}</TableCell>
-                  <TableCell>{matiere.formateur}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDelete(matiere.id)}
-                    >
-                      Supprimer
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Box>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
-
-    // <div className="flex justify-between w-full">
-    //   <table className=" mt-4 mr-2 border border-collapse min-h-full w-1/6">
-    //     <tr className="bg-gray-300">
-    //       <th>Les Filieres</th>
-    //     </tr>
-    //     {classes.map((classe, key) => (
-    //       <tr key={key}>
-    //         <td className="border p-2 cursor-pointer">{classe.name}</td>
-    //       </tr>
-    //     ))}
-    //   </table>
-    //   <table className=" mt-4 border border-collapse min-h-full w-5/6">
-    //     <tr className="bg-gray-300">
-    //       <th>Les Filieres</th>
-    //       <th className=" max-w-4">Coefficient</th>
-    //     </tr>
-    //     {classes.map((classe, key) => (
-    //       <tr key={key}>
-    //         <td className="border p-2 cursor-pointer">{classe.name}</td>
-    //         <td className="border p-2 cursor-pointer  max-w-4">
-    //           <input title="coefficient" type="number " className="w-5/6" />
-    //         </td>
-    //       </tr>
-    //     ))}
-    //   </table>
-    // </div>
   );
-};
-export default Configuration;
+}

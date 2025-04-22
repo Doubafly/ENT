@@ -26,7 +26,6 @@ interface Module {
   id_module: number;
   nom: string;
   description?: string;
-
 }
 
 interface Session {
@@ -76,27 +75,31 @@ export default function Configuration({
   });
   const [error, setError] = useState("");
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading({ main: true, sessions: true });
+        setLoading({ main: true, sessions: true, modules: true });
         setError("");
 
         if (!filiereId) {
           throw new Error("Aucune filière sélectionnée");
         }
 
-        const [filiereResponse, sessionsResponse] = await Promise.all([
-          fetch(`/api/filieres/${filiereId}/modules`),
-          fetch("/api/sessions"),
-        ]);
+        const [filiereResponse, sessionsResponse, modulesResponse] =
+          await Promise.all([
+            fetch(`/api/filieres/${filiereId}/modules`),
+            fetch("/api/sessions"),
+            fetch("/api/modules"),
+          ]);
 
         if (!filiereResponse.ok) {
           throw new Error("Erreur de chargement des données de la filière");
         }
         if (!sessionsResponse.ok) {
           throw new Error("Erreur de chargement des sessions");
+        }
+        if (!modulesResponse.ok) {
+          throw new Error("Erreur de chargement des modules");
         }
 
         const [filiereData, sessionsData, modulesData] = await Promise.all([

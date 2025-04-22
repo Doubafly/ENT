@@ -48,9 +48,9 @@ export default function Page() {
   return (
 
     <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden flex w-full max-w-4xl">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden flex w-full max-w-4xl partie">
         {/* 🟢 Section Gauche : Formulaire */}
-        <div className="w-1/2 p-6 flex flex-col justify-center"> {/* Réduit le padding (p-8 à p-6) */}
+        <div className="w-1/2 p-6 flex flex-col justify-center partie1"> {/* Réduit le padding (p-8 à p-6) */}
           {/* Logo */}
           <div className="flex justify-center mb-2"> {/* Réduit la marge en bas (mb-4 à mb-2) */}
             <Image
@@ -123,7 +123,7 @@ export default function Page() {
         </div>
 
         {/* Section Droite : Image */}
-        <div className="w-1/2 relative">
+        <div className="w-1/2 relative partie2">
           <Image
             src="/img/user2.svg" // Remplace par le bon chemin
             alt="Illustration de connexion"

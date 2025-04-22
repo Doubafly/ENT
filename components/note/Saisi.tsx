@@ -78,6 +78,7 @@ const handleInputChange = (
       note.id === id ? { ...note, [field]: value } : note
     )
   );
+  
 };
 const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
   event.preventDefault();

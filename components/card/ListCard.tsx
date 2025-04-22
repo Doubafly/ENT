@@ -105,7 +105,7 @@ const UserCard = ({
       <div className="flex items-start mt-4">
         <div className="flex-1 flex flex-col gap-2 text-xs text-gray-700">
           <p className="flex gap-1 items-center text-sm">
-            <Image src="/icons/book.png" alt="Adresse" width={12} height={12} />
+            <Image src="/icons/location.png" alt="Adresse" width={12} height={12} />
             {item.adresse}
           </p>
           {/* <p className="flex gap-1 items-center text-sm">
@@ -120,7 +120,7 @@ const UserCard = ({
           */}
           <p className="flex gap-1 items-center text-sm">
             <Image
-              src="/icons/eye.png"
+              src="/icons/tel.png"
               alt="Téléphone"
               width={12}
               height={12}

@@ -1,5 +1,5 @@
-import EtudiantList from "@/components/list/EtudiantList";
+import EnseignantEtudiantList from "@/components/list/EnseignantEtudiantList";
 
 export default function Page(){
-  return <EtudiantList/>;
+  return <EnseignantEtudiantList />;
 }

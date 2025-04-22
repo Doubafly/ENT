@@ -11,11 +11,12 @@ export async function GET() {
             nom: true,
             ville: true,
           },
-        },
+        }, 
         filiere_module: {
           include: {
             cours: {
               select: {
+                id_cours: true,
                 semestre: true,
                 enseignant: {
                   select: {
@@ -73,6 +74,7 @@ export async function GET() {
             },
             notes: {
               select: {
+                id_note: true,
                 note_class: true,
                 note_exam: true,
               },

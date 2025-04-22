@@ -36,23 +36,26 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { id_module } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
-    if (!id_module) {
+    const { id_module } = await request.json();
+
+    if (!id_module || !id) {
       return NextResponse.json(
         { message: "Paramètres manquants" },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
+
     await prisma.modules.delete({
-      where: { id_module: id ? parseInt(id) : 0 },
+      where: { id_module: parseInt(id) },
     });
-    return NextResponse.json({ message: "succes" }), { status: 200 };
+
+    return NextResponse.json({ message: "success" }, { status: 200 });
+
   } catch (error) {
+    console.error(error);
     return NextResponse.json(
-      { message: "Une erreur est survenue" },
+      { message: "Erreur serveur" },
       { status: 500 }
     );
   }

@@ -8,99 +8,93 @@ import { useEffect, useState } from "react";
 
 export default function page() {
   const [classes, setClasses] = useState([]);
+
   useEffect(() => {
     async function fetchStats() {
       try {
-        // Récupérer les informations de l'utilisateur connecté
-        const userResponse = await fetch("/api/auth/session", {
-          credentials: "include",
-        });
-        const userData = await userResponse.json();
+          // Récupérer les informations de l'utilisateur connecté
+          const userResponse = await fetch("/api/auth/session", {
+            credentials: "include",
+          });
+          const userData = await userResponse.json();
 
-        if (userData.user && userData.user.type === "Enseignant") {
           const enseignantId = userData.user.enseignant?.id; // Récupérer l'ID de l'enseignant
-
-          if (!enseignantId) {
-            console.error("Aucun ID enseignant trouvé pour cet utilisateur.");
-            return;
+  
+          if (userData.user && userData.user.type === "Enseignant") {
+  
+            if (!enseignantId) {
+              console.error("Aucun ID enseignant trouvé pour cet utilisateur.");
+              return;
+            }
           }
+            
 
-          // Récupérer les cours
-          const coursRes = await fetch("/api/cours");
-          const coursData = await coursRes.json();
+        const response = await fetch("/api/filieres");
+        const data = await response.json();
 
-          // Filtrer les cours enseignés par l'enseignant connecté
-          const filteredCours = coursData.cours.filter(
-            (cours: any) => cours.enseignant.id === enseignantId
-          );
-          // console.log(filteredCours);
-          // ...existing code...
-
-          // Transformer les données filtrées
-          const formattedClasses = filteredCours.reduce(
-            (acc: any[], cours: any) => {
-              const filiere = cours.filiere_module.filiere;
-              const module = cours.filiere_module.module;
-
-              // Vérifier si la filière existe déjà dans acc
-              const existingFiliere = acc.find(
-                (item) => item.id === filiere.id_filiere
-              );
-
-              const semestreData = {
-                id: `${filiere.id_filiere}-${cours.semestre}`, // ID unique pour le semestre
-                name: cours.semestre, // Nom du semestre
-                modules: [
-                  {
-                    id: cours.filiere_module.module.id_module, // ID du module
-                    name: module.nom, // Nom du module
-                    students: Array.isArray(filiere.etudiants)
-                      ? filiere.etudiants.map((etudiant: any) => ({
-                          id: etudiant.matricule, // Matricule de l'étudiant
-                          name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`, // Nom complet de l'étudiant
-                          note_class: etudiant.notes?.note_class || 0, // Note de classe
-                          note_exam: etudiant.notes?.note_exam || 0, // Note d'examen
-                          coefficient: cours.filiere_module.coefficient, // Coefficient du module
-                        }))
-                      : [], // Vérifier si etudiants est un tableau avant de le parcourir
-                  },
-                ],
-              };
-
-              if (existingFiliere) {
-                // Ajouter le semestre à la filière existante
-                existingFiliere.semestres.push(semestreData);
-              } else {
-                // Ajouter une nouvelle filière
-                acc.push({
-                  id: filiere.id_filiere, // ID de la filière
-                  name: `L${
-                    filiere.niveau.toLowerCase().includes("primaire")
-                      ? "1"
-                      : "2"
-                  } ${filiere.nom}`, // Nom formaté
-                  coefficients: Array.isArray(filiere.filiere_module)
-                    ? filiere.filiere_module.map((mod: any) => mod.coefficient)
-                    : [], // Vérifier si filiere_module est un tableau avant de le parcourir
-                  semestres: [semestreData], // Ajouter le premier semestre
+        if (data.filieres) {
+          
+          const result = data.filieres.filter((item: { filiere_module: { cours: any[]; }[]; })=> {
+            return item.filiere_module.some((module: { cours: any[]; }) => {
+              return module.cours.some(c => c.enseignant.id === enseignantId);
+            });
+          });
+          
+          // Transformer les données API en structure attendue
+          const formattedClasses = result.map((filiere: any) => {
+            // Vérifier le niveau et formater le nom de la classe
+            let niveauLabel = "";
+            if (filiere.niveau.toLowerCase().includes("primaire")) {
+              niveauLabel = `L1 ${filiere.nom}`;
+            } else if (filiere.niveau.toLowerCase().includes("secondaire")) {
+              niveauLabel = `L2 ${filiere.nom}`;
+            }else if (filiere.niveau.toLowerCase().includes("licence")) {
+              niveauLabel = `L3 ${filiere.nom}`;
+            } else {
+              niveauLabel = `${filiere.niveau} ${filiere.nom}`;
+            }
+          
+            // Regrouper les modules par semestre
+            const semestresMap = new Map();
+          
+            filiere.filiere_module.forEach((mod: any, Index: number) => {
+              mod.cours.forEach((cours: any) => {
+                const semestreId = `${filiere.id_filiere}-${cours.semestre}`;
+                if (!semestresMap.has(semestreId)) {
+                  semestresMap.set(semestreId, {
+                    id: semestreId,
+                    name: cours.semestre,
+                    modules: [],
+                  });
+                }
+                semestresMap.get(semestreId).modules.push({
+                  id: mod.id_module,
+                  name: mod.module.nom,
+                  students: filiere.etudiants.map((etudiant: any) => ({
+                    id: etudiant.id,
+                    matricule: etudiant.matricule,
+                    name: `${etudiant.utilisateur.prenom} ${etudiant.utilisateur.nom}`,
+                    id_cours: cours.id_cours,
+                    id_note: etudiant.notes[Index]?.id_note || 0,
+                    note_class: etudiant.notes[Index]?.note_class || 0,
+                    note_exam: etudiant.notes[Index]?.note_exam || 0,
+                    coefficient: mod.coefficient, // Associer le coefficient au module
+                  })),
                 });
-              }
-
-              return acc;
-            },
-            []
-          );
-
-          // Mettre à jour l'état avec les données formatées
-          console.log(formattedClasses);
+              });
+            });
+          
+            return {
+              id: filiere.id_filiere,
+              name: niveauLabel, // Intégration du niveau dans le nom de la classe
+              coefficients: filiere.filiere_module.map((mod: any) => mod.coefficient), // Récupérer tous les coefficients des modules
+              semestres: Array.from(semestresMap.values()), // Convertir la Map en tableau
+            };
+          });
           setClasses(formattedClasses);
-
-          // ...existing code...
-        } else {
-          console.error("L'utilisateur connecté n'est pas un enseignant.");
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des données :", error);
+        console.error("Erreur lors de la récupération des filieres :", error);
       }
     }
 

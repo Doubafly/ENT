@@ -458,6 +458,11 @@ export default function ClasseList() {
 
                 {showTeachers && (
                   <div className="mt-4 space-y-4">
+                    {selectedClass.enseignants?.length === 0 && (
+                      <div className="text-gray-500 text-center py-4">
+                        Aucun enseignant inscrit dans cette classe.
+                      </div>
+                    )}
                     <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {(selectedClass.enseignants || []).map((teacher) => (
                         <ListCard
@@ -491,7 +496,11 @@ export default function ClasseList() {
 
                 {showStudents && (
                   <div className="mt-4 space-y-4">
-                    Je suis là {selectedClass.nom}
+                    {selectedClass.effectif === 0 && (
+                      <div className="text-gray-500 text-center py-4">
+                        Aucun étudiant inscrit dans cette classe.
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {selectedClass.filtreEtudiant
                         ?.slice(0, selectedClass.effectif || 0)
@@ -506,23 +515,6 @@ export default function ClasseList() {
                             onrecharge={() => {}}
                           />
                         ))}
-                    </div>
-                    <div className="mt-4">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Ajouter un étudiant"
-                          className="flex-1 border border-gray-300 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          value={newStudent}
-                          onChange={(e) => setNewStudent(e.target.value)}
-                        />
-                        <button
-                          onClick={handleAddStudent}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200"
-                        >
-                          Ajouter
-                        </button>
-                      </div>
                     </div>
                   </div>
                 )}

@@ -21,7 +21,26 @@ export async function GET() {
             date_creation: true,
           },
         },
-        filiere: true, // Informations de la filière
+        filiere: {
+          select: {
+            id_filiere: true,
+            nom: true,
+            niveau: true,
+            montant_annuel: true,
+            filiere_module: {
+              include: {
+                cours: {
+                  include: {
+                    sessions: {
+                      select: {
+                        annee_academique: true,
+                      },
+                    },
+                  },
+              },
+          },
+        },},},
+         // Informations de la filière
         notes: {
           include: {
             cours: {

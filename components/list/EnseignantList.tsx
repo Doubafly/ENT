@@ -188,7 +188,7 @@ export default function EnseignantList() {
             setClassFilter(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-1/4 p-3 border rounded-lg text-sm"
+          className="w-1/3 p-3 border rounded-lg text-sm"
         >
           <option value="">Filtrer par spécialité</option>
           {[...new Set(enseignants.map((e) => e.specialite))].map(
@@ -201,9 +201,9 @@ export default function EnseignantList() {
         </select>
         <button
           onClick={() => setShowForm(true)}
-          className="px-6 py-2 bg-green-500 hover:bg-blue-300 text-white text-sm rounded-lg mr-4"
+          className="w-1/4 p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200"    
         >
-          Ajouter
+          + Ajouter
         </button>
       </div>
 

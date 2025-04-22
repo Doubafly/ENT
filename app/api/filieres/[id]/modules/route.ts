@@ -6,7 +6,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const filiereId = parseInt(params.id);
+    const { id } = params;
+    const filiereId = parseInt(id);
+
     if (isNaN(filiereId)) {
       return NextResponse.json(
         { message: "ID de filière invalide" },
@@ -14,6 +16,7 @@ export async function GET(
       );
     }
 
+    // Vérifier l'existence de la filière
     const filiereExists = await prisma.filieres.findUnique({
       where: { id_filiere: filiereId },
     });
@@ -25,25 +28,29 @@ export async function GET(
       );
     }
 
-    const [enseignantsResponse, filiereModules] = await Promise.all([
-      fetch(`${process.env.NEXTAUTH_URL}/api/utilisateurs/enseignants`),
-      prisma.filiereModule.findMany({
-        where: { id_filiere: filiereId },
-        include: {
-          module: true,
-          cours: {
-            include: {
-              sessions: true,
-              enseignant: {
-                include: {
-                  utilisateur: true,
+    // Récupérer les données en parallèle
+    const [enseignantsResponse, filiereModules, allModules] = await Promise.all(
+      [
+        fetch(`${process.env.NEXTAUTH_URL}/api/utilisateurs/enseignants`),
+        prisma.filiereModule.findMany({
+          where: { id_filiere: filiereId },
+          include: {
+            module: true,
+            cours: {
+              include: {
+                sessions: true,
+                enseignant: {
+                  include: {
+                    utilisateur: true,
+                  },
                 },
               },
             },
           },
-        },
-      }),
-    ]);
+        }),
+        prisma.modules.findMany(), // Tous les modules disponibles
+      ]
+    );
 
     if (!enseignantsResponse.ok) {
       throw new Error("Erreur lors de la récupération des enseignants");
@@ -51,6 +58,7 @@ export async function GET(
 
     const enseignantsData = await enseignantsResponse.json();
 
+    // Formater la réponse
     const response = {
       filiere: {
         id: filiereExists.id_filiere,
@@ -78,6 +86,7 @@ export async function GET(
             id: c.enseignant.id,
             nom: c.enseignant.utilisateur.nom,
             prenom: c.enseignant.utilisateur.prenom,
+            specialite: c.enseignant.specialite,
           },
         })),
       })),
@@ -86,6 +95,11 @@ export async function GET(
         nom: e.utilisateur.nom,
         prenom: e.utilisateur.prenom,
         specialite: e.specialite,
+      })),
+      allModules: allModules.map((m) => ({
+        id_module: m.id_module,
+        nom: m.nom,
+        description: m.description || undefined,
       })),
     };
 
@@ -97,7 +111,9 @@ export async function GET(
     console.error("Error fetching data:", e);
     return NextResponse.json(
       {
-        message: "Une erreur est survenue lors de la récupération des données"+e,
+        message: "Une erreur est survenue lors de la récupération des données",
+        error: e instanceof Error ? e.message : "Erreur inconnue",
+
       },
       { status: 500 }
     );

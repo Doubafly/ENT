@@ -7,9 +7,13 @@ export async function GET(
 ) {
   const id = request.nextUrl.pathname.split("/").pop();
   if (!id) {
-    return  NextResponse.json({ message: "ID manquant" }, {
-      status: 400,
-    });
+    return NextResponse.json(
+      { message: "ID manquant" },
+      {
+        status: 400,
+      }
+    );
+
   }
   try {
     const filiereModule = await prisma.filiereModule.findMany({
@@ -18,10 +22,10 @@ export async function GET(
         module: {
           select: {
             nom: true,
-            description: true, 
+            description: true,
             id_module: true,
           },
-        }, 
+        },
         filiere: {
           select: {
             nom: true,
@@ -35,16 +39,23 @@ export async function GET(
     });
 
     if (!filiereModule || filiereModule.length === 0) {
-      return  NextResponse.json({ message: "Aucun module trouvé" }, {
-        status: 404,
-      });
+      return NextResponse.json(
+        { message: "Aucun module trouvé" },
+        {
+          status: 404,
+        }
+      );
     }
 
-    return  NextResponse.json({ message: "succes", filiereModule }, {
-      status: 200,
-    });
+    return NextResponse.json(
+      { message: "succes", filiereModule },
+      {
+        status: 200,
+      }
+    );
   } catch (e) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }
@@ -69,9 +80,12 @@ export async function PUT(request: NextRequest) {
       !code_module ||
       !volume_horaire
     ) {
-      return  NextResponse.json({ message: "Paramètres manquants" }, {
-        status: 400,
-      });
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     const filiereModule = await prisma.filiereModule.update({
       where: { id_filiere_module: id ? parseInt(id) : 0 },
@@ -83,30 +97,38 @@ export async function PUT(request: NextRequest) {
         volume_horaire,
       },
     });
-    return  NextResponse.json({ message: "succes", filiereModule }, {
-      status: 200,
-    });
+    return NextResponse.json(
+      { message: "succes", filiereModule },
+      {
+        status: 200,
+      }
+    );
   } catch (e) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
-      { status: 500 });
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
+      { status: 500 }
+    );
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { id_filiere_module } = await request.json();
     const id = request.nextUrl.pathname.split("/").pop();
-    if (!id_filiere_module) {
-      return  NextResponse.json({ message: "Paramètres manquants" }, {
-        status: 400,
-      });
+    if (!id) {
+      return NextResponse.json(
+        { message: "Paramètres manquants" },
+        {
+          status: 400,
+        }
+      );
     }
     await prisma.filiereModule.delete({
       where: { id_filiere_module: id ? parseInt(id) : 0 },
     });
-    return  NextResponse.json({ message: "succes" }, { status: 200 });
+    return NextResponse.json({ message: "succes" }, { status: 200 });
   } catch (e) {
-    return  NextResponse.json({ message: "Une erreur est survenue" },
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
       { status: 500 }
     );
   }

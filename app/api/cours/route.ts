@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
         enseignant: {
           include: {
             utilisateur: true,
+
           },
         },
       },

@@ -26,6 +26,7 @@ interface Module {
   id_module: number;
   nom: string;
   description?: string;
+
 }
 
 interface Session {
@@ -67,11 +68,14 @@ export default function Configuration({
 }) {
   const [data, setData] = useState<FiliereData | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [allModules, setAllModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState({
     main: true,
     sessions: true,
+    modules: true,
   });
   const [error, setError] = useState("");
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,17 +99,20 @@ export default function Configuration({
           throw new Error("Erreur de chargement des sessions");
         }
 
-        const [filiereData, sessionsData] = await Promise.all([
+        const [filiereData, sessionsData, modulesData] = await Promise.all([
           filiereResponse.json(),
           sessionsResponse.json(),
+          modulesResponse.json(),
         ]);
 
         setData(filiereData.data);
         setSessions(sessionsData.data || []);
+        setAllModules(modulesData.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
+        console.error("Fetch error:", err);
       } finally {
-        setLoading({ main: false, sessions: false });
+        setLoading({ main: false, sessions: false, modules: false });
       }
     };
 
@@ -135,7 +142,9 @@ export default function Configuration({
   if (!data) {
     return (
       <Box p={2}>
-        <Alert severity="warning">Aucune donnée disponible</Alert>
+        <Alert severity="warning">
+          Aucune donnée disponible pour cette filière
+        </Alert>
       </Box>
     );
   }
@@ -145,12 +154,11 @@ export default function Configuration({
       <Typography variant="h5" gutterBottom>
         Mes matières enseignés - {data.filiere.nom}
       </Typography>
-
       <Typography variant="h6" gutterBottom>
-        Liste des cours
+        Liste des cours programmés
       </Typography>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ mt: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -187,7 +195,7 @@ export default function Configuration({
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                   <Typography variant="body1" color="textSecondary">
-                    Aucun cours programmé
+                    Aucun cours programmé pour cette filière
                   </Typography>
                 </TableCell>
               </TableRow>

@@ -13,6 +13,7 @@ export async function GET(
         status: 400,
       }
     );
+
   }
   try {
     const filiereModule = await prisma.filiereModule.findMany({

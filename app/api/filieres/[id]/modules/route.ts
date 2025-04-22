@@ -113,6 +113,7 @@ export async function GET(
       {
         message: "Une erreur est survenue lors de la récupération des données",
         error: e instanceof Error ? e.message : "Erreur inconnue",
+
       },
       { status: 500 }
     );

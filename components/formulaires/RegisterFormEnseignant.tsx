@@ -24,7 +24,6 @@ const RegisterFormEnseignant = ({
     specialite: "",
     matricule: "",
     mot_de_passe: "",
-
     date_naissance: "",
   });
 

@@ -23,11 +23,17 @@
   .login-icon {
     width: 50%;
   }
+  .partie{
+    margin-left: 10px;
+    margin-right: 10px;
+  }
 }
 @media (max-width: 550px) {
   .partie {
     width: 100%;
     height: 100vh;
+    margin-left: 0;
+    margin-right: 0;
   }
   .centre {
     justify-content: center;

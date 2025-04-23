@@ -44,20 +44,38 @@ model Cours {
   @@index([id_filiere_module], map: "Cours_id_filiere_module_fkey")
   @@index([id_professeur], map: "Cours_id_professeur_fkey")
   @@index([id_sessions], map: "Cours_id_sessions_fkey")
+  Absences Absences[]
 }
 
 // Table pour gérer les emplois du temps
 model EmploisDuTemps {
   id_emploi   Int             @id @default(autoincrement())
   id_cours    Int
+  id_enseignant Int            @default(1)
   jour        EmploisDuTempsJour
   heure_debut DateTime
   heure_fin   DateTime
   salle       String?
   cours       Cours           @relation(fields: [id_cours], references: [id_cours])
+  enseignant  Enseignants     @relation(fields: [id_enseignant], references: [id])
 
   @@index([id_cours], map: "EmploisDuTemps_id_cours_fkey")
+  @@index([id_enseignant], map: "EmploisDuTemps_id_enseignant_fkey")
   @@unique([id_cours, jour, heure_debut, heure_fin], map: "Unique_Cours_Same_Time") // Empêcher la superposition des cours
+}
+
+// Table pour gérer les absences
+model Absences {
+  id_absence    Int       @id @default(autoincrement())
+  id_utilisateur Int
+  id_cours      Int
+  date_absence  DateTime
+  motif         String?
+  utilisateur   Utilisateurs @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  cours         Cours        @relation(fields: [id_cours], references: [id_cours])
+
+  @@index([id_utilisateur], map: "Absences_id_utilisateur_fkey")
+  @@index([id_cours], map: "Absences_id_cours_fkey")
 }
 
 // Table pour gérer les enseignants
@@ -70,6 +88,7 @@ model Enseignants {
   utilisateur    Utilisateurs @relation("UtilisateurEnseignant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
   @@map("enseignants")
+  EmploisDuTemps EmploisDuTemps[]
 }
 
 // Table pour gérer les étudiants
@@ -178,6 +197,8 @@ model Utilisateurs {
   admin      Admin?       @relation("UtilisateurAdmin")
 
   Permission Permission[] @relation("UtilisateurPermission")
+
+  Absences Absences[]
 }
 
 model Admin {

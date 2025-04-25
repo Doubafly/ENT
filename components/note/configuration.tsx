@@ -1,4 +1,4 @@
-import { Add, Delete, ExpandLess } from "@mui/icons-material";
+import { Add, Delete, ExpandLess, Edit } from "@mui/icons-material";
 import {
   Alert,
   Autocomplete,
@@ -97,6 +97,11 @@ export default function Configuration({
     volume_horaire: 30,
     code_module: "",
   });
+
+  // État pour la modification
+  const [editingCours, setEditingCours] = useState<Cours | null>(null);
+  const [editingFiliereModule, setEditingFiliereModule] =
+    useState<FiliereModule | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -232,9 +237,10 @@ export default function Configuration({
 
     try {
       const response = await fetch("/api/cours", {
-        method: "POST",
+        method: editingCours ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id_cours: editingCours?.id_cours,
           id_filiere_module: selectedFiliereModule.id_filiere_module,
           id_professeur: selectedEnseignant.id,
           id_sessions: selectedSession.id_sessions,
@@ -245,27 +251,93 @@ export default function Configuration({
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.message || "Erreur lors de la création du cours"
+          errorData.message || "Erreur lors de la création/mise à jour du cours"
         );
       }
 
-      const newCours = await response.json();
+      const updatedCours = await response.json();
 
       // Mise à jour optimiste des données locales
       if (data) {
         const updatedModules = data.modules.map((m) => {
           if (m.id_filiere_module === selectedFiliereModule.id_filiere_module) {
             const cours = m.cours || [];
+            
+            if (editingCours) {
+              // Mise à jour d'un cours existant
+              return {
+                ...m,
+                cours: cours.map(c => 
+                  c.id_cours === editingCours.id_cours 
+                    ? { ...updatedCours, sessions: selectedSession, enseignant: selectedEnseignant }
+                    : c
+                ),
+              };
+            } else {
+              // Ajout d'un nouveau cours
+              return {
+                ...m,
+                cours: [
+                  ...cours,
+                  {
+                    ...updatedCours,
+                    sessions: selectedSession,
+                    enseignant: selectedEnseignant,
+                  },
+                ],
+              };
+            }
+          }
+          return m;
+        });
+
+        setData({
+          ...data,
+          modules: updatedModules,
+        });
+      }
+
+      // Réinitialiser le formulaire
+      resetForm();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la création/mise à jour"
+      );
+    }
+  };
+
+  const handleUpdateFiliereModule = async () => {
+    if (!editingFiliereModule) return;
+
+    try {
+      const response = await fetch(`/api/filiereModule/${editingFiliereModule.id_filiere_module}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          volume_horaire: moduleConfig.volume_horaire,
+          code_module: moduleConfig.code_module,
+          coefficient: moduleConfig.coefficient,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || "Erreur lors de la mise à jour du module"
+        );
+      }
+
+      const updatedModule = await response.json();
+
+      // Mise à jour optimiste des données locales
+      if (data) {
+        const updatedModules = data.modules.map((m) => {
+          if (m.id_filiere_module === editingFiliereModule.id_filiere_module) {
             return {
               ...m,
-              cours: [
-                ...cours,
-                {
-                  ...newCours,
-                  sessions: selectedSession,
-                  enseignant: selectedEnseignant,
-                },
-              ],
+              ...updatedModule,
+              module: m.module, // Garder les infos du module
+              cours: m.cours, // Garder les cours existants
             };
           }
           return m;
@@ -278,17 +350,36 @@ export default function Configuration({
       }
 
       // Réinitialiser le formulaire
-      setShowForm(false);
-      setStep("selectModule");
-      setSelectedModule(null);
-      setSelectedFiliereModule(null);
-      setSelectedSession(null);
-      setSelectedEnseignant(null);
+      resetForm();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Erreur lors de la création"
+        err instanceof Error ? err.message : "Erreur lors de la mise à jour"
       );
     }
+  };
+
+  const handleEditCours = (cours: Cours, filiereModule: FiliereModule) => {
+    setShowForm(true);
+    setSelectedModule(filiereModule.module);
+    setSelectedFiliereModule(filiereModule);
+    setSelectedSession(cours.sessions);
+    setSelectedEnseignant(cours.enseignant);
+    setSemestre(cours.semestre);
+    setEditingCours(cours);
+    setStep("createCours");
+  };
+
+  const handleEditFiliereModule = (filiereModule: FiliereModule) => {
+    setShowForm(true);
+    setSelectedModule(filiereModule.module);
+    setSelectedFiliereModule(filiereModule);
+    setEditingFiliereModule(filiereModule);
+    setModuleConfig({
+      coefficient: filiereModule.coefficient,
+      volume_horaire: filiereModule.volume_horaire || 30,
+      code_module: filiereModule.code_module || "",
+    });
+    setStep("configureModule");
   };
 
   const handleDeleteCours = async (id: number, idfm: number) => {
@@ -296,9 +387,6 @@ export default function Configuration({
 
     try {
       const response = await fetch(`/api/cours/${id}`, { method: "DELETE" });
-      const reponse2 = await fetch(`/api/filiereModule/${idfm}`, {
-        method: "DELETE",
-      });
       if (!response.ok) throw new Error("Erreur lors de la suppression");
 
       // Mise à jour optimisée
@@ -318,6 +406,45 @@ export default function Configuration({
         err instanceof Error ? err.message : "Erreur lors de la suppression"
       );
     }
+  };
+
+  const handleDeleteFiliereModule = async (id: number) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce module et tous ses cours associés ?")) return;
+
+    try {
+      const response = await fetch(`/api/filiereModule/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Erreur lors de la suppression");
+
+      // Mise à jour optimisée
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              modules: prev.modules.filter((m) => m.id_filiere_module !== id),
+            }
+          : null
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la suppression"
+      );
+    }
+  };
+
+  const resetForm = () => {
+    setShowForm(false);
+    setStep("selectModule");
+    setSelectedModule(null);
+    setSelectedFiliereModule(null);
+    setSelectedSession(null);
+    setSelectedEnseignant(null);
+    setEditingCours(null);
+    setEditingFiliereModule(null);
+    setModuleConfig({
+      coefficient: 1,
+      volume_horaire: 30,
+      code_module: "",
+    });
   };
 
   if (loading.main) {
@@ -357,12 +484,8 @@ export default function Configuration({
           variant="contained"
           startIcon={showForm ? <ExpandLess /> : <Add />}
           onClick={() => {
+            resetForm();
             setShowForm(!showForm);
-            if (!showForm) {
-              setStep("selectModule");
-              setSelectedModule(null);
-              setSelectedFiliereModule(null);
-            }
           }}
           sx={{ mb: 2 }}
         >
@@ -372,7 +495,7 @@ export default function Configuration({
         <Collapse in={showForm}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
-              Nouveau cours - Étape{" "}
+              {editingCours ? "Modifier un cours" : editingFiliereModule ? "Modifier un module" : "Nouveau cours"} - Étape{" "}
               {step === "selectModule" ? 1 : step === "configureModule" ? 2 : 3}{" "}
               sur 3
             </Typography>
@@ -412,7 +535,7 @@ export default function Configuration({
             {step === "configureModule" && selectedModule && (
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom>
-                  Configuration du module {selectedModule.nom} pour la filière{" "}
+                  {editingFiliereModule ? "Modification" : "Configuration"} du module {selectedModule.nom} pour la filière{" "}
                   {data.filiere.nom}
                 </Typography>
 
@@ -468,15 +591,18 @@ export default function Configuration({
                 >
                   <Button
                     variant="outlined"
-                    onClick={() => setStep("selectModule")}
+                    onClick={() => {
+                      setStep("selectModule");
+                      setEditingFiliereModule(null);
+                    }}
                   >
                     Retour
                   </Button>
                   <Button
                     variant="contained"
-                    onClick={handleCreateFiliereModule}
+                    onClick={editingFiliereModule ? handleUpdateFiliereModule : handleCreateFiliereModule}
                   >
-                    Associer le module et continuer
+                    {editingFiliereModule ? "Mettre à jour le module" : "Associer le module et continuer"}
                   </Button>
                 </Box>
               </Box>
@@ -485,7 +611,7 @@ export default function Configuration({
             {step === "createCours" && selectedFiliereModule && (
               <Box>
                 <Typography variant="subtitle1" gutterBottom>
-                  Création du cours pour le module{" "}
+                  {editingCours ? "Modification" : "Création"} du cours pour le module{" "}
                   {selectedFiliereModule.module.nom}
                 </Typography>
 
@@ -540,13 +666,14 @@ export default function Configuration({
                 >
                   <Button
                     variant="outlined"
-                    onClick={() =>
+                    onClick={() => {
                       setStep(
                         selectedFiliereModule
                           ? "selectModule"
                           : "configureModule"
-                      )
-                    }
+                      );
+                      setEditingCours(null);
+                    }}
                   >
                     Retour
                   </Button>
@@ -555,7 +682,7 @@ export default function Configuration({
                     onClick={handleCreateCours}
                     disabled={!selectedSession || !selectedEnseignant}
                   >
-                    Créer le cours
+                    {editingCours ? "Mettre à jour le cours" : "Créer le cours"}
                   </Button>
                 </Box>
               </Box>
@@ -574,6 +701,8 @@ export default function Configuration({
             <TableRow>
               <TableCell>Module</TableCell>
               <TableCell>Code</TableCell>
+              <TableCell>Coefficient</TableCell>
+              <TableCell>Volume Horaire</TableCell>
               <TableCell>Session</TableCell>
               <TableCell>Semestre</TableCell>
               <TableCell>Enseignant</TableCell>
@@ -581,37 +710,63 @@ export default function Configuration({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.modules.flatMap(
-              (module) =>
-                module.cours?.map((cours) => (
-                  <TableRow key={cours.id_cours}>
-                    <TableCell>{module.module.nom}</TableCell>
-                    <TableCell>{module.code_module}</TableCell>
-                    <TableCell>{cours.sessions.annee_academique}</TableCell>
-                    <TableCell>{cours.semestre}</TableCell>
-                    <TableCell>
-                      {cours.enseignant.nom} {cours.enseignant.prenom}
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="error"
-                        onClick={() =>
-                          handleDeleteCours(
-                            cours.id_cours,
-                            module.id_filiere_module
-                          )
-                        }
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                )) || []
-            )}
+            {data.modules.flatMap((module) => [
+              // Ligne pour le module
+              <TableRow key={`module-${module.id_filiere_module}`}>
+                <TableCell colSpan={2}>
+                  <Typography fontWeight="bold">{module.module.nom}</Typography>
+                </TableCell>
+                <TableCell>{module.coefficient}</TableCell>
+                <TableCell>{module.volume_horaire}</TableCell>
+                <TableCell colSpan={3}></TableCell>
+                <TableCell>
+                  <IconButton
+                    color="primary"
+                    onClick={() => handleEditFiliereModule(module)}
+                  >
+                    <Edit />
+                  </IconButton>
+                  <IconButton
+                    color="error"
+                    onClick={() => handleDeleteFiliereModule(module.id_filiere_module)}
+                  >
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>,
+              // Lignes pour les cours
+              ...(module.cours?.map((cours) => (
+                <TableRow key={cours.id_cours}>
+                  <TableCell></TableCell>
+                  <TableCell>{module.code_module}</TableCell>
+                  <TableCell></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell>{cours.sessions.annee_academique}</TableCell>
+                  <TableCell>{cours.semestre}</TableCell>
+                  <TableCell>
+                    {cours.enseignant.nom} {cours.enseignant.prenom}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleEditCours(cours, module)}
+                    >
+                      <Edit />
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteCours(cours.id_cours, module.id_filiere_module)}
+                    >
+                      <Delete />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              )) || []),
+            ])}
 
             {data.modules.every((m) => !m.cours || m.cours.length === 0) && (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                   <Typography variant="body1" color="textSecondary">
                     Aucun cours programmé
                   </Typography>

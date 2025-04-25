@@ -97,7 +97,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
       // S'il a déjà une note enregistrée → PUT
       if (id_note) {
-        const res = await fetch(`/api/notes/${id_note}`, {
+        const res = await fetch(`/api/notes/${note.id_note}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

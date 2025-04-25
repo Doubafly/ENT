@@ -1,3 +1,8 @@
+import Imprimer from "../imprimerBulletin/Imprimer";
+
 export default function Resultat() {
-  return <div>merci</div>;
+  return <div>
+    
+    <Imprimer />
+  </div>;
 }

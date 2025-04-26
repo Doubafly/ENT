@@ -78,6 +78,18 @@ model Absences {
   @@index([id_cours], map: "Absences_id_cours_fkey")
 }
 
+// Table pour gérer les annonces
+model Annonce {
+  id_annonce    Int       @id @default(autoincrement())
+  id_admin      Int
+  titre         String
+  contenu       String
+  date_creation DateTime  @default(now())
+  admin         Admin @relation(fields: [id_admin], references: [id_admin])
+
+  @@index([id_admin], map: "Annonce_id_admin_fkey")
+}
+
 // Table pour gérer les enseignants
 model Enseignants {
   id             Int          @id @default(autoincrement())
@@ -191,7 +203,6 @@ model Utilisateurs {
   profil         String?            
   date_creation  DateTime          @default(now())
 
-  // Relations avec les différents types d'utilisateurs
   etudiant   Etudiants?   @relation("UtilisateurEtudiant")
   enseignant Enseignants? @relation("UtilisateurEnseignant")
   admin      Admin?       @relation("UtilisateurAdmin")
@@ -209,6 +220,7 @@ model Admin {
   // permissions   AdminPermission[] // Relation avec la table de liaison
 
   @@map("admin")
+  Annonce Annonce[]
 }
 
 // Table pour gérer les permissions

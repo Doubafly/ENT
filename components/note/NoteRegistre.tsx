@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Saisi from "./Saisi";
-import Configuration from "./configuration2";
 import Resultat from "./resultat";
 import { Tabs, Tab, Box } from "@mui/material";
 
@@ -12,11 +11,40 @@ interface NoteRegistreProps {
 export default function NoteRegistre({ classes }: NoteRegistreProps) {
   const [tabIndex, setTabIndex] = useState(0);
 
-  return (
+  const [selectedSession, setSelectedSession] = useState("");
+
+  // Extraire toutes les sessions, supprimer les doublons
+  const allSessions: string[] = Array.from(
+    new Set(
+      classes.flatMap((cls: any) =>
+        Array.isArray(cls.sessions) ? cls.sessions : [cls.sessions]
+      )
+    )
+  ) as string[];
+
+  useEffect(() => {
+    if (selectedSession=="" && allSessions.length > 0) {
+      setSelectedSession(allSessions[allSessions.length - 1]);
+    }
+  }, [allSessions]);
+
+  // Filtrer les classes par session sélectionnée
+  const filteredClasses = selectedSession
+    ? classes.filter((cls: any) =>
+        Array.isArray(cls.sessions)
+          ? cls.sessions.includes(selectedSession)
+          : cls.sessions === selectedSession
+      )
+    : classes;
+
+    // setSelectedSession(allSessions[0]);
+
+  return  (
     <div>
       <Box sx={{ padding: 2 }}>
         <h1 className="text-2xl">Les Notes </h1>
-        {/* Conteneur des onglets aligné à droite */}
+
+        {/* Tabs */}
         <Box sx={{ display: "flex", marginLeft: "50px" }}>
           <Tabs
             value={tabIndex}
@@ -24,14 +52,30 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
           >
             <Tab label="Saisi" />
             <Tab label="Resultat" />
-            {/* <Tab label="Configuration " /> */}
           </Tabs>
         </Box>
 
+        {/* Sélection session */}
+        <div className="mb-4 ml-2 text-right">
+          <label className="block font-medium mb-1">Année Académique</label>
+          <select
+            title="Sélectionner une Année Académique"
+            className="p-2 border rounded w-1/12"
+            onChange={(e) => setSelectedSession(e.target.value)}
+            value={selectedSession}
+          >
+            <option value="m">-- Choisir --</option>
+            {allSessions.map((session) => (
+              <option key={session} value={session}>
+                {session}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Contenu selon l'onglet actif */}
-        {tabIndex === 0 && <Saisi classes={classes} />}
-        {tabIndex === 1 && <Resultat />}
-        {/* {tabIndex === 2 && <Configuration classes={classes} />} */}
+        {tabIndex === 0 && <Saisi classes={filteredClasses} />}
+        {tabIndex === 1 && <Resultat classes={filteredClasses} />}
       </Box>
     </div>
   );

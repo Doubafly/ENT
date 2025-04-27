@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AnnonceCard from '@/components/annonces/AnnonceCard';
 import AnnonceDetail from '@/components/annonces/AnnonceDetail';
+import { FaSpinner } from 'react-icons/fa';
+import { ConfirmDialog } from '../ConfirmDialog';
 
 interface Utilisateur {
   nom: string;
@@ -35,8 +37,11 @@ const AnnonceList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [annonceToDelete, setAnnonceToDelete] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Récupérer toutes les annonces
   const fetchAnnonces = async () => {
     setIsLoading(true);
     try {
@@ -51,7 +56,6 @@ const AnnonceList: React.FC = () => {
     }
   };
 
-  // Créer ou mettre à jour une annonce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -70,14 +74,15 @@ const AnnonceList: React.FC = () => {
       
       await fetchAnnonces();
       resetForm();
+      setSuccessMessage(`Annonce ${editingId ? 'modifiée' : 'créée'} avec succès`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setIsLoading(false);
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
-  // Préparer le formulaire d'édition
   const setupEditForm = (annonce: Annonce) => {
     setFormData({
       titre: annonce.titre,
@@ -89,20 +94,34 @@ const AnnonceList: React.FC = () => {
     setSelectedAnnonce(null);
   };
 
-  // Supprimer une annonce
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Confirmer la suppression ?')) return;
-    setIsLoading(true);
+  const handleDeleteClick = (id: number) => {
+    setAnnonceToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDelete = async () => {
+    if (!annonceToDelete) return;
+    setIsProcessing(true);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_BASE_URL}/${annonceToDelete}`, { 
+        method: 'DELETE' 
+      });
+      
       if (!response.ok) throw new Error('Échec de la suppression');
+      
       await fetchAnnonces();
-      if (selectedAnnonce?.id_annonce === id) setSelectedAnnonce(null);
+      if (selectedAnnonce?.id_annonce === annonceToDelete) {
+        setSelectedAnnonce(null);
+      }
+      setSuccessMessage('Annonce supprimée avec succès');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
+      setShowDeleteConfirm(false);
+      setAnnonceToDelete(null);
+      setTimeout(() => setSuccessMessage(null), 3000);
     }
   };
 
@@ -116,7 +135,7 @@ const AnnonceList: React.FC = () => {
 
   if (isLoading && !annonces.length) {
     return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <FaSpinner className="animate-spin text-2xl text-blue-500" />
     </div>;
   }
 
@@ -136,6 +155,12 @@ const AnnonceList: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4">
+      {successMessage && (
+        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          {successMessage}
+        </div>
+      )}
+
       <h1 className="text-3xl font-bold text-center mb-6">📢 Annonces</h1>
 
       {selectedAnnonce ? (
@@ -155,7 +180,7 @@ const AnnonceList: React.FC = () => {
                 Modifier
               </button>
               <button
-                onClick={() => handleDelete(selectedAnnonce.id_annonce)}
+                onClick={() => handleDeleteClick(selectedAnnonce.id_annonce)}
                 className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm"
               >
                 Supprimer
@@ -255,7 +280,7 @@ const AnnonceList: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete(annonce.id_annonce);
+                        handleDeleteClick(annonce.id_annonce);
                       }}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >
@@ -268,8 +293,21 @@ const AnnonceList: React.FC = () => {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="Confirmer la suppression"
+        message={`Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.`}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setAnnonceToDelete(null);
+        }}
+        confirmText={isProcessing ? "Suppression..." : "Supprimer"}
+        cancelText="Annuler"
+      />
     </div>
   );
 };
 
-export default AnnonceList; 
+export default AnnonceList;

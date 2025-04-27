@@ -8,23 +8,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Aucune session active" }, { status: 401 });
   }
 
-  const user = JSON.parse(sessionUser);
+  try {
+    const user = JSON.parse(sessionUser);
 
-  // Récupérer les informations de l'utilisateur avec les relations enseignant et étudiant
-  const utilisateur = await prisma.utilisateurs.findUnique({
-    where: { id_utilisateur: user.id },
-    include: { 
-      enseignant: true,  // Inclure la relation enseignant
-      etudiant: true     // Inclure la relation étudiant
-    }, 
-  });
+    // Récupérer les informations complètes de l'utilisateur
+    const utilisateur = await prisma.utilisateurs.findUnique({
+      where: { id_utilisateur: user.id },
+      include: { 
+        enseignant: true,
+        etudiant: true,
+        admin: true // Ajout de la relation admin
+      }
+    });
 
-  if (!utilisateur) {
-    return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+    if (!utilisateur) {
+      return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 });
+    }
+
+    // Structure de réponse améliorée
+    const responseData = {
+      message: "Utilisateur connecté",
+      user: {
+        ...utilisateur,
+        isAdmin: !!utilisateur.admin, // Ajout d'un flag booléen
+        adminId: utilisateur.admin?.id_admin // Ajout de l'ID admin si existe
+      }
+    };
+
+    return NextResponse.json(responseData, { status: 200 });
+
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'utilisateur:", error);
+    return NextResponse.json(
+      { error: "Erreur interne du serveur" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(
-    { message: "Utilisateur connecté", user: utilisateur },
-    { status: 200 }
-  );
 }

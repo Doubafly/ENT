@@ -91,7 +91,7 @@ const UserCard = ({ item, onSelect }: UserCardProps) => {
                 src="/icons/tel.png"
                 alt="Téléphone"
                 width={14}
-                height={14}
+                height={15}
               />
               {item.tel}
             </p>

@@ -31,7 +31,8 @@ const AnnonceList: React.FC = () => {
   const [formData, setFormData] = useState({
     titre: '',
     contenu: '',
-    id_admin: 2
+    id_admin: 1
+    
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

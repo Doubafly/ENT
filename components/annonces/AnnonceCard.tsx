@@ -6,6 +6,7 @@ type AnnonceProps = {
   contenu: string;
   date_creation: string;
   admin: {
+   
     utilisateur: {
       nom: string;
       prenom: string;

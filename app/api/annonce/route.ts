@@ -26,7 +26,7 @@ export async function GET() {
         }
       },
     });
-
+ 
     return NextResponse.json(
       { message: "Annonces récupérées avec succès", annonces },
       { status: 200 }

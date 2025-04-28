@@ -9,10 +9,11 @@ import Modal from "@/components/modal/Modal";
 export default function EtudiantList() {
   const [etudiants, setEtudiants] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [classFilter, setClassFilter] = useState("");
+  const [classFilter, setClassFilter] = useState<string>(""); // État pour le filtre par classe
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedEtudiant, setSelectedEtudiant] = useState<User | null>(null);
   const [idProfesseur, setIdProfesseur] = useState<number | null>(null); // État pour l'ID du professeur
+  const [sessionFilter, setSessionFilter] = useState<string>(""); // État pour le filtre par session
 
   const itemsPerPage = 8;
 
@@ -62,6 +63,8 @@ export default function EtudiantList() {
 
       if (response.ok) {
         const formattedEtudiants = data.etudiants.map((etudiant: any) => ({
+
+          
           id: etudiant.id_utilisateur,
           id_utilisateur: etudiant.id_utilisateur, // ✅ Ajout explicite
           nom: etudiant.utilisateur.nom,
@@ -78,6 +81,7 @@ export default function EtudiantList() {
           filiere_module:etudiant.filiere.filiere_module,
 
           },
+          annee_academique: etudiant.filiere.filiere_module[0]?.sessions?.annee_academique || "Non renseignée", // Récupération de l'année académique
           date_naissance: formatDate(etudiant.date_naissance),
           date_inscription: formatDate(etudiant.date_inscription),
           notes: etudiant.notes || [], // Ajout des notes pour le filtre par session
@@ -101,14 +105,25 @@ export default function EtudiantList() {
 
  // Filtrage des étudiants
  const filteredEtudiants = etudiants.filter((etudiant) => {
-  return (
-    `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase()) &&
+  const matchesSearchTerm = `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
+
+  const matchesSession =
+    sessionFilter === "" ||
+    etudiant.filiere.filiere_module.some((module: any) =>
+      module.cours.some((cours: any) => cours.sessions?.annee_academique === sessionFilter)
+    );
+
+  const matchesClass =
+    classFilter === "" || etudiant.filiere.nom === classFilter;
+
+  const matchesProfesseur =
     etudiant.filiere.filiere_module.some((module: any) =>
       module.cours.some((cours: any) => cours.id_professeur === idProfesseur)
-    ) // Filtrer par l'ID du professeur
-  );
+    );
+
+  return matchesSearchTerm && matchesSession && matchesClass && matchesProfesseur;
 });
 console.log(filteredEtudiants);
 
@@ -126,7 +141,7 @@ console.log(filteredEtudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
-      <div className="flex justify-between items-center mb-4 ml-6">
+      <div className="flex flex-wrap justify-between items-center mb-4 ml-6 gap-4">
         <input
           type="text"
           placeholder="Rechercher un étudiant..."
@@ -135,9 +150,59 @@ console.log(filteredEtudiants);
             setSearchTerm(e.target.value);
             setCurrentPage(1);
           }}
-          className="w-1/3 p-3 border rounded-lg text-sm"
+          className="w-1/4 p-3 border rounded-lg text-sm"
         />
-       
+{/* Filtre par classe */}
+<select
+  value={classFilter}
+  onChange={(e) => {
+    setClassFilter(e.target.value);
+    setCurrentPage(1);
+  }}
+  className="w-1/4 p-3 border rounded-lg text-sm"
+>
+  <option value="">Toutes les classes</option>
+  {Array.from(
+    new Set(
+      etudiants
+        .filter((etudiant) =>
+          etudiant.filiere.filiere_module.some((module: any) =>
+            module.cours.some((cours: any) => cours.id_professeur === idProfesseur)
+          )
+        )
+        .map((etudiant) => etudiant.filiere.nom)
+    )
+  ).map((classe) => (
+    <option key={classe} value={classe}>
+      {classe}
+    </option>
+  ))}
+</select>
+
+        {/* Filtre par session */}
+  <select
+    value={sessionFilter}
+    onChange={(e) => {
+      setSessionFilter(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="w-1/4 p-3 border rounded-lg text-sm"
+  >
+    <option value="">Toutes les sessions</option>
+    {Array.from(
+      new Set(
+        etudiants.flatMap((etudiant) =>
+          etudiant.filiere.filiere_module.flatMap((module: any) =>
+            module.cours.flatMap((cours: any) => cours.sessions?.annee_academique)
+          )
+        )
+      )
+    ).map((session) => (
+      <option key={session} value={session}>
+        {session}
+      </option>
+    ))}
+  </select>
       </div>
 
       {/* Liste des étudiants */}
@@ -230,14 +295,18 @@ console.log(filteredEtudiants);
     <span className="italic underline font-bold">Matricule</span> : {selectedEtudiant.matricule}
   </p>
   <p>
+  <span className="italic underline font-bold">Année académique</span> :{" "}
+  {selectedEtudiant.filiere.filiere_module[0]?.cours[0]?.sessions?.annee_academique || "Non renseignée"}
+</p>
+  <p>
     <span className="italic underline font-bold">Filière</span> : {selectedEtudiant.filiere.nom}
   </p>
   <p>
     <span className="italic underline font-bold">Date d'inscription</span> :{" "}
     {new Date(selectedEtudiant.date_inscription).toLocaleDateString("fr-FR")}
   </p>
-  <p>
-    <span className="italic underline font-bold">Date de naissance</span> :{" "}
+  <p >
+    <span className="italic underline font-bold ">Date de naissance</span> :{" "}
     {new Date(selectedEtudiant.date_naissance).toLocaleDateString("fr-FR")}
   </p>
 </div>

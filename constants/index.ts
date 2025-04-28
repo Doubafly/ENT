@@ -67,11 +67,11 @@ export const EtudiantLinks = [
     path: "/etudiant",
     title: "Acceuil",
   },
-  {
-    image: "/icons/presentation.png",
-    path: "/etudiant/classe",
-    title: "Classe",
-  },
+  // {
+  //   image: "/icons/presentation.png",
+  //   path: "/etudiant/classe",
+  //   title: "Classe",
+  // },
   {
     image: "/icons/promotion.png",
     path: "/etudiant/annonces",
@@ -82,11 +82,11 @@ export const EtudiantLinks = [
     path: "/etudiant/result",
     title: "Résulat",
   },
-  {
-    image: "/icons/email.png",
-    path: "/etudiant/messages",
-    title: "Messages",
-  },
+  // {
+  //   image: "/icons/email.png",
+  //   path: "/etudiant/messages",
+  //   title: "Messages",
+  // },
   {
     image: "/icons/grades.png",
     path: "/etudiant/note",
@@ -96,11 +96,6 @@ export const EtudiantLinks = [
     image: "/icons/user.png",
     path: "/etudiant/profil",
     title: "Profil",
-  },
-  {
-    image: "/icons/settings.png",
-    path: "/etudiant/parametre",
-    title: "parametre",
   },
   {
     image: "/icons/out.png",

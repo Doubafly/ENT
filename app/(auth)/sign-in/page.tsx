@@ -125,7 +125,7 @@ export default function Page() {
         {/* Section Droite : Image */}
         <div className="w-1/2 relative partie2">
           <Image
-            src="/img/user2.svg" // Remplace par le bon chemin
+            src="/img/imgDroite.png" // Remplace par le bon chemin
             alt="Illustration de connexion"
             layout="fill"
             objectFit="contain" // Changé de "cover" à "contain"

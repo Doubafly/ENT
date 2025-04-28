@@ -7,8 +7,7 @@ interface Student {
   id_note?: number;
   name: string;
   id_cours?: number;
-  note_class?: number;
-  note_exam?: number;
+  notes: any;
   coefficient?: number;
 }
 
@@ -37,6 +36,8 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number | null }> 
   students,
   moduleKey,
 }) => {
+
+
 // Initialise notes avec students, et met à jour quand students change
 const [notes, setNotes] = useState<Array<{
   id: string | number;
@@ -51,6 +52,7 @@ const [modal, setModal] = useState<{
   message: string;
   status: "success" | "error" | "info";
 } | null>(null);
+
 // Effet pour synchroniser notes avec students quand students change
 useEffect(() => {
   if (students && students.length > 0) {
@@ -58,11 +60,11 @@ useEffect(() => {
       students.map((stud) => ({
         id: stud.id,
         matricule: stud.matricule,
-        id_note: stud.id_note || 0,
+        id_note: stud.notes?.[0]?.id_note || 0,
         id_cours: stud.id_cours || 0,
         coefficient: stud.coefficient || 0,
-        note_class: stud.note_class || 0,
-        note_exam: stud.note_exam || 0,
+        note_class: stud.notes?.[0]?.note_class || 0,
+        note_exam: stud.notes?.[0]?.note_exam || 0,
         name: stud.name || "",
       }))
     );
@@ -97,7 +99,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
       // S'il a déjà une note enregistrée → PUT
       if (id_note) {
-        const res = await fetch(`/api/notes/${id_note}`, {
+        const res = await fetch(`/api/notes/${note.id_note}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -143,9 +145,6 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
   }
 };
 
-
-
-
   return (
     <>
       <table className="w-full border-collapse border border-gray-300">
@@ -160,9 +159,9 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
           </tr>
         </thead>
         <tbody>
-          {students.map(({ id,name, note_class, note_exam, coefficient }) => {
+          {students.map(({ id,name, notes, coefficient }) => {
           const note =
-          ((Number(note_class) || 0) + (Number(note_exam) || 0) * 2) / 3;
+          notes && notes[0]? ((Number(notes[0].note_class) || 0) + (Number(notes[0].note_exam) || 0) * 2) / 3 : 0;
             return (
               <tr key={id} className="border">
                 <td className="p-2 border">{name}</td>
@@ -170,7 +169,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
                   <input
                     type="number"
                     className="border p-1 w-full"
-                    defaultValue={note_class}
+                    defaultValue={notes?.[0]?.note_class || 0}
                     onChange={(e) =>
                       handleInputChange(id, "note_class", Number(e.target.value))
                     }
@@ -182,7 +181,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
                   <input
                     type="number"
                     className="border p-1 w-full"
-                    defaultValue={note_exam}
+                    defaultValue={notes?.[0]?.note_exam || 0}
                     onChange={(e) =>
                       handleInputChange(id, "note_exam", Number(e.target.value))
                     }
@@ -231,13 +230,12 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
-
   const handleClassChange = (classId: number) => {
     setSelectedClass(classId);
     setSelectedSemester(null);
     setSelectedModule(null);
   };
-
+  
   const handleSemesterChange = (semesterId: string) => {
     setSelectedSemester(semesterId);
     setSelectedModule(null);

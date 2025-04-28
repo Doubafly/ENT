@@ -1,4 +1,15 @@
-export default function NoteTable({ semesterName, data }) {
+interface NoteTableProps {
+  semesterName: string;
+  data: Array<{
+    Module: string;
+    NoteClasse: string;
+    NoteCompo: string;
+    NoteMatiere: string;
+    Validation: string;
+  }>;
+}
+
+export default function NoteTable({ semesterName, data }: NoteTableProps) {
   return (
     <div>
       <h2 className="text-xl font-bold mb-2">{semesterName}</h2>

@@ -20,6 +20,7 @@ interface Annonce {
 }
 
 const API_BASE_URL = '/api/annonce';
+
 const SESSION_API_URL = '/api/auth/session';
 
 const AnnonceList: React.FC = () => {

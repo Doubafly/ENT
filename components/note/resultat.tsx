@@ -271,8 +271,7 @@ let resultat;
                     {showStudents ? "▲" : "▼"}
                   </span>
                 </button> */}
-{/* 
-                {showStudents && (
+            {/* {showStudents && (
                   <div className="mt-4 space-y-4">
                     {selectedClass.effectif === 0 && (
                       <div className="text-gray-500 text-center py-4">
@@ -295,7 +294,8 @@ let resultat;
                         ))}
                     </div>
                   </div>
-                )} */}
+                )} 
+              */}
               </div>
 
             </div>
@@ -319,14 +319,17 @@ let resultat;
       
       )}
 
-    {/* <Imprimer 
-      students={
-        classes
-          .find((cls) => cls.id === selectedClass)
-          ?.semestres.find((sem) => sem.id === selectedSemester)
-          ?.modules.find((mod) => mod.id === selectedModule)?.students ||
-        []
-      } /> */}
+    {/* 
+      <Imprimer 
+        students={
+          classes
+            .find((cls) => cls.id === selectedClass)
+            ?.semestres.find((sem) => sem.id === selectedSemester)
+            ?.modules.find((mod) => mod.id === selectedModule)?.students ||
+          []
+        } 
+      /> 
+    */}
   </div>;
 }
 export default Resultat;

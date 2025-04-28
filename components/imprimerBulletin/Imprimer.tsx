@@ -31,36 +31,36 @@ interface ImprimerProps {
 
 const Imprimer = (students:ImprimerProps) => {
   // Données des matières (à remplir avec toutes les données du tableau)
-  const matieres = [
-    {
-      codeUE: "TEC12101",
-      intituleUE: "Techniques quantitatives",
-      matiere: "Analyse -2",
-      noteClasse: "14.00",
-      noteExamen: "19.00",
-      noteMatiere: "17.33",
-      creditEQUE: "2",
-      creditUE: "4",
-      moyenneUE: "16,00",
-      noteCoeff: "64,00",
-      resultat: "Validée",
-    },
-    {
-      codeUE: "TEC12101",
-      intituleUE: "Techniques quantitatives",
-      matiere: "Analyse -2",
-      noteClasse: "14.00",
-      noteExamen: "19.00",
-      noteMatiere: "17.33",
-      creditEQUE: "2",
-      creditUE: "4",
-      moyenneUE: "16,00",
-      noteCoeff: "64,00",
-      resultat: "Validée",
-    },
-    // Ajouter toutes les autres matières ici...
-  ];
-  const matiere = students.students.flatMap((semestre) =>
+  // const matieres = [
+  //   {
+  //     codeUE: "TEC12101",
+  //     intituleUE: "Techniques quantitatives",
+  //     matiere: "Analyse -2",
+  //     noteClasse: "14.00",
+  //     noteExamen: "19.00",
+  //     noteMatiere: "17.33",
+  //     creditEQUE: "2",
+  //     creditUE: "4",
+  //     moyenneUE: "16,00",
+  //     noteCoeff: "64,00",
+  //     resultat: "Validée",
+  //   },
+  //   {
+  //     codeUE: "TEC12101",
+  //     intituleUE: "Techniques quantitatives",
+  //     matiere: "Analyse -2",
+  //     noteClasse: "14.00",
+  //     noteExamen: "19.00",
+  //     noteMatiere: "17.33",
+  //     creditEQUE: "2",
+  //     creditUE: "4",
+  //     moyenneUE: "16,00",
+  //     noteCoeff: "64,00",
+  //     resultat: "Validée",
+  //   },
+  //   // Ajouter toutes les autres matières ici...
+  // ];
+  const matieres = students.students.flatMap((semestre) =>
     semestre.modules.flatMap((module) =>
       module.students.map((student) => ({
         codeUE: module.id.toString(), // ID du module comme codeUE
@@ -89,8 +89,6 @@ const Imprimer = (students:ImprimerProps) => {
       }))
     )
   );
-
-  console.log(matiere);
 
   return (
     <div className="max-w-4xl mx-auto p-5 border border-gray-300 shadow-md my-8 font-sans">

@@ -53,7 +53,6 @@ let resultat;
     resultat = classes.filter((item)=> {
       return item.id == classId
     });
-    console.log(resultat);
     setfilterClasse(resultat[0])
     
   };

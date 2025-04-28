@@ -22,7 +22,7 @@ interface Annonce {
 }
 
 const API_BASE_URL = '/api/annonce';
-
+ 
 const AnnonceList: React.FC = () => {
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [selectedAnnonce, setSelectedAnnonce] = useState<Annonce | null>(null);

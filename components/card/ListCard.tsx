@@ -82,7 +82,7 @@ const UserCard = ({
           onSelect(item); // Appelle la fonction de sélection si aucun modal n'est ouvert
         }
       }}
-      className="w-[250px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
+      className="w-[260px] bg-white p-5 rounded-lg shadow-md cursor-pointer"
     >
       {/* Section avec background gris et photo de l'utilisateur */}
       <div className="bg-gray-100 p-4 rounded-lg flex flex-col items-center">
@@ -104,8 +104,8 @@ const UserCard = ({
       {/* Contenu avec deux colonnes : détails à gauche et boutons à droite */}
       <div className="flex items-start mt-4">
         <div className="flex-1 flex flex-col gap-2 text-xs text-gray-700">
-          <p className="flex gap-1 items-center text-sm">
-            <Image src="/icons/location.png" alt="Adresse" width={12} height={12} />
+          <p className="flex gap-2 items-center text-base">
+            <Image src="/icons/location.png" alt="Adresse" width={16} height={16} />
             {item.adresse}
           </p>
           {/* <p className="flex gap-1 items-center text-sm">
@@ -118,12 +118,12 @@ const UserCard = ({
             {formatDate(item.date_naissance)}  
           </p> 
           */}
-          <p className="flex gap-1 items-center text-sm">
+          <p className="flex gap-1 items-center text-base">
             <Image
               src="/icons/tel.png"
               alt="Téléphone"
-              width={12}
-              height={12}
+              width={16}
+              height={16}
             />
             {item.tel}
           </p>

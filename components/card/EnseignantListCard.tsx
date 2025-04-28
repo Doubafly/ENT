@@ -7,6 +7,7 @@ import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Imp
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
+ 
   notes: any;
   specialite?: string;
   id_utilisateur: number;
@@ -105,6 +106,18 @@ const UserCard = ({ item, onSelect }: UserCardProps) => {
               {item.filiere.nom}
             </p>
           </div>
+          {/* Ajout de l'année académique */}
+<div className="flex justify-center mt-2">
+  <p className="flex gap-1 items-center text-base">
+    <Image
+      src="/icons/calendar.png"
+      alt="Année académique"
+      width={16}
+      height={16}
+    />
+    {item.filiere.filiere_module[0]?.cours[0]?.sessions?.annee_academique || "Non renseignée"}
+  </p>
+</div>
         </div>
       </div>
     </div>

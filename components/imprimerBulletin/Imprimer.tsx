@@ -1,36 +1,94 @@
 import React from "react";
 
-const Imprimer = () => {
+interface Student {
+  notes: any;
+  id: number;
+  matricule: string;
+  id_note?: number;
+  name: string;
+  id_cours?: number;
+  note_class?: number;
+  note_exam?: number;
+  coefficient?: number;
+}
+
+interface Module {
+  id: number;
+  name: string;
+  students: Student[];
+}
+
+interface Semestre {
+  id: string;
+  name: string;
+  modules: Module[];
+}
+
+interface ImprimerProps {
+  students: Semestre[]; // Correspond au type passé depuis Resultat
+}
+
+
+const Imprimer = (students:ImprimerProps) => {
   // Données des matières (à remplir avec toutes les données du tableau)
-  const matieres = [
-    {
-      codeUE: "TEC12101",
-      intituleUE: "Techniques quantitatives",
-      matiere: "Analyse -2",
-      noteClasse: "14.00",
-      noteExamen: "19.00",
-      noteMatiere: "17.33",
-      creditEQUE: "2",
-      creditUE: "4",
-      moyenneUE: "16,00",
-      noteCoeff: "64,00",
-      resultat: "Validée",
-    },
-    {
-      codeUE: "TEC12101",
-      intituleUE: "Techniques quantitatives",
-      matiere: "Analyse -2",
-      noteClasse: "14.00",
-      noteExamen: "19.00",
-      noteMatiere: "17.33",
-      creditEQUE: "2",
-      creditUE: "4",
-      moyenneUE: "16,00",
-      noteCoeff: "64,00",
-      resultat: "Validée",
-    },
-    // Ajouter toutes les autres matières ici...
-  ];
+  // const matieres = [
+  //   {
+  //     codeUE: "TEC12101",
+  //     intituleUE: "Techniques quantitatives",
+  //     matiere: "Analyse -2",
+  //     noteClasse: "14.00",
+  //     noteExamen: "19.00",
+  //     noteMatiere: "17.33",
+  //     creditEQUE: "2",
+  //     creditUE: "4",
+  //     moyenneUE: "16,00",
+  //     noteCoeff: "64,00",
+  //     resultat: "Validée",
+  //   },
+  //   {
+  //     codeUE: "TEC12101",
+  //     intituleUE: "Techniques quantitatives",
+  //     matiere: "Analyse -2",
+  //     noteClasse: "14.00",
+  //     noteExamen: "19.00",
+  //     noteMatiere: "17.33",
+  //     creditEQUE: "2",
+  //     creditUE: "4",
+  //     moyenneUE: "16,00",
+  //     noteCoeff: "64,00",
+  //     resultat: "Validée",
+  //   },
+  //   // Ajouter toutes les autres matières ici...
+  // ];
+  const matieres = students.students.flatMap((semestre) =>
+    semestre.modules.flatMap((module) =>
+      module.students.map((student) => ({
+        codeUE: module.id.toString(), // ID du module comme codeUE
+        intituleUE: module.name, // Nom du module
+        matiere: module.name, // Nom de l'étudiant
+        noteClasse: student.notes[0].note_class?.toFixed(2) || "N/A", // Note de classe
+        noteExamen: student.notes[0].note_exam?.toFixed(2) || "N/A", // Note d'examen
+        noteMatiere: (
+          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
+          2
+        ).toFixed(2), // Moyenne des notes
+        creditEQUE: student.notes[0].coefficient?.toString() || "N/A", // Coefficient
+        creditUE: "4", // Exemple : valeur fixe ou calculée
+        moyenneUE: (
+          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
+          2
+        ).toFixed(2), // Moyenne UE
+        noteCoeff: (
+          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) *
+          (student.notes[0].coefficient|| 1)
+        ).toFixed(2), // Note coefficientée
+        resultat: ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) / 2 >=
+          10
+          ? "Validée"
+          : "Non Validée", // Résultat basé sur la moyenne
+      }))
+    )
+  );
 
   return (
     <div className="max-w-4xl mx-auto p-5 border border-gray-300 shadow-md my-8 font-sans">

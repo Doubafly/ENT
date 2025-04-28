@@ -201,7 +201,7 @@ export default function EnseignantList() {
         </select>
         <button
           onClick={() => setShowForm(true)}
-          className="w-1/4 p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200"    
+          className="w-1/10 p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200"    
         >
           + Ajouter
         </button>
@@ -295,44 +295,31 @@ export default function EnseignantList() {
 
             {/* Informations détaillées en colonnes */}
             <div className="grid grid-cols-2 gap-4 text-lg border-t pt-4">
-              <p>
-                <strong>Nom :</strong> {selectedEnseignant.nom}
-              </p>
-              <p>
-                <strong>Prénom :</strong> {selectedEnseignant.prenom}
-              </p>
-              <p>
-                <strong>Email :</strong> {selectedEnseignant.email}
-              </p>
-              <p>
-                <strong>Sexe :</strong> {selectedEnseignant.sexe}
-              </p>
-              <p>
-                <strong>Téléphone :</strong>{" "}
-                {selectedEnseignant.tel || "Non renseigné"}
-              </p>
-              <p>
-                <strong>Adresse :</strong>{" "}
-                {selectedEnseignant.adresse || "Non renseignée"}
-              </p>
-              <p>
-                <strong>Matricule :</strong> {selectedEnseignant.matricule}
-              </p>
-              <p>
-                <strong>Specialiter :</strong> {selectedEnseignant.specialite}
-              </p>
-              <p>
-                <strong>Date d'inscription :</strong>{" "}
-                {new Date(
-                  selectedEnseignant.date_inscription
-                ).toLocaleDateString("fr-FR")}
-              </p>
-              <p>
-                <strong>Date de naissance :</strong>{" "}
-                {new Date(selectedEnseignant.date_naissance).toLocaleDateString(
-                  "fr-FR"
-                )}
-              </p>
+            <p>
+    <span className="italic underline font-bold">Nom</span> : {selectedEnseignant.nom}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Prénom</span> : {selectedEnseignant.prenom}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Email</span> : {selectedEnseignant.email}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Sexe</span> : {selectedEnseignant.sexe}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Téléphone</span> : {selectedEnseignant.tel || "Non renseigné"}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Adresse</span> : {selectedEnseignant.adresse || "Non renseignée"}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Matricule</span> : {selectedEnseignant.matricule}
+  </p>
+  <p>
+    <span className="italic underline font-bold">Spécialité</span> : {selectedEnseignant.specialite || "Non renseignée"}
+  </p>
+             
             </div>
           </div>
         </Modal>

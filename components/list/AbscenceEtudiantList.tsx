@@ -1,75 +1,151 @@
-import { useState } from "react";
+import * as React from 'react';
+import { useState } from 'react';
+import { DataGrid, GridColDef, GridValueGetter } from '@mui/x-data-grid';
+import Paper from '@mui/material/Paper';
 
-export default function AttendancePage() {
-  const classes = [
-    { id: "class1", name: "Informatique 1" },
-    { id: "class2", name: "Génie Civil 2" },
-  ];
+// Définir l'interface pour un enseignant
+interface Student {
+  id: number;
+  firstName: string;
+  lastName: string;
+  Heure: string;
+  justifier?: string;
+  classe?: string;
+  
+}
 
-  const schedule = {
-    class1: [
-      { id: 1, name: "Ali Traoré" },
-      { id: 2, name: "Fatou Diarra" },
-    ],
-    class2: [
-      { id: 3, name: "Moussa Konaté" },
-      { id: 4, name: "Awa Coulibaly" },
-    ],
-  };
+// Exemple de données
+const initialRows: Student[] = [
+  { id: 1, lastName: 'Diallo', firstName: 'Kadidia', Heure: '8H-10H', justifier: 'malade' , classe: 'Licence'}, 
+   { id: 2, lastName: 'Cisse', firstName: 'Moussa', Heure: '10H-12H', justifier: '_', classe: 'Licence'},  
+  { id: 3, lastName: 'Konaté', firstName: 'Souleymane', Heure: '10H-12H', justifier: '_', classe: 'Secondaire'}, 
+  { id: 4, lastName: 'Toure', firstName: 'Boubacar', Heure: '10H-12H', justifier: '_', classe: 'Primaire'}, 
+  { id: 5, lastName: 'Sidibe', firstName: 'Adam', Heure: '10H-12H', justifier: 'permission', classe: 'Primaire'}, 
+  { id: 6, lastName: 'Sylla', firstName: 'Ousmane', Heure: '10H-12H', justifier: 'malade', classe: 'Primaire'},  
+  { id: 7, lastName: 'Diarra', firstName: 'Mamadou', Heure: '10H-12H', justifier: '_', classe: 'Primaire'}, 
+  { id: 8, lastName: 'Diakite', firstName: 'Madi', Heure: '10H-12H', justifier: 'malade', classe: 'Secondaire'}, 
+  { id: 9, lastName: 'Ba', firstName: 'Mamadou', Heure: '10H-12H', justifier: 'permission', classe: 'Licence'}, 
+];
 
-  const [selectedClass, setSelectedClass] = useState(classes[0].id);
-  const [attendance, setAttendance] = useState({});
+// Colonnes du tableau
+const columns: GridColDef[] = [
+  { field: 'id', headerName: 'ID', width: 70 },
+  { field: 'firstName', headerName: 'Nom', width: 130 },
+  { field: 'lastName', headerName: 'Prenom', width: 130 },
+  { field: 'Heure', headerName: 'Heure', width: 130 },
+  { field: 'classe', headerName: 'Classe', width: 130 },
+  { field: 'justifier', headerName: 'Justification', width: 130 },
+  {
+    field: 'action',
+    headerName: 'Action',
+    width: 150,
+    renderCell: (params) => (
+      <strong>
+        <button className="text-blue-500 hover:text-blue-700"> Voir ses absences</button>
+      </strong>
+    ),
+  },
+];
 
-  const handleCheckboxChange = (studentId) => {
-    setAttendance((prev) => ({
-      ...prev,
-      [studentId]: !prev[studentId],
-    }));
-  };
+export default function AbsenceEtudiantList() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [classFilter, setClassFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+  const [rows, setRows] = useState<Student[]>(initialRows);
+  
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+    // Traduction du jour de la date sélectionnée
+    const jours = [
+      "dimanche",
+      "lundi",
+      "mardi",
+      "mercredi",
+      "jeudi",
+      "vendredi",
+      "samedi",
+    ] as const;
+    const dayName = jours[new Date(selectedDate).getDay()];
+    const paginationModel = { page: 0, pageSize: 5 };
+  // Filtrage dynamique
+  const filteredRows = rows.filter((row) => {
+    const matchesSearch = `${row.firstName} ${row.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+    // const matchesClass = classFilter ? row.module === classFilter : true;
+    return matchesSearch ;
+  });
 
-  const handleSubmit = () => {
-    console.log("Présence enregistrée pour", selectedClass, attendance);
-  };
+  // ...
 
-  return (
-    <div className="p-6 max-w-lg mx-auto bg-gray-100 rounded-xl shadow-md space-y-6">
-      <h1 className="text-2xl font-bold text-center">Liste de Présence</h1>
-      <div>
-        <label className="font-medium">Sélectionner une classe :</label>
-        <select
-          className="block w-full mt-1 p-2 border rounded-md"
-          value={selectedClass}
-          onChange={(e) => setSelectedClass(e.target.value)}
-        >
-          {classes.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <ul className="bg-white p-4 rounded-lg shadow-md">
-        {schedule[selectedClass]?.map((student) => (
-          <li
-            key={student.id}
-            className="flex items-center justify-between py-2 border-b"
-          >
-            <span className="font-medium">{student.name}</span>
-            <input
-              type="checkbox"
-              checked={attendance[student.id] || false}
-              onChange={() => handleCheckboxChange(student.id)}
-              className="w-5 h-5"
-            />
-          </li>
-        ))}
-      </ul>
-      <button
-        onClick={handleSubmit}
-        className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-800"
+return (
+  <div  className="ml-0 px-1 py-5 text-xl">
+    {/* Barre de recherche et filtres */}
+    <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
+      <input
+        type="text"
+        placeholder="Rechercher un enseignant..."
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
+      />
+      {/* <select
+        value={classFilter}
+        onChange={(e) => {
+          setClassFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
       >
-        Enregistrer la Présence
+        {/* <option value="">Filtrer module</option>
+        {[...new Set(rows.map((e) => e.module))].map((module) => (
+          <option key={module} value={module}>
+            {module}
+          </option>
+        ))} 
+      </select> */}
+      <select
+        value={classFilter}
+        onChange={(e) => {
+          setClassFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
+      >
+        <option value="">Filtrer par Classes</option>
+        {[...new Set(rows.map((e) => e.classe))].map((classe) => (
+          <option key={classe} value={classe}>
+            {classe}
+          </option>
+        ))}
+      </select>
+      <button
+        onClick={() => setShowForm(true)}
+        className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200"
+      >
+        Enregister les absences
       </button>
     </div>
-  );
+
+    <div className="flex items-center text-ml text-green-600 mb-4">
+      <span>Jour :</span>
+      <span className="ml-2 font-medium capitalize">{dayName}</span>
+    </div>
+
+    {/* Tableau */}
+    <Paper sx={{ height: 500, width: '100%' }}>
+      <DataGrid
+        rows={filteredRows}
+        columns={columns}
+        initialState={{ pagination: { paginationModel } }}
+        pageSizeOptions={[5, 10]}
+        checkboxSelection
+        sx={{ border: 0 }}
+      />
+    </Paper>
+  </div>
+);
 }

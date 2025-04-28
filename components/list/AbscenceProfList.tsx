@@ -40,7 +40,7 @@ const columns: GridColDef[] = [
     width: 150,
     renderCell: (params) => (
       <strong>
-        <button className="text-blue-500 hover:text-blue-700">Absence</button>
+        <button className="text-blue-500 hover:text-blue-700"> Voir ses absences</button>
       </strong>
     ),
   },

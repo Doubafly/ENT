@@ -234,19 +234,18 @@ export default function AbsenceProfList() {
 
             {/* Liste d'absences */}
             <div className="mt-4 text-center">
-  <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
-  <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
-    <li>Absence le 20/04/2025</li>
-    <li>Absence le 05/05/2025</li>
-    <li>Absence le 10/05/2025</li>
-    <li>Absence le 15/05/2025</li>
-    <li>Absence le 20/05/2025</li>
-    <li>Absence le 25/05/2025</li>
-    <li>Absence le 30/05/2025</li>
-    {/* Remplacer plus tard par les vraies données */}
-  </ul>
-</div>
-
+              <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
+              <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
+                <li>Absence le 20/04/2025</li>
+                <li>Absence le 05/05/2025</li>
+                <li>Absence le 10/05/2025</li>
+                <li>Absence le 15/05/2025</li>
+                <li>Absence le 20/05/2025</li>
+                <li>Absence le 25/05/2025</li>
+                <li>Absence le 30/05/2025</li>
+                {/* Remplacer plus tard par les vraies données */}
+              </ul>
+            </div>
           </div>
         </Modal>
       )}

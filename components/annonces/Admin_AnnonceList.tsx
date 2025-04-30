@@ -79,7 +79,12 @@ const AnnonceList: React.FC = () => {
       if (!response.ok) throw new Error('Échec du chargement');
       
       const data = await response.json();
-      setAnnonces(data.annonces || []);
+           // Trier les annonces par date de création décroissante
+           const sortedAnnonces = (data.annonces || []).sort((a: Annonce, b: Annonce) => 
+            new Date(b.date_creation).getTime() - new Date(a.date_creation).getTime()
+          );
+          setAnnonces(sortedAnnonces);
+    
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {

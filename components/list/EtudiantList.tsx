@@ -229,15 +229,18 @@ console.log(filteredEtudiants);
           className="w-1/4 p-3 border rounded-lg text-sm"
         >
         
-          <option value="">Filtrer par session</option>
-
-          {[...new Set(
-            etudiants.flatMap((etudiant) =>
-              etudiant.filiere.filiere_module.flatMap((fm) =>
-                fm.cours.map((cour) => cour.sessions.annee_academique)
-              )
-            )
-          )].sort().map((annee) => (
+        <option value="">Filtrer par session</option>
+        {[...new Set(
+          etudiants.flatMap((etudiant) =>
+            etudiant.filiere?.filiere_module?.flatMap((fm: any) =>
+              fm.cours?.flatMap((cour: any) =>
+                cour.sessions?.annee_academique || []
+              ) || []
+            ) || []
+          )
+        )]
+          .sort()
+          .map((annee) => (
             <option key={annee} value={annee}>
               {annee}
             </option>

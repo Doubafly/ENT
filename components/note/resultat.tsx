@@ -77,7 +77,7 @@ let resultat;
 <div className="mt-4">
       <div className="md:flex p-4">
         {/* Sélection de la classe */}
-        <div className="mb-4 ml-2">
+        {/* <div className="mb-4 ml-2">
           <label className="block font-medium mb-1">
             Sélectionner une classe
           </label>
@@ -93,10 +93,10 @@ let resultat;
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Sélection du semestre */}
-        {selectedClass && (
+        {/* {selectedClass && (
           <div className="mb-4 ml-2">
             <label className="block font-medium mb-1">
               Sélectionner un semestre
@@ -116,7 +116,7 @@ let resultat;
                 ))}
             </select>
           </div>
-        )}
+        )} */}
 
       </div>
     </div>

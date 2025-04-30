@@ -66,6 +66,7 @@ const Imprimer = (students:ImprimerProps) => {
         codeUE: module.id.toString(), // ID du module comme codeUE
         intituleUE: module.name, // Nom du module
         matiere: module.name, // Nom de l'étudiant
+        nom: student.name,
         noteClasse: student.notes[0].note_class?.toFixed(2) || "N/A", // Note de classe
         noteExamen: student.notes[0].note_exam?.toFixed(2) || "N/A", // Note d'examen
         noteMatiere: (
@@ -89,9 +90,14 @@ const Imprimer = (students:ImprimerProps) => {
       }))
     )
   );
+  console.log(matieres);
+  
 
   return (
-    <div className="max-w-4xl mx-auto p-5 border border-gray-300 shadow-md my-8 font-sans">
+    <div>
+    {matieres.map((matiere: any, index: any) => (
+      <div className="max-w-4xl mx-auto p-5 border border-gray-300 shadow-md my-8 font-sans">
+
       {/* En-tête */}
       <header className="text-center mb-5">
         <h1 className="text-lg font-bold">
@@ -110,7 +116,7 @@ const Imprimer = (students:ImprimerProps) => {
         <h2 className="text-base font-bold border-b border-black">
           NOM et PRENOM (S) : CLASSE
         </h2>
-        <p className="font-bold">MAMADOU BA</p>
+        <p className="font-bold">{matiere.nom}</p>
         <p>
           <strong>Licence 1</strong>
           <br />
@@ -126,6 +132,8 @@ const Imprimer = (students:ImprimerProps) => {
 
       {/* Tableau des résultats */}
       <div className="overflow-x-auto mb-5">
+
+     
         <table className="min-w-full text-xs border-collapse">
           <thead>
             <tr className="bg-gray-100">
@@ -145,7 +153,6 @@ const Imprimer = (students:ImprimerProps) => {
             </tr>
           </thead>
           <tbody>
-            {matieres.map((matiere, index) => (
               <tr key={index}>
                 <td className="border border-gray-300 p-2">{matiere.codeUE}</td>
                 <td className="border border-gray-300 p-2">
@@ -179,7 +186,7 @@ const Imprimer = (students:ImprimerProps) => {
                   {matiere.resultat}
                 </td>
               </tr>
-            ))}
+            
           </tbody>
         </table>
       </div>
@@ -271,6 +278,7 @@ const Imprimer = (students:ImprimerProps) => {
           technoisib@mailjaw.com, Banako, MAU
         </p>
       </footer>
+    </div> ))}
     </div>
   );
 };

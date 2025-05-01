@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import AnnonceCard from '@/components/annonces/AnnonceCard';
-import AnnonceDetail from '@/components/annonces/AnnonceDetail';
-import { FaSpinner, FaLock, FaSignInAlt } from 'react-icons/fa';
-import { ConfirmDialog } from '../ConfirmDialog';
+import React, { useState, useEffect } from "react";
+import AnnonceCard from "@/components/annonces/AnnonceCard";
+import AnnonceDetail from "@/components/annonces/AnnonceDetail";
+import { FaSpinner, FaLock, FaSignInAlt } from "react-icons/fa";
+import { ConfirmDialog } from "../ConfirmDialog";
 
 interface Annonce {
   id_annonce: number;
@@ -19,17 +19,17 @@ interface Annonce {
   };
 }
 
-const API_BASE_URL = '/api/annonce';
+const API_BASE_URL = "/api/annonce";
 
-const SESSION_API_URL = '/api/auth/session';
+const SESSION_API_URL = "/api/auth/session";
 
 const AnnonceList: React.FC = () => {
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
   const [selectedAnnonce, setSelectedAnnonce] = useState<Annonce | null>(null);
   const [formData, setFormData] = useState({
-    titre: '',
-    contenu: '',
-    id_admin: 0
+    titre: "",
+    contenu: "",
+    id_admin: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,16 +47,16 @@ const AnnonceList: React.FC = () => {
     const checkAdminSession = async () => {
       try {
         const response = await fetch(SESSION_API_URL, {
-          credentials: 'include'
+          credentials: "include",
         });
-        
-        if (!response.ok) throw new Error('Erreur de session');
-        
+
+        if (!response.ok) throw new Error("Erreur de session");
+
         const { user } = await response.json();
-        
+
         if (user?.admin) {
           setCurrentAdminId(user.admin.id_admin);
-          setFormData(prev => ({ ...prev, id_admin: user.admin.id_admin }));
+          setFormData((prev) => ({ ...prev, id_admin: user.admin.id_admin }));
         }
       } catch (error) {
         console.error("Erreur vérification session:", error);
@@ -73,20 +73,21 @@ const AnnonceList: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await fetch(API_BASE_URL, {
-        credentials: 'include'
+        credentials: "include",
       });
-      
-      if (!response.ok) throw new Error('Échec du chargement');
-      
+
+      if (!response.ok) throw new Error("Échec du chargement");
+
       const data = await response.json();
-           // Trier les annonces par date de création décroissante
-           const sortedAnnonces = (data.annonces || []).sort((a: Annonce, b: Annonce) => 
-            new Date(b.date_creation).getTime() - new Date(a.date_creation).getTime()
-          );
-          setAnnonces(sortedAnnonces);
-    
+      // Trier les annonces par date de création décroissante
+      const sortedAnnonces = (data.annonces || []).sort(
+        (a: Annonce, b: Annonce) =>
+          new Date(b.date_creation).getTime() -
+          new Date(a.date_creation).getTime()
+      );
+      setAnnonces(sortedAnnonces);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsLoading(false);
     }
@@ -95,35 +96,37 @@ const AnnonceList: React.FC = () => {
   // Gestion de la création/modification
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!currentAdminId) {
       setError("Vous devez être connecté en tant qu'admin");
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      const method = editingId ? 'PUT' : 'POST';
+      const method = editingId ? "PUT" : "POST";
       const url = editingId ? `${API_BASE_URL}/${editingId}` : API_BASE_URL;
-      
+
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           ...formData,
-          id_admin: currentAdminId
-        })
+          id_admin: currentAdminId,
+        }),
       });
 
       if (!response.ok) throw new Error(await response.text());
-      
+
       await fetchAnnonces();
       resetForm();
-      setSuccessMessage(`Annonce ${editingId ? 'modifiée' : 'créée'} avec succès`);
+      setSuccessMessage(
+        `Annonce ${editingId ? "modifiée" : "créée"} avec succès`
+      );
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsLoading(false);
       setTimeout(() => setSuccessMessage(null), 3000);
@@ -138,21 +141,21 @@ const AnnonceList: React.FC = () => {
   // Gestion de la suppression
   const handleDelete = async () => {
     if (!annonceToDelete || !currentAdminId) return;
-    
+
     setIsProcessing(true);
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/${annonceToDelete}`, {
-        method: 'DELETE',
-        credentials: 'include'
+        method: "DELETE",
+        credentials: "include",
       });
-      
-      if (!response.ok) throw new Error('Échec de la suppression');
-      
+
+      if (!response.ok) throw new Error("Échec de la suppression");
+
       await fetchAnnonces();
-      setSuccessMessage('Annonce supprimée avec succès');
+      setSuccessMessage("Annonce supprimée avec succès");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setIsProcessing(false);
       setShowDeleteConfirm(false);
@@ -162,7 +165,7 @@ const AnnonceList: React.FC = () => {
 
   // Reset du formulaire
   const resetForm = () => {
-    setFormData({ titre: '', contenu: '', id_admin: currentAdminId || 0 });
+    setFormData({ titre: "", contenu: "", id_admin: currentAdminId || 0 });
     setIsFormOpen(false);
     setEditingId(null);
   };
@@ -172,7 +175,7 @@ const AnnonceList: React.FC = () => {
     setFormData({
       titre: annonce.titre,
       contenu: annonce.contenu,
-      id_admin: currentAdminId || 0
+      id_admin: currentAdminId || 0,
     });
     setEditingId(annonce.id_annonce);
     setIsFormOpen(true);
@@ -180,7 +183,7 @@ const AnnonceList: React.FC = () => {
   };
 
   // Chargement initial
-  useEffect(() => { 
+  useEffect(() => {
     if (sessionChecked) fetchAnnonces();
   }, [sessionChecked]);
 
@@ -199,7 +202,7 @@ const AnnonceList: React.FC = () => {
       <div className="p-4 max-w-7xl mx-auto">
         <div className="bg-red-100 border-l-4 border-red-500 p-4">
           <p className="text-red-700">{error}</p>
-          <button 
+          <button
             onClick={fetchAnnonces}
             className="mt-2 px-3 py-1 bg-red-200 rounded text-sm"
           >
@@ -226,8 +229,11 @@ const AnnonceList: React.FC = () => {
           <div>
             <h3 className="font-medium text-blue-800">Accès restreint</h3>
             <p className="text-blue-600">
-              Veuillez vous 
-              <a href="/login" className="ml-1 text-blue-700 underline flex items-center">
+              Veuillez vous
+              <a
+                href="/login"
+                className="ml-1 text-blue-700 underline flex items-center"
+              >
                 connecter <FaSignInAlt className="ml-1" />
               </a>
               pour gérer les annonces
@@ -239,7 +245,7 @@ const AnnonceList: React.FC = () => {
       {selectedAnnonce ? (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <button 
+            <button
               onClick={() => setSelectedAnnonce(null)}
               className="text-blue-600 hover:text-blue-800 flex items-center"
             >
@@ -282,33 +288,46 @@ const AnnonceList: React.FC = () => {
           </div>
 
           {isFormOpen && currentAdminId && (
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white p-6 rounded-lg shadow-md mb-6"
+            >
               <h2 className="text-xl font-semibold mb-4">
-                {editingId ? "Modifier l'annonce" : "Créer une nouvelle annonce"}
+                {editingId
+                  ? "Modifier l'annonce"
+                  : "Créer une nouvelle annonce"}
               </h2>
-              
+
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Titre *</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Titre *
+                  </label>
                   <input
                     value={formData.titre}
-                    onChange={(e) => setFormData({...formData, titre: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, titre: e.target.value })
+                    }
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Contenu *</label>
+                  <label className="block text-sm font-medium mb-1">
+                    Contenu *
+                  </label>
                   <textarea
                     value={formData.contenu}
-                    onChange={(e) => setFormData({...formData, contenu: e.target.value})}
+                    onChange={(e) =>
+                      setFormData({ ...formData, contenu: e.target.value })
+                    }
                     rows={5}
                     className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>
-                
+
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -322,7 +341,11 @@ const AnnonceList: React.FC = () => {
                     disabled={!formData.titre || !formData.contenu || isLoading}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
                   >
-                    {isLoading ? 'Envoi...' : editingId ? 'Mettre à jour' : 'Publier'}
+                    {isLoading
+                      ? "Envoi..."
+                      : editingId
+                      ? "Mettre à jour"
+                      : "Publier"}
                   </button>
                 </div>
               </div>
@@ -336,11 +359,18 @@ const AnnonceList: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {annonces.map((annonce) => (
-                <div 
-                  key={annonce.id_annonce} 
+                <div
+                  key={annonce.id_annonce}
                   className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
                 >
-                  <AnnonceCard {...annonce} />
+                  <AnnonceCard
+                    {...annonce}
+                    onViewMore={
+                      currentAdminId
+                        ? undefined
+                        : () => setSelectedAnnonce(annonce)
+                    }
+                  />
                   {currentAdminId && (
                     <div className="p-4 flex justify-end space-x-3 border-t">
                       <button

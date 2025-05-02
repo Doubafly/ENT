@@ -16,7 +16,7 @@ import {
 } from "chart.js";
 import MiniSmallIconCard from "../card/MiniIconCard";
 import { UserContext } from "@/changerUtilisateur/utilisateur";
-import EmploieStudent from "../EmploieStudent";
+import EmploieStudent from "../EmploiDuTemps";
 
 ChartJS.register(
   CategoryScale,

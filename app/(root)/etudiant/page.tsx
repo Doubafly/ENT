@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import RightSidebar from "@/components/RightSidebar";
+import EmploieStudent from "@/components/EmploiDuTemps";
 import Statistique from "@/components/statistique/statistique";
-
 export default function Home() {
   const [user, setUser] = useState(null); // Stocker les informations de l'utilisateur connecté
   const [statData, setStatData] = useState([
@@ -80,7 +80,9 @@ export default function Home() {
   return (
     <section className="home">
       <div className="home-content">
+        {/* <EmploieStudent menuStat={statData} /> */}
         <Statistique menuStat={statData} />
+        
       </div>
       <RightSidebar />
     </section>

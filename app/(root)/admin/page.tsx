@@ -72,7 +72,6 @@ export default function Home() {
         <Statistique menuStat={statData} />
       </div>
       <RightSidebar />
-        kkkkkkk
     </section>
   );
 }

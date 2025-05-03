@@ -77,6 +77,10 @@ export async function GET() {
                 id_note: true,
                 note_class: true,
                 note_exam: true,
+                commentaire_etudiant: true,
+                commentaire_enseignant: true,
+                statut_reclamation: true,
+                statut_note: true
               },
             },
           },

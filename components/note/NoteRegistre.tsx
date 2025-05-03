@@ -36,6 +36,7 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
           : cls.sessions === selectedSession
       )
     : classes;
+    
 
     // setSelectedSession(allSessions[0]);
 
@@ -72,6 +73,7 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
             ))}
           </select>
         </div>
+        
 
         {/* Contenu selon l'onglet actif */}
         {tabIndex === 0 && <Saisi classes={filteredClasses} />}

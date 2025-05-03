@@ -64,10 +64,10 @@ export async function PUT(
     }
 
     // Extraire les données de la requête
-    const { note_class, note_exam, commentaire } = await request.json();
+    const { note_class, note_exam, commentaire_enseignant } = await request.json();
 
     // Validation des données
-    if (note_class === undefined && note_exam === undefined && !commentaire) {
+    if (note_class === undefined && note_exam === undefined && !commentaire_enseignant) {
       return NextResponse.json(
         { message: "Aucune donnée à mettre à jour" },
         { status: 400 }
@@ -80,7 +80,7 @@ export async function PUT(
       data: {
         note_class,
         note_exam,
-        commentaire,
+        commentaire_enseignant,
       },
     });
 

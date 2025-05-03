@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   
   return (
-    <html lang="en">
+    <html lang="fr">
       <body className={`${inter.variable} ${ibmPlexSerif.variable}`}>
         {children}
       </body>

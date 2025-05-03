@@ -59,8 +59,8 @@ export default function Home() {
   
         // Calculs
         const nombreModules = coursFiltres.length;
-        const nombreModulesValides = notesEtudiant.filter((note: { commentaire: string; }) => note.commentaire === "valide").length;
-        const nombreModulesNonValides = notesEtudiant.filter((note: { commentaire: string; }) => note.commentaire !== "valide").length;
+        const nombreModulesValides = notesEtudiant.filter((note: { commentaire_enseignant: string; }) => note.commentaire_enseignant === "valide").length;
+        const nombreModulesNonValides = notesEtudiant.filter((note: { commentaire_enseignant: string; }) => note.commentaire_enseignant !== "valide").length;
   
         setStatData([
           { link: "/icons/teach.png", value: nombreModules, nom: "Nombre Module" },

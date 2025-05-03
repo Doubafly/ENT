@@ -49,6 +49,7 @@ export default function page() {
         const response2 = await fetch("/api/cours");
         const data1 = await response2.json();
 
+        console.log(data1);
         
 
         // if(data2.data) {
@@ -68,7 +69,9 @@ export default function page() {
               id_note: note.id_note,
               note_class: note.note_class,
               note_exam: note.note_exam,
-              commentaire: note.commentaire,
+              commentaire_etudiant: note.commentaire_etudiant,
+              statut_reclamation: note.statut_reclamation,
+              commentaire_enseignant: note.commentaire_enseignant,
               id_etudiant: note.etudiant.id,
             }))
         
@@ -78,8 +81,10 @@ export default function page() {
                 niveauLabel = `L1 ${filiere.nom}`;
               } else if (filiere.niveau.toLowerCase().includes("secondaire")) {
                 niveauLabel = `L2 ${filiere.nom}`;
+              }else if (filiere.niveau.toLowerCase().includes("licence")) {
+                niveauLabel = `L3 ${filiere.nom}`;
               } else {
-                niveauLabel = `Autre ${filiere.nom}`;
+                niveauLabel = `${filiere.niveau} ${filiere.nom}`;
               }
         
               filieresMap.set(filiereId, {

@@ -154,7 +154,7 @@ export async function GET() {
                       select: {
                         note_exam: true,
                         note_class: true,
-                        commentaire: true,
+                        commentaire_enseignant: true,
                       },
                     },
                     utilisateur: {
@@ -200,7 +200,9 @@ export async function GET() {
             id_note: true,
             note_exam: true,
             note_class: true,
-            commentaire: true,
+            commentaire_enseignant: true,
+            statut_reclamation: true,
+            commentaire_etudiant: true,
             etudiant: {
               select: {
                 id: true,

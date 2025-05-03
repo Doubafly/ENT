@@ -37,12 +37,13 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number | null }> 
   moduleKey,
 }) => {
 
-
 // Initialise notes avec students, et met à jour quand students change
 const [notes, setNotes] = useState<Array<{
   id: string | number;
   id_note: number;
   id_cours: number;
+  statut_reclamation: string;
+  commentaire_etudiant: string;
   coefficient: number;
   note_class: number;
   note_exam: number;
@@ -62,6 +63,8 @@ useEffect(() => {
         matricule: stud.matricule,
         id_note: stud.notes?.[0]?.id_note || 0,
         id_cours: stud.id_cours || 0,
+        statut_reclamation: stud.notes?.[0]?.statut_reclamation || "",
+        commentaire_etudiant: stud.notes?.[0]?.statut_reclamation || "",
         coefficient: stud.coefficient || 0,
         note_class: stud.notes?.[0]?.note_class || 0,
         note_exam: stud.notes?.[0]?.note_exam || 0,
@@ -70,6 +73,7 @@ useEffect(() => {
     );
   }
 }, [students]);
+
 const handleInputChange = (
   id: string | number,
   field: "note_class" | "note_exam",
@@ -125,7 +129,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
           ...payload,
           id_etudiant,
           id_cours,
-          commentaire: "", // Optionnel
+          commentaire_enseignant: "", // Optionnel
         }),
       });
 
@@ -147,15 +151,14 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
   return (
     <>
-      <table className="w-full border-collapse border border-gray-300">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border p-2">Étudiant</th>
-            <th className="border p-2">Note Classe</th>
-            <th className="border p-2">Note Examen</th>
-            <th className="border p-2">Coefficient</th>
-            <th className="border p-2">Note Matiere</th>
-
+      <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">
+        <thead className="bg-blue-500 text-white">
+          <tr className="">
+            <th className="p-3 text-left">Étudiant</th>
+            <th className="p-3 text-left">Note Classe</th>
+            <th className="p-3 text-left">Note Examen</th>
+            <th className="p-3 text-left">Coefficient</th>
+            <th className="p-3 text-left">Note Matiere</th>
           </tr>
         </thead>
         <tbody>
@@ -163,7 +166,13 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
           const note =
           notes && notes[0]? ((Number(notes[0].note_class) || 0) + (Number(notes[0].note_exam) || 0) * 2) / 3 : 0;
             return (
-              <tr key={id} className="border">
+              <tr key={id} 
+                className={`border-b hover:bg-gray-50 transition duration-150 cursor-pointer  ${
+                notes?.[0]?.statut_reclamation === "EnAttente" ? "bg-amber-100" : ""  
+              }`} onClick={()=>{ 
+                alert(notes?.[0]?.commentaire_etudiant);
+                
+              }}>
                 <td className="p-2 border">{name}</td>
                 <td className="p-2 border">
                   <input
@@ -235,6 +244,7 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
     setSelectedSemester(null);
     setSelectedModule(null);
   };
+  
   
   const handleSemesterChange = (semesterId: string) => {
     setSelectedSemester(semesterId);

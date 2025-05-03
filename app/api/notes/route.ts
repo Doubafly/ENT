@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         id_cours: true,
         note_class: true,
         note_exam: true,
-        commentaire: true,
+        commentaire_enseignant: true,
         date_saisie: true,
         cours: true,
         etudiant: true,
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     // Extraire les données de la requête
-    const { id_etudiant, id_cours, note_class, note_exam, commentaire } =
+    const { id_etudiant, id_cours, note_class, note_exam, commentaire_enseignant } =
       await request.json();
 
     // Validation des données
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
         id_cours,
         note_class,
         note_exam,
-        commentaire,
+        commentaire_enseignant,
         date_saisie: new Date(), // Date de saisie automatique
       },
     });

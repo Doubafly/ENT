@@ -26,8 +26,6 @@ interface Classe {
 export default function ClasseList() {
   // États pour les données
   const [classes, setClasses] = useState<Classe[]>([]);
-  const [enseignants, setEnseignants] = useState<User[]>(enseignantsData);
-  const [etudiants, setEtudiants] = useState<User[]>(etudiantsData);
 
   // États pour l'UI
   const [loading, setLoading] = useState(true);
@@ -45,7 +43,6 @@ export default function ClasseList() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
   // États pour les formulaires
-  const [newTeacher, setNewTeacher] = useState("");
   const [newStudent, setNewStudent] = useState("");
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
@@ -219,38 +216,9 @@ export default function ClasseList() {
     }
   };
 
-  // Gestion des enseignants/étudiants
-  // const handleAddTeacher = () => {
-  //   if (!newTeacher.trim() || !selectedClassId) return;
-
-  //   const trimmedTeacher = newTeacher.trim();
-  //   setClasses((prev) =>
-  //     prev.map((c) =>
-  //       c.id_filiere === selectedClassId
-  //         ? { ...c, enseignants: [...(c.enseignants || []), trimmedTeacher] }
-  //         : c
-  //     )
-  //   );
-  //   setNewTeacher("");
-  // };
-
-  // const handleRemoveTeacher = (teacher: string, classId: number) => {
-  //   setClasses((prev) =>
-  //     prev.map((c) =>
-  //       c.id_filiere === classId
-  //         ? {
-  //             ...c,
-  //             enseignants: (c.enseignants || []).filter((t) => t !== teacher),
-  //           }
-  //         : c
-  //     )
-  //   );
-  // };
-
   const handleAddStudent = () => {
     if (!newStudent.trim() || !selectedClassId) return;
 
-    const trimmedStudent = newStudent.trim();
     setClasses((prev) =>
       prev.map((c) =>
         c.id_filiere === selectedClassId
@@ -267,13 +235,6 @@ export default function ClasseList() {
     setNewClassName("");
     setNewClassTeachers([]);
     setTempTeacher("");
-  };
-
-  const addTeacherToNewClass = () => {
-    if (tempTeacher.trim() && !newClassTeachers.includes(tempTeacher.trim())) {
-      setNewClassTeachers((prev) => [...prev, tempTeacher.trim()]);
-      setTempTeacher("");
-    }
   };
 
   // Filtrage et pagination
@@ -653,16 +614,3 @@ export default function ClasseList() {
     </div>
   );
 }
-
-// Données statiques (à remplacer par des appels API si nécessaire)
-const enseignantsData: User[] = [
-  // ... (conservez vos données enseignants existantes)
-];
-
-const etudiantsData: User[] = [
-  // ... (conservez vos données étudiants existantes)
-];
-
-const classe: any = [
-  // ... (conservez vos données de classes statiques existantes)
-];

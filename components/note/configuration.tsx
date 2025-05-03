@@ -45,7 +45,7 @@ interface Session {
 
 interface Cours {
   id_cours: number;
-  semestre: "Semestre1" | "Semestre2";
+  semestre: string;
   sessions: Session;
   enseignant: Enseignant;
 }
@@ -93,9 +93,7 @@ export default function Configuration({
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedEnseignant, setSelectedEnseignant] =
     useState<Enseignant | null>(null);
-  const [semestre, setSemestre] = useState<"Semestre1" | "Semestre2">(
-    "Semestre1"
-  );
+  const [semestre, setSemestre] = useState<string>("Semestre1");
   const [moduleConfig, setModuleConfig] = useState({
     coefficient: 1,
     volume_horaire: 30,
@@ -185,11 +183,10 @@ export default function Configuration({
 
     try {
       // Suppression du cours si spécifié, sinon suppression du module et de ses cours
-      if (itemToDelete.id_cours) {
+      if (itemToDelete.id_cours && itemToDelete.id_filiere_module) {
         await fetch(`/api/cours/${itemToDelete.id_cours}`, {
           method: "DELETE",
         });
-      } else {
         await fetch(`/api/filiereModule/${itemToDelete.id_filiere_module}`, {
           method: "DELETE",
         });
@@ -199,16 +196,13 @@ export default function Configuration({
       setData((prev) => {
         if (!prev) return null;
 
-        if (itemToDelete.id_cours) {
+        if (itemToDelete.id_cours && itemToDelete.id_filiere_module) {
           // Suppression d'un cours spécifique
           return {
             ...prev,
-            modules: prev.modules.map((m) => ({
-              ...m,
-              cours: m.cours?.filter(
-                (c) => c.id_cours !== itemToDelete.id_cours
-              ),
-            })),
+            modules: prev.modules.filter(
+              (m) => m.id_filiere_module !== itemToDelete.id_filiere_module
+            ),
           };
         } else {
           // Suppression de tout le module
@@ -429,20 +423,20 @@ export default function Configuration({
     });
   };
 
-  if (loading.main) {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box p={2}>
         <Alert severity="error" onClose={() => setError("")}>
           {error}
         </Alert>
+      </Box>
+    );
+  }
+
+  if (loading.main) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
       </Box>
     );
   }

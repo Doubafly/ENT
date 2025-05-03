@@ -31,7 +31,11 @@ const AnnonceList: React.FC = () => {
       }
       const data = await response.json();
       console.log("Données récupérées :", data);
-      setAnnonces(data.annonces);
+          // Trier les annonces par date de création décroissante
+          const sortedAnnonces = (data.annonces || []).sort((a: Annonce, b: Annonce) => 
+            new Date(b.date_creation).getTime() - new Date(a.date_creation).getTime()
+          );
+          setAnnonces(sortedAnnonces);
     } catch (err: any) {
       setError(err.message || "Une erreur est survenue");
     } finally {

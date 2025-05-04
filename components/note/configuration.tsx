@@ -1,4 +1,6 @@
 import { Add, Delete, Edit, ExpandLess } from "@mui/icons-material";
+
+import  { User } from "@/components/card/ListCard";
 import {
   Alert,
   Autocomplete,
@@ -25,7 +27,35 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 
+interface FiliereModule {
+  id_filiere_module: number;
+  id_module:number;
+  module: Module;
+  coefficient: number;
+  volume_horaire?: number;
+  code_module?: string;
+  cours?: Cours[];
+}
+interface Classe {
+  id_filiere: number;
+  nom: string;
+  description: string | null;
+  niveau: string;
+  montant_annuel: number;
+  id_annexe: number | null;
+  annexe?: {
+    id_annexe: number;
+    nom: string;
+    ville: string;
+  };
+  enseignants?: User[];
+  effectif?: number;
+  etudiants?: User[];
+  filtreEtudiant?: User[];
+  filiere_module?: FiliereModule[];
+}
 interface Enseignant {
+  utilisateur: any;
   id: number;
   nom: string;
   prenom: string;
@@ -50,14 +80,6 @@ interface Cours {
   enseignant: Enseignant;
 }
 
-interface FiliereModule {
-  id_filiere_module: number;
-  module: Module;
-  coefficient: number;
-  volume_horaire?: number;
-  code_module?: string;
-  cours?: Cours[];
-}
 
 interface FiliereData {
   filiere: {
@@ -65,18 +87,25 @@ interface FiliereData {
     nom: string;
     niveau: string;
   };
-  modules: FiliereModule[];
   enseignants: Enseignant[];
   allModules: Module[];
+  modules?: FiliereModule[]; // Add this property to match the usage
 }
 
 export default function Configuration({
   filiereId,
+  donne,
+  alldata
 }: {
   filiereId: number | null;
+  donne: Classe
+  alldata: any
 }) {
+  
   const [data, setData] = useState<FiliereData | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [filiereModule, setFiliereModule]= useState<FiliereModule[]>();
+
   const [loading, setLoading] = useState({
     main: true,
     sessions: true,
@@ -110,46 +139,23 @@ export default function Configuration({
     id_filiere_module: number;
     id_cours?: number;
   } | null>(null);
+  const fetchData = async () => {
+    try {
+      setLoading({ main: true, sessions: true });
+      setError("");
+      setData(alldata.data);
+      setSessions(alldata.data.allsession)
+      setFiliereModule(donne.filiere_module)
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      setLoading({ main: false, sessions: false });
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading({ main: true, sessions: true });
-        setError("");
-
-        if (!filiereId) {
-          throw new Error("Aucune filière sélectionnée");
-        }
-
-        const [filiereResponse, sessionsResponse] = await Promise.all([
-          fetch(`/api/filieres/${filiereId}/modules`),
-          fetch("/api/sessions"),
-        ]);
-
-        if (!filiereResponse.ok) {
-          throw new Error("Erreur de chargement des données de la filière");
-        }
-        if (!sessionsResponse.ok) {
-          throw new Error("Erreur de chargement des sessions");
-        }
-
-        const [filiereData, sessionsData] = await Promise.all([
-          filiereResponse.json(),
-          sessionsResponse.json(),
-        ]);
-
-        setData(filiereData.data);
-        setSessions(sessionsData.data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur inconnue");
-      } finally {
-        setLoading({ main: false, sessions: false });
-      }
-    };
-
-    if (filiereId) {
       fetchData();
-    }
   }, [filiereId]);
 
   const handleEdit = (filiereModule: FiliereModule, cours?: Cours) => {
@@ -159,7 +165,7 @@ export default function Configuration({
     if (cours) {
       setSelectedFiliereModule(filiereModule);
       setSelectedSession(cours.sessions);
-      setSelectedEnseignant(cours.enseignant);
+      setSelectedEnseignant(cours.enseignant.utilisateur? cours.enseignant.utilisateur: cours.enseignant);
       setSemestre(cours.semestre);
       setEditingCours(cours);
       setStep("createCours");
@@ -182,11 +188,14 @@ export default function Configuration({
 
   const confirmDelete = async () => {
     if (!itemToDelete) return;
-
+    
     try {
       // Suppression du cours si spécifié, sinon suppression du module et de ses cours
-      if (itemToDelete.id_cours) {
+      if(itemToDelete.id_cours){
         await fetch(`/api/cours/${itemToDelete.id_cours}`, {
+          method: "DELETE",
+        });
+        await fetch(`/api/filiereModule/${itemToDelete.id_filiere_module}`, {
           method: "DELETE",
         });
       } else {
@@ -195,32 +204,14 @@ export default function Configuration({
         });
       }
 
-      // Mise à jour de l'état local
-      setData((prev) => {
-        if (!prev) return null;
-
-        if (itemToDelete.id_cours) {
-          // Suppression d'un cours spécifique
-          return {
-            ...prev,
-            modules: prev.modules.map((m) => ({
-              ...m,
-              cours: m.cours?.filter(
-                (c) => c.id_cours !== itemToDelete.id_cours
-              ),
-            })),
-          };
-        } else {
-          // Suppression de tout le module
-          return {
-            ...prev,
-            modules: prev.modules.filter(
-              (m) => m.id_filiere_module !== itemToDelete.id_filiere_module
-            ),
-          };
-        }
-      });
-
+    // Mise à jour de l'état local pour supprimer l'instance correspondante
+    setFiliereModule((prev) => {
+      if (!prev) return prev; // Vérification si `prev` est null ou undefined
+      return prev.filter(
+        (module) => module.id_filiere_module !== itemToDelete.id_filiere_module
+      );
+    });
+    
       setDeleteConfirmOpen(false);
       setItemToDelete(null);
     } catch (err) {
@@ -237,8 +228,8 @@ export default function Configuration({
       return;
     }
 
-    const existingFiliereModule = data?.modules.find(
-      (fm) => fm.module.id_module === module.id_module
+    const existingFiliereModule = donne?.filiere_module?.find(
+      (fm) => fm.id_module === module.id_module
     );
 
     if (existingFiliereModule) {
@@ -290,11 +281,13 @@ export default function Configuration({
         );
       }
 
+      
+
       const { data: updatedFiliereModule } = await response.json();
 
       if (data) {
         const updatedModules = editingFiliereModule
-          ? data.modules.map((m) =>
+           ?filiereModule?.map((m) =>
               m.id_filiere_module === editingFiliereModule.id_filiere_module
                 ? {
                     ...updatedFiliereModule,
@@ -304,7 +297,7 @@ export default function Configuration({
                 : m
             )
           : [
-              ...data.modules,
+              ...(filiereModule || []),
               { ...updatedFiliereModule, module: selectedModule, cours: [] },
             ];
 
@@ -359,11 +352,44 @@ export default function Configuration({
           errorData.message || "Erreur lors de la création/mise à jour du cours"
         );
       }
-
       const updatedCours = await response.json();
 
+const exampleFiliereModule: FiliereModule = {
+  id_filiere_module: selectedFiliereModule.id_filiere_module,
+  id_module: updatedCours.data.module.id_module,
+  module: selectedModule || {
+    id_module: updatedCours.data.module.id_module,
+    nom: "Nouveau Module",
+    description: "Description du nouveau module"
+  },
+  coefficient: moduleConfig.coefficient,
+  volume_horaire: moduleConfig.volume_horaire,
+  code_module: updatedCours.data.filiere_module.code_module,
+  cours: [
+    {
+      id_cours: updatedCours.data.id_cours,
+      semestre: semestre,
+      sessions: selectedSession || {
+        id_sessions: sessions.length > 0 ? Math.max(...sessions.map(s => s.id_sessions)) + 1 : 1,
+        annee_academique: "Nouvelle Session"
+      },
+      enseignant: selectedEnseignant || {
+        id: (data?.enseignants?.length ?? 0) > 0 ? Math.max(...(data?.enseignants?.map(e => e.id) || [])) + 1 : 1,
+        nom: "Nouveau",
+        prenom: "Enseignant",
+        specialite: "Spécialité"
+      }
+    }
+  ]
+};
+
+setFiliereModule((prev) => {
+  if (!prev) return [exampleFiliereModule]; // Si `prev` est null ou undefined, initialisez avec `newFiliereModule`
+  return [...prev, exampleFiliereModule]; // Ajoutez `newFiliereModule` à la liste existante
+});
+
       if (data) {
-        const updatedModules = data.modules.map((m) => {
+        const updatedModules =filiereModule?.map((m) => {
           if (m.id_filiere_module === selectedFiliereModule.id_filiere_module) {
             const cours = m.cours || [];
 
@@ -402,7 +428,6 @@ export default function Configuration({
           modules: updatedModules,
         });
       }
-
       resetForm();
     } catch (err) {
       setError(
@@ -457,8 +482,9 @@ export default function Configuration({
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* ok */}
       <Typography variant="h5" gutterBottom>
-        Gestion des Cours - {data.filiere.nom}
+        Gestion des Cours - {donne.nom}
       </Typography>
 
       <Box mb={3}>
@@ -486,7 +512,7 @@ export default function Configuration({
               {step === "selectModule" ? 1 : step === "configureModule" ? 2 : 3}{" "}
               sur 3
             </Typography>
-
+                {/* api oblicatoire module */}
             {step === "selectModule" && (
               <Box sx={{ mb: 3 }}>
                 <Autocomplete
@@ -523,7 +549,7 @@ export default function Configuration({
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" gutterBottom>
                   {editingFiliereModule ? "Modification" : "Configuration"} du
-                  module {selectedModule.nom} pour la filière {data.filiere.nom}
+                  module {selectedModule.nom} pour la filière {donne.nom}
                 </Typography>
 
                 <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
@@ -699,9 +725,9 @@ export default function Configuration({
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.modules.flatMap((module) =>
+            {filiereModule?.flatMap((module) =>
               module.cours?.length ? (
-                module.cours.map((cours) => (
+                module.cours.map((cours:any) => (
                   <TableRow key={`cours-${cours.id_cours}`}>
                     <TableCell>{module.module.nom}</TableCell>
                     <TableCell>{module.code_module}</TableCell>
@@ -710,7 +736,7 @@ export default function Configuration({
                     <TableCell>{cours.sessions.annee_academique}</TableCell>
                     <TableCell>{cours.semestre}</TableCell>
                     <TableCell>
-                      {cours.enseignant.nom} {cours.enseignant.prenom}
+                      {cours.enseignant.utilisateur? cours.enseignant.utilisateur.nom: cours.enseignant.nom} {cours.enseignant.utilisateur? cours.enseignant.utilisateur.prenom: cours.enseignant.prenom}
                     </TableCell>
                     <TableCell>
                       <IconButton

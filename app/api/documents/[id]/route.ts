@@ -1,61 +1,112 @@
-// app/api/documents/[id]/route.ts
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/prisma"; // Assurez-vous que le chemin est correct
+import { Document as PrismaDocument } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+
+// Types personnalisés
+type DocumentWithRelations = Omit<
+  PrismaDocument,
+  "id_uploader" | "id_classe"
+> & {
+  uploader: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+  };
+  filiere: {
+    id: number;
+    nom: string;
+    code_filiere: string;
+  };
+};
+
+type ApiResponse<T> = {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
+};
+
+type DocumentResponse = ApiResponse<DocumentWithRelations>;
+type BasicResponse = ApiResponse<null>;
+
+// Options de sélection communes
+const documentSelectOptions = {
+  id: true,
+  titre: true,
+  description: true,
+  chemin_fichier: true,
+  type_fichier: true,
+  taille_fichier: true,
+  date_upload: true,
+  est_actif: true,
+  uploader: {
+    select: {
+      id: true,
+      nom: true,
+      prenom: true,
+      email: true,
+    },
+  },
+  filiere: {
+    select: {
+      id: true,
+      nom: true,
+      code_filiere: true,
+    },
+  },
+};
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse<DocumentResponse>> {
   try {
     const documentId = parseInt(params.id);
 
     if (isNaN(documentId)) {
       return NextResponse.json(
-        { message: "ID du document invalide" },
+        {
+          success: false,
+          message: "Requête invalide",
+          error: "L'ID du document doit être un nombre",
+        },
         { status: 400 }
       );
     }
 
     const document = await prisma.document.findUnique({
       where: { id: documentId },
-      select: {
-        id: true,
-        titre: true,
-        description: true,
-        chemin_fichier: true,
-        type_fichier: true,
-        taille_fichier: true,
-        date_upload: true,
-        est_actif: true,
-        uploader: {
-          select: {
-            id: true,
-            nom: true,
-            prenom: true,
-          },
-        },
-        filiere: {
-          select: {
-            id: true,
-            nom: true,
-            code_filiere: true,
-          },
-        },
-      },
+      select: documentSelectOptions,
     });
 
     if (!document) {
       return NextResponse.json(
-        { message: "Document non trouvé" },
+        {
+          success: false,
+          message: "Document introuvable",
+          error: "Aucun document trouvé avec cet ID",
+        },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ message: "Succès", document }, { status: 200 });
-  } catch (e) {
-    console.error("Erreur lors de la récupération du document :", e);
     return NextResponse.json(
-      { message: "Une erreur est survenue" },
+      {
+        success: true,
+        message: "Document récupéré avec succès",
+        data: document as DocumentWithRelations,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error(`GET /api/documents/${params.id} error:`, error);
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Erreur serveur",
+        error: "Échec de la récupération du document",
+      },
       { status: 500 }
     );
   }
@@ -64,45 +115,56 @@ export async function GET(
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse<DocumentResponse>> {
   try {
     const documentId = parseInt(params.id);
 
     if (isNaN(documentId)) {
       return NextResponse.json(
-        { message: "ID du document invalide" },
+        {
+          success: false,
+          message: "Requête invalide",
+          error: "L'ID du document doit être un nombre",
+        },
         { status: 400 }
       );
     }
 
-    const { titre, description, est_actif, id_classe } = await request.json();
+    const requestData = await request.json();
+    const { titre, description, est_actif, id_classe } = requestData;
 
     // Vérification de l'existence du document
-    const documentExistant = await prisma.document.findUnique({
+    const existingDocument = await prisma.document.findUnique({
       where: { id: documentId },
     });
 
-    if (!documentExistant) {
+    if (!existingDocument) {
       return NextResponse.json(
-        { message: "Document non trouvé" },
+        {
+          success: false,
+          message: "Document introuvable",
+          error: "Aucun document trouvé avec cet ID",
+        },
         { status: 404 }
       );
     }
 
-    // Vérification de l'unicité du titre si modification
-    if (titre && titre !== documentExistant.titre) {
-      const titreExistant = await prisma.document.findFirst({
+    // Validation de l'unicité du titre si modification
+    if (titre && titre !== existingDocument.titre) {
+      const sameTitleDocument = await prisma.document.findFirst({
         where: {
           titre,
-          id_classe: id_classe || documentExistant.id_classe,
+          id_classe: id_classe || existingDocument.id_classe,
           NOT: { id: documentId },
         },
       });
 
-      if (titreExistant) {
+      if (sameTitleDocument) {
         return NextResponse.json(
           {
-            message: "Un document avec ce titre existe déjà dans cette classe",
+            success: false,
+            message: "Conflit de données",
+            error: "Un document avec ce titre existe déjà dans cette classe",
           },
           { status: 409 }
         );
@@ -110,31 +172,33 @@ export async function PUT(
     }
 
     // Mise à jour du document
-    const documentModifie = await prisma.document.update({
+    const updatedDocument = await prisma.document.update({
       where: { id: documentId },
       data: {
-        titre: titre !== undefined ? titre : documentExistant.titre,
-        description:
-          description !== undefined
-            ? description
-            : documentExistant.description,
-        est_actif:
-          est_actif !== undefined ? est_actif : documentExistant.est_actif,
-        id_classe:
-          id_classe !== undefined
-            ? parseInt(id_classe)
-            : documentExistant.id_classe,
+        titre: titre ?? existingDocument.titre,
+        description: description ?? existingDocument.description,
+        est_actif: est_actif ?? existingDocument.est_actif,
+        id_classe: id_classe ? parseInt(id_classe) : existingDocument.id_classe,
       },
+      select: documentSelectOptions,
     });
 
     return NextResponse.json(
-      { message: "Document modifié avec succès", document: documentModifie },
+      {
+        success: true,
+        message: "Document mis à jour avec succès",
+        data: updatedDocument as DocumentWithRelations,
+      },
       { status: 200 }
     );
-  } catch (e) {
-    console.error("Erreur lors de la modification du document :", e);
+  } catch (error) {
+    console.error(`PUT /api/documents/${params.id} error:`, error);
     return NextResponse.json(
-      { message: "Une erreur est survenue" },
+      {
+        success: false,
+        message: "Erreur serveur",
+        error: "Échec de la mise à jour du document",
+      },
       { status: 500 }
     );
   }
@@ -143,25 +207,33 @@ export async function PUT(
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
-) {
+): Promise<NextResponse<BasicResponse>> {
   try {
     const documentId = parseInt(params.id);
 
     if (isNaN(documentId)) {
       return NextResponse.json(
-        { message: "ID du document invalide" },
+        {
+          success: false,
+          message: "Requête invalide",
+          error: "L'ID du document doit être un nombre",
+        },
         { status: 400 }
       );
     }
 
     // Vérification de l'existence du document
-    const documentExistant = await prisma.document.findUnique({
+    const existingDocument = await prisma.document.findUnique({
       where: { id: documentId },
     });
 
-    if (!documentExistant) {
+    if (!existingDocument) {
       return NextResponse.json(
-        { message: "Document non trouvé" },
+        {
+          success: false,
+          message: "Document introuvable",
+          error: "Aucun document trouvé avec cet ID",
+        },
         { status: 404 }
       );
     }
@@ -172,13 +244,20 @@ export async function DELETE(
     });
 
     return NextResponse.json(
-      { message: "Document supprimé avec succès" },
+      {
+        success: true,
+        message: "Document supprimé avec succès",
+      },
       { status: 200 }
     );
-  } catch (e) {
-    console.error("Erreur lors de la suppression du document :", e);
+  } catch (error) {
+    console.error(`DELETE /api/documents/${params.id} error:`, error);
     return NextResponse.json(
-      { message: "Une erreur est survenue" },
+      {
+        success: false,
+        message: "Erreur serveur",
+        error: "Échec de la suppression du document",
+      },
       { status: 500 }
     );
   }

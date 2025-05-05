@@ -9,32 +9,71 @@ type ApiResponse<T> = {
   error?: string;
 };
 
-// Type de réponse pour un ou plusieurs documents
 type DocumentResponse = ApiResponse<any>;
 type DocumentsResponse = ApiResponse<any[]>;
 
-export async function GET(): Promise<NextResponse<DocumentsResponse>> {
+export async function GET() {
   try {
     const documents = await prisma.document.findMany({
-      where: { est_actif: true },
-      orderBy: { date_upload: "desc" },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Documents récupérés avec succès",
-        data: documents,
+      include: {
+        uploader: {
+          select: {
+            nom: true,
+            prenom: true,
+            email: true,
+            telephone: true,
+          },
+        },
+        classe: {
+          include: {
+            filiere_module: {
+              include: {
+                filiere: {
+                  select: {
+                    nom: true,
+                  },
+                },
+                module: {
+                  select: {
+                    nom: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
-      { status: 200 }
-    );
+    });
+    
+    const formatted = documents.map((doc) => ({
+      id: doc.id,
+      titre: doc.titre,
+      description: doc.description,
+      niveau: null, // Replace with the correct property if it exists in your schema
+      utilisateur: {
+        nom: doc.uploader.nom,
+        prenom: doc.uploader.prenom,
+        email: doc.uploader.email,
+        telephone: doc.uploader.telephone,
+      },
+      filiere: doc.classe?.filiere_module?.filiere?.nom || null,
+      module: doc.classe?.filiere_module?.module?.nom || null,
+      annexe: null, // Replace with a valid property if needed
+    }));
+    
+
+    return NextResponse.json({
+      success: true,
+      message: "Documents récupérés avec succès",
+      data: formatted,
+    });
   } catch (error) {
-    console.error("Erreur GET /api/documents:", error);
+    console.error("Erreur lors de la récupération des documents :", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Erreur lors de la récupération des documents",
-        error: "Erreur serveur",
+        message: "Erreur serveur lors de la récupération des documents",
+        error: "Erreur interne",
       },
       { status: 500 }
     );

@@ -40,7 +40,8 @@ model Cours {
   enseignant        Enseignants      @relation(fields: [id_professeur], references: [id])
   emplois_du_temps  EmploisDuTemps[]
   notes             Notes[]
-
+  documents     Document[]      @relation("FilieresToDocuments")
+  
   @@index([id_filiere_module], map: "Cours_id_filiere_module_fkey")
   @@index([id_professeur], map: "Cours_id_professeur_fkey")
   @@index([id_sessions], map: "Cours_id_sessions_fkey")
@@ -197,6 +198,7 @@ model Utilisateurs {
   Permission Permission[] @relation("UtilisateurPermission")
 
   Absences Absences[]
+  documents Document[]    @relation("UploaderToDocuments")
 }
 
 model Admin {
@@ -317,6 +319,8 @@ model Document {
   est_actif     Boolean   @default(true)
   id_uploader   Int
   id_classe     Int
+  uploader        Utilisateurs  @relation("UploaderToDocuments", fields: [id_uploader], references: [id_utilisateur])
+  classe          Cours        @relation("FilieresToDocuments", fields: [id_classe], references: [id_cours])
 
   // Index pour les performances (optionnel mais recommandé)
   @@index([id_uploader], name: "Document_id_uploader_fkey")

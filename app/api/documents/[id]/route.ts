@@ -1,37 +1,13 @@
-import prisma from "@/lib/prisma"; // Assurez-vous que le chemin est correct
+import prisma from "@/lib/prisma";
 import { Document as PrismaDocument } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
-// Types personnalisés
-type DocumentWithRelations = Omit<
-  PrismaDocument,
-  "id_uploader" | "id_classe"
-> & {
-  uploader: {
-    id: number;
-    nom: string;
-    prenom: string;
-    email: string;
-  };
-  filiere: {
-    id: number;
-    nom: string;
-    code_filiere: string;
-  };
+type DocumentWithRelations = PrismaDocument & {
+  uploader: { id: number; nom: string; prenom: string; email: string };
+  filiere: { id: number; nom: string; code_filiere: string };
 };
 
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-};
-
-type DocumentResponse = ApiResponse<DocumentWithRelations>;
-type BasicResponse = ApiResponse<null>;
-
-// Options de sélection communes
-const documentSelectOptions = {
+const selectOptions = {
   id: true,
   titre: true,
   description: true,
@@ -57,208 +33,101 @@ const documentSelectOptions = {
   },
 };
 
+// 📘 GET /api/documents/:id
 export async function GET(
-  request: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
-): Promise<NextResponse<DocumentResponse>> {
-  try {
-    const documentId = parseInt(params.id);
+) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return badRequest("ID invalide");
 
-    if (isNaN(documentId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Requête invalide",
-          error: "L'ID du document doit être un nombre",
-        },
-        { status: 400 }
-      );
-    }
+  const document = await prisma.document.findUnique({
+    where: { id },
+    select: selectOptions,
+  });
 
-    const document = await prisma.document.findUnique({
-      where: { id: documentId },
-      select: documentSelectOptions,
-    });
-
-    if (!document) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Document introuvable",
-          error: "Aucun document trouvé avec cet ID",
-        },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Document récupéré avec succès",
-        data: document as DocumentWithRelations,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error(`GET /api/documents/${params.id} error:`, error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Erreur serveur",
-        error: "Échec de la récupération du document",
-      },
-      { status: 500 }
-    );
-  }
+  return document
+    ? ok("Document trouvé", document)
+    : notFound("Document introuvable");
 }
 
+// ✏️ PUT /api/documents/:id
 export async function PUT(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
-): Promise<NextResponse<DocumentResponse>> {
-  try {
-    const documentId = parseInt(params.id);
+) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return badRequest("ID invalide");
 
-    if (isNaN(documentId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Requête invalide",
-          error: "L'ID du document doit être un nombre",
-        },
-        { status: 400 }
-      );
-    }
+  const data = await req.json();
+  const { titre, description, est_actif, id_classe } = data;
 
-    const requestData = await request.json();
-    const { titre, description, est_actif, id_classe } = requestData;
+  const document = await prisma.document.findUnique({ where: { id } });
+  if (!document) return notFound("Document non trouvé");
 
-    // Vérification de l'existence du document
-    const existingDocument = await prisma.document.findUnique({
-      where: { id: documentId },
+  // Vérifie l’unicité du titre dans la même classe
+  if (titre && titre !== document.titre) {
+    const exists = await prisma.document.findFirst({
+      where: {
+        titre,
+        id_classe: id_classe || document.id_classe,
+        NOT: { id },
+      },
     });
-
-    if (!existingDocument) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Document introuvable",
-          error: "Aucun document trouvé avec cet ID",
-        },
-        { status: 404 }
+    if (exists)
+      return conflict(
+        "Un document avec ce titre existe déjà dans cette classe"
       );
-    }
-
-    // Validation de l'unicité du titre si modification
-    if (titre && titre !== existingDocument.titre) {
-      const sameTitleDocument = await prisma.document.findFirst({
-        where: {
-          titre,
-          id_classe: id_classe || existingDocument.id_classe,
-          NOT: { id: documentId },
-        },
-      });
-
-      if (sameTitleDocument) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Conflit de données",
-            error: "Un document avec ce titre existe déjà dans cette classe",
-          },
-          { status: 409 }
-        );
-      }
-    }
-
-    // Mise à jour du document
-    const updatedDocument = await prisma.document.update({
-      where: { id: documentId },
-      data: {
-        titre: titre ?? existingDocument.titre,
-        description: description ?? existingDocument.description,
-        est_actif: est_actif ?? existingDocument.est_actif,
-        id_classe: id_classe ? parseInt(id_classe) : existingDocument.id_classe,
-      },
-      select: documentSelectOptions,
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Document mis à jour avec succès",
-        data: updatedDocument as DocumentWithRelations,
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error(`PUT /api/documents/${params.id} error:`, error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Erreur serveur",
-        error: "Échec de la mise à jour du document",
-      },
-      { status: 500 }
-    );
   }
+
+  const updated = await prisma.document.update({
+    where: { id },
+    data: {
+      titre: titre ?? document.titre,
+      description: description ?? document.description,
+      est_actif: est_actif ?? document.est_actif,
+      id_classe: id_classe ?? document.id_classe,
+    },
+    select: selectOptions,
+  });
+
+  return ok("Document mis à jour", updated);
 }
 
+// ❌ DELETE /api/documents/:id
 export async function DELETE(
-  request: NextRequest,
+  _req: NextRequest,
   { params }: { params: { id: string } }
-): Promise<NextResponse<BasicResponse>> {
-  try {
-    const documentId = parseInt(params.id);
+) {
+  const id = parseInt(params.id);
+  if (isNaN(id)) return badRequest("ID invalide");
 
-    if (isNaN(documentId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Requête invalide",
-          error: "L'ID du document doit être un nombre",
-        },
-        { status: 400 }
-      );
-    }
+  const existing = await prisma.document.findUnique({ where: { id } });
+  if (!existing) return notFound("Document non trouvé");
 
-    // Vérification de l'existence du document
-    const existingDocument = await prisma.document.findUnique({
-      where: { id: documentId },
-    });
+  await prisma.document.delete({ where: { id } });
+  return ok("Document supprimé");
+}
 
-    if (!existingDocument) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Document introuvable",
-          error: "Aucun document trouvé avec cet ID",
-        },
-        { status: 404 }
-      );
-    }
-
-    // Suppression du document
-    await prisma.document.delete({
-      where: { id: documentId },
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Document supprimé avec succès",
-      },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error(`DELETE /api/documents/${params.id} error:`, error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Erreur serveur",
-        error: "Échec de la suppression du document",
-      },
-      { status: 500 }
-    );
-  }
+// ✅ Réponses utilitaires
+function ok(message: string, data?: any) {
+  return NextResponse.json({ success: true, message, data }, { status: 200 });
+}
+function badRequest(error: string) {
+  return NextResponse.json(
+    { success: false, message: "Requête invalide", error },
+    { status: 400 }
+  );
+}
+function notFound(error: string) {
+  return NextResponse.json(
+    { success: false, message: "Introuvable", error },
+    { status: 404 }
+  );
+}
+function conflict(error: string) {
+  return NextResponse.json(
+    { success: false, message: "Conflit", error },
+    { status: 409 }
+  );
 }

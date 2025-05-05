@@ -41,7 +41,7 @@ model Cours {
   emplois_du_temps  EmploisDuTemps[]
   notes             Notes[]
   documents     Document[]      @relation("FilieresToDocuments")
-  
+
   @@index([id_filiere_module], map: "Cours_id_filiere_module_fkey")
   @@index([id_professeur], map: "Cours_id_professeur_fkey")
   @@index([id_sessions], map: "Cours_id_sessions_fkey")
@@ -328,7 +328,8 @@ model Document {
 
   // Contrainte d'unicité : titre unique par classe
   @@unique([titre, id_classe], name: "unique_titre_par_classe")
-
+  @@index([id_uploader], map: "infos_ser")
+  @@index([id_classe], map: "infos_classe")
   @@map("documents")
 }
 

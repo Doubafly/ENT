@@ -1,9 +1,12 @@
+import { Document as PrismaDocument } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
-import { Document as PrismaDocument } from "@prisma/client";
 
 // Types personnalisés pour nos réponses
-type DocumentWithRelations = Omit<PrismaDocument, 'id_uploader' | 'id_classe'> & {
+type DocumentWithRelations = Omit<
+  PrismaDocument,
+  "id_uploader" | "id_classe"
+> & {
   uploader: {
     id: number;
     nom: string;
@@ -94,7 +97,12 @@ export async function POST(
     const requestData = await request.json();
 
     // Validation des données
-    const requiredFields = ["titre", "chemin_fichier", "id_uploader", "id_classe"];
+    const requiredFields = [
+      "titre",
+      "chemin_fichier",
+      "id_uploader",
+      "id_classe",
+    ];
     const missingFields = requiredFields.filter((field) => !requestData[field]);
 
     if (missingFields.length > 0) {
@@ -108,27 +116,8 @@ export async function POST(
       );
     }
 
-    // Vérification de l'unicité
-    const existingDocument = await prisma.document.findFirst({
-      where: {
-        titre: requestData.titre,
-        id_classe: parseInt(requestData.id_classe),
-      },
-    });
-
-    if (existingDocument) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Conflit de données",
-          error: "Un document avec ce titre existe déjà dans cette classe",
-        },
-        { status: 409 }
-      );
-    }
-
     // Création du document
-    const newDocument = await prisma.document.create({
+    const createdDocument = await prisma.document.create({
       data: {
         titre: requestData.titre,
         description: requestData.description || null,
@@ -140,14 +129,23 @@ export async function POST(
         id_uploader: parseInt(requestData.id_uploader),
         id_classe: parseInt(requestData.id_classe),
       },
+    });
+
+    // Récupération du document avec les relations
+    const documentWithRelations = await prisma.document.findUnique({
+      where: { id: createdDocument.id },
       select: documentSelectOptions,
     });
+
+    if (!documentWithRelations) {
+      throw new Error("Le document a été créé mais n'a pas pu être récupéré");
+    }
 
     return NextResponse.json(
       {
         success: true,
         message: "Document créé avec succès",
-        data: newDocument as DocumentWithRelations,
+        data: documentWithRelations,
       },
       { status: 201 }
     );

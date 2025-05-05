@@ -1,25 +1,7 @@
-import { Document as PrismaDocument } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
 
-// Types personnalisés pour nos réponses
-type DocumentWithRelations = Omit<
-  PrismaDocument,
-  "id_uploader" | "id_classe"
-> & {
-  uploader: {
-    id: number;
-    nom: string;
-    prenom: string;
-    email: string;
-  };
-  filiere: {
-    id: number;
-    nom: string;
-    code_filiere: string;
-  };
-};
-
+// Types de réponse API
 type ApiResponse<T> = {
   success: boolean;
   message: string;
@@ -27,63 +9,32 @@ type ApiResponse<T> = {
   error?: string;
 };
 
-type DocumentsResponse = ApiResponse<DocumentWithRelations[]>;
-type DocumentResponse = ApiResponse<DocumentWithRelations>;
-
-// Options de sélection communes
-const documentSelectOptions = {
-  id: true,
-  titre: true,
-  description: true,
-  chemin_fichier: true,
-  type_fichier: true,
-  taille_fichier: true,
-  date_upload: true,
-  est_actif: true,
-  uploader: {
-    select: {
-      id: true,
-      nom: true,
-      prenom: true,
-      email: true,
-    },
-  },
-  filiere: {
-    select: {
-      id: true,
-      nom: true,
-      code_filiere: true,
-    },
-  },
-};
+// Type de réponse pour un ou plusieurs documents
+type DocumentResponse = ApiResponse<any>;
+type DocumentsResponse = ApiResponse<any[]>;
 
 export async function GET(): Promise<NextResponse<DocumentsResponse>> {
   try {
     const documents = await prisma.document.findMany({
-      select: documentSelectOptions,
-      where: {
-        est_actif: true,
-      },
-      orderBy: {
-        date_upload: "desc",
-      },
+      where: { est_actif: true },
+      orderBy: { date_upload: "desc" },
     });
 
     return NextResponse.json(
       {
         success: true,
         message: "Documents récupérés avec succès",
-        data: documents as DocumentWithRelations[],
+        data: documents,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("GET /api/documents error:", error);
+    console.error("Erreur GET /api/documents:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Erreur serveur",
-        error: "Échec de la récupération des documents",
+        message: "Erreur lors de la récupération des documents",
+        error: "Erreur serveur",
       },
       { status: 500 }
     );
@@ -94,68 +45,56 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<DocumentResponse>> {
   try {
-    const requestData = await request.json();
+    const body = await request.json();
 
-    // Validation des données
     const requiredFields = [
       "titre",
       "chemin_fichier",
       "id_uploader",
       "id_classe",
     ];
-    const missingFields = requiredFields.filter((field) => !requestData[field]);
+    const missing = requiredFields.filter((field) => !body[field]);
 
-    if (missingFields.length > 0) {
+    if (missing.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          message: "Données manquantes",
-          error: `Champs requis: ${missingFields.join(", ")}`,
+          message: "Champs requis manquants",
+          error: `Champs manquants: ${missing.join(", ")}`,
         },
         { status: 400 }
       );
     }
 
-    // Création du document
-    const createdDocument = await prisma.document.create({
+    const newDocument = await prisma.document.create({
       data: {
-        titre: requestData.titre,
-        description: requestData.description || null,
-        chemin_fichier: requestData.chemin_fichier,
-        type_fichier: requestData.type_fichier || null,
-        taille_fichier: requestData.taille_fichier
-          ? parseInt(requestData.taille_fichier)
+        titre: body.titre,
+        description: body.description || null,
+        chemin_fichier: body.chemin_fichier,
+        type_fichier: body.type_fichier || null,
+        taille_fichier: body.taille_fichier
+          ? parseInt(body.taille_fichier)
           : null,
-        id_uploader: parseInt(requestData.id_uploader),
-        id_classe: parseInt(requestData.id_classe),
+        id_uploader: parseInt(body.id_uploader),
+        id_classe: parseInt(body.id_classe),
       },
     });
-
-    // Récupération du document avec les relations
-    const documentWithRelations = await prisma.document.findUnique({
-      where: { id: createdDocument.id },
-      select: documentSelectOptions,
-    });
-
-    if (!documentWithRelations) {
-      throw new Error("Le document a été créé mais n'a pas pu être récupéré");
-    }
 
     return NextResponse.json(
       {
         success: true,
         message: "Document créé avec succès",
-        data: documentWithRelations,
+        data: newDocument,
       },
       { status: 201 }
     );
   } catch (error) {
-    console.error("POST /api/documents error:", error);
+    console.error("Erreur POST /api/documents:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Erreur serveur",
-        error: "Échec de la création du document",
+        message: "Erreur lors de la création du document",
+        error: "Erreur serveur",
       },
       { status: 500 }
     );

@@ -10,6 +10,11 @@ export const AdminLinks = [
     title: "Classes",
   },
   {
+    image: "/icons/ordre-du-jour.png",
+    path: "/admin/emploisDuTemps",
+    title: "Emplois Du Temps",
+  },
+  {
     image: "/icons/friends.png",
     path: "/admin/enseignants",
     title: "Enseignants",

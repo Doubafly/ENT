@@ -11,6 +11,22 @@ export default function HomePage() {
     prenom: string;
     type: "Etudiant" | "Enseignant" | "Admin";
     profil: string;
+    isAdmin: boolean;
+    adresse: string;
+    sexe: string;
+    telephone: string;
+    date_creation: string;
+    permissions: {
+      admin: boolean|null;      
+      annonces: boolean|null;
+      classes: boolean|null;
+      emplois_du_temps: boolean|null;
+      enseignants: boolean|null;
+      etudiants: boolean|null;
+      note: boolean|null;      
+      paiement: boolean|null;
+      parametres: boolean|null;
+    };
   }>({
     id: "",
     email: "",
@@ -18,6 +34,22 @@ export default function HomePage() {
     prenom: "",
     type: "Etudiant",
     profil: "",
+    isAdmin: false,
+    adresse: "",
+    sexe: "",
+    telephone: "",
+    date_creation: "",
+    permissions: {
+      admin: null,
+      annonces: null,
+      classes: null,
+      emplois_du_temps: null,
+      enseignants: null,
+      etudiants: null,
+      note: null,
+      paiement: null,
+      parametres: null,
+    },
   });
 
   useEffect(() => {
@@ -26,7 +58,32 @@ export default function HomePage() {
         const response = await fetch("/api/auth/session");
         if (response.ok) {
           const userData = await response.json();
-          setUser(userData.user);
+        
+
+          setUser({
+            id: userData.user.id_utilisateur,
+            email: userData.user.email,
+            nom: userData.user.nom,
+            prenom: userData.user.prenom,
+            type: userData.user.type,
+            profil: userData.user.profil,
+            isAdmin: userData.user.isAdmin,
+            adresse: userData.user.adresse,
+            sexe: userData.user.sexe,
+            telephone: userData.user.telephone,
+            date_creation: userData.user.date_creation,
+            permissions: {
+              admin: userData.user.Permission[0].admin,
+              annonces: userData.user.Permission[0].annonces,
+              classes: userData.user.Permission[0].classes,
+              emplois_du_temps: userData.user.Permission[0].emplois_du_temps,
+              enseignants: userData.user.Permission[0].enseignants,
+              etudiants: userData.user.Permission[0].etudiants,
+              note: userData.user.Permission[0].note,
+              paiement: userData.user.Permission[0].paiement,
+              parametres: userData.user.Permission[0].parametres,
+            },
+          });
         } else {
           console.error("Failed to fetch user session");
         }
@@ -37,9 +94,8 @@ export default function HomePage() {
 
     fetchUserSession();
   }, []);
-
   return (
-    <div className="mt-7 justify-center items-center">
+    <div className="mt-10 justify-center items-center">
       <ProfilePage user={user} />
     </div>
   );

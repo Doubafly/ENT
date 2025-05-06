@@ -44,6 +44,8 @@ export default function ClasseList() {
 
   // États pour les formulaires
   const [alldata, setalldata] = useState(null);
+
+  const [newStudent, setNewStudent] = useState("");
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
   const [newClassTeachers, setNewClassTeachers] = useState<string[]>([]);
@@ -221,7 +223,6 @@ export default function ClasseList() {
     }
   };
 
-
   // const handleAddStudent = () => {
   //   if (!newStudent.trim() || !selectedClassId) return;
 
@@ -250,6 +251,7 @@ export default function ClasseList() {
   //     setTempTeacher("");
   //   }
   // };
+
 
   // Filtrage et pagination
   const filteredClasses = classes.filter(
@@ -629,16 +631,3 @@ const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
     </div>
   );
 }
-
-// Données statiques (à remplacer par des appels API si nécessaire)
-const enseignantsData: User[] = [
-  // ... (conservez vos données enseignants existantes)
-];
-
-const etudiantsData: User[] = [
-  // ... (conservez vos données étudiants existantes)
-];
-
-const classe: any = [
-  // ... (conservez vos données de classes statiques existantes)
-];

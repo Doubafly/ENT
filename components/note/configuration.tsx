@@ -75,7 +75,7 @@ interface Session {
 
 interface Cours {
   id_cours: number;
-  semestre: "Semestre1" | "Semestre2";
+  semestre: string;
   sessions: Session;
   enseignant: Enseignant;
 }
@@ -122,9 +122,7 @@ export default function Configuration({
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [selectedEnseignant, setSelectedEnseignant] =
     useState<Enseignant | null>(null);
-  const [semestre, setSemestre] = useState<"Semestre1" | "Semestre2">(
-    "Semestre1"
-  );
+  const [semestre, setSemestre] = useState<string>("Semestre1");
   const [moduleConfig, setModuleConfig] = useState({
     coefficient: 1,
     volume_horaire: 30,
@@ -199,10 +197,12 @@ export default function Configuration({
           method: "DELETE",
         });
       } else {
+
         await fetch(`/api/filiereModule/${itemToDelete.id_filiere_module}`, {
           method: "DELETE",
         });
       }
+
 
     // Mise à jour de l'état local pour supprimer l'instance correspondante
     setFiliereModule((prev) => {
@@ -454,20 +454,20 @@ setFiliereModule((prev) => {
     });
   };
 
-  if (loading.main) {
-    return (
-      <Box display="flex" justifyContent="center" p={4}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   if (error) {
     return (
       <Box p={2}>
         <Alert severity="error" onClose={() => setError("")}>
           {error}
         </Alert>
+      </Box>
+    );
+  }
+
+  if (loading.main) {
+    return (
+      <Box display="flex" justifyContent="center" p={4}>
+        <CircularProgress />
       </Box>
     );
   }

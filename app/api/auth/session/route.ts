@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     const utilisateur = await prisma.utilisateurs.findUnique({
       where: { id_utilisateur: user.id },
       include: { 
+        Permission: true,
         enseignant: true,
         etudiant: true,
         admin: true // Ajout de la relation admin

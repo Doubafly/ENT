@@ -40,6 +40,7 @@ model Cours {
   enseignant        Enseignants      @relation(fields: [id_professeur], references: [id])
   emplois_du_temps  EmploisDuTemps[]
   notes             Notes[]
+  documents     Document[]      @relation("FilieresToDocuments")
 
   @@index([id_filiere_module], map: "Cours_id_filiere_module_fkey")
   @@index([id_professeur], map: "Cours_id_professeur_fkey")
@@ -161,20 +162,7 @@ model Modules {
 }
 
 // Table pour gérer les notes
-model Notes {
-  id_note          Int       @id @default(autoincrement())
-  id_etudiant      Int
-  id_cours         Int
-  note_class       Float?
-  note_exam        Float?
-  commentaire      String?
-  date_saisie      DateTime  @default(now())
-  cours            Cours     @relation(fields: [id_cours], references: [id_cours])
-  etudiant         Etudiants @relation(fields: [id_etudiant], references: [id])
 
-  @@index([id_cours], map: "Notes_id_cours_fkey")
-  @@index([id_etudiant], map: "Notes_id_etudiant_fkey")
-}
 
 // Table pour gérer les paiements
 model Paiements {
@@ -210,6 +198,7 @@ model Utilisateurs {
   Permission Permission[] @relation("UtilisateurPermission")
 
   Absences Absences[]
+  documents Document[]    @relation("UploaderToDocuments")
 }
 
 model Admin {
@@ -240,7 +229,42 @@ model Permission {
 
   @@map("permission")
 }
+model Notes {
+  id_note          Int       @id @default(autoincrement())
+  id_etudiant      Int
+  id_cours         Int
+  note_class       Float?
+  note_exam        Float?
+  commentaire_enseignant String?  // Commentaire de l'enseignant sur la note
+  commentaire_etudiant String?    // Réclamation de l'étudiant
+  date_saisie      DateTime?  @default(now())
+  date_validation  DateTime? // Date de validation finale
+  statut_note      NoteStatut @default(Brouillon)
+  statut_reclamation ReclamationStatut? @default(null) // Null si pas de réclamation
+  date_reclamation DateTime? // Date de la réclamation
+  date_traitement  DateTime? // Date de traitement de la réclamation
+  cours            Cours     @relation(fields: [id_cours], references: [id_cours])
+  etudiant         Etudiants @relation(fields: [id_etudiant], references: [id])
 
+  @@index([id_cours], map: "Notes_id_cours_fkey")
+  @@index([id_etudiant], map: "Notes_id_etudiant_fkey")
+}
+
+
+// Enums modifiés
+enum NoteStatut {
+  Brouillon      // En cours de saisie par l'enseignant
+  Provisoire    // Visible par l'étudiant (période de réclamation)
+  Valide        // Validé définitivement (plus de modifications)
+}
+
+enum ReclamationStatut {
+  null
+  EnAttente    // Réclamation soumise
+  EnCours      // En cours d'examen
+  Acceptee     // Réclamation acceptée (note modifiée)
+  Rejetee      // Réclamation refusée
+}
 
 
 // Enums
@@ -283,3 +307,29 @@ enum UtilisateursType {
   Enseignant
   Admin
 }
+
+model Document {
+  id            Int       @id @default(autoincrement())
+  titre         String
+  description   String?
+  chemin_fichier String
+  type_fichier  String?
+  taille_fichier Int?
+  date_upload   DateTime  @default(now())
+  est_actif     Boolean   @default(true)
+  id_uploader   Int
+  id_classe     Int
+  uploader        Utilisateurs  @relation("UploaderToDocuments", fields: [id_uploader], references: [id_utilisateur])
+  classe          Cours        @relation("FilieresToDocuments", fields: [id_classe], references: [id_cours])
+
+  // Index pour les performances (optionnel mais recommandé)
+  @@index([id_uploader], name: "Document_id_uploader_fkey")
+  @@index([id_classe], name: "Document_id_classe_fkey")
+
+  // Contrainte d'unicité : titre unique par classe
+  @@unique([titre, id_classe], name: "unique_titre_par_classe")
+  @@index([id_uploader], map: "infos_ser")
+  @@index([id_classe], map: "infos_classe")
+  @@map("documents")
+}
+

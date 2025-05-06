@@ -34,11 +34,13 @@ export default function page() {
 
         if (data.filieres) {
           
+          
           const result = data.filieres.filter((item: { filiere_module: { cours: any[]; }[]; })=> {
             return item.filiere_module.some((module: { cours: any[]; }) => {
               return module.cours.some(c => c.enseignant.id === enseignantId);
             });
           });
+          
           
           // Transformer les données API en structure attendue
           const formattedClasses = result.map((filiere: any) => {
@@ -59,6 +61,7 @@ export default function page() {
           
             filiere.filiere_module.forEach((mod: any, Index: number) => {
               mod.cours.forEach((cours: any) => {
+              
                 const semestreId = `${filiere.id_filiere}-${cours.semestre}`;
                 if (!semestresMap.has(semestreId)) {
                   semestresMap.set(semestreId, {
@@ -77,6 +80,9 @@ export default function page() {
                     id_cours: cours.id_cours,
                     id_note: etudiant.notes[Index]?.id_note || 0,
                     note_class: etudiant.notes[Index]?.note_class || 0,
+                    commentaire_etudiant: etudiant.notes[Index]?.commentaire_etudiant || "",
+                    commentaire_enseignant: etudiant.notes[Index]?.commentaire_enseignant || "",
+                    statut_reclamation: etudiant.notes[Index]?.statut_reclamation || "",
                     note_exam: etudiant.notes[Index]?.note_exam || 0,
                     coefficient: mod.coefficient, // Associer le coefficient au module
                   })),
@@ -87,11 +93,49 @@ export default function page() {
             return {
               id: filiere.id_filiere,
               name: niveauLabel, // Intégration du niveau dans le nom de la classe
-              coefficients: filiere.filiere_module.map((mod: any) => mod.coefficient), // Récupérer tous les coefficients des modules
+              coefficients: filiere.filiere_module.map((mod: any) => mod.coefficient),
+              sessions: Array.from(new Set(filiere.filiere_module.flatMap((mod: any) => mod.cours.flatMap((c: any) => c.sessions.annee_academique)))),
               semestres: Array.from(semestresMap.values()), // Convertir la Map en tableau
             };
           });
-          setClasses(formattedClasses);
+
+          
+         // Reformater les données pour correspondre à la structure cible
+const transformedClasses = formattedClasses.map((classe: any) => ({
+  id: classe.id,
+  name: classe.name,
+  sessions: classe.sessions, // Inclure les années académiques
+  semestres: classe.semestres.map((semestre: any) => ({
+    id: semestre.id,
+    name: semestre.name,
+    modules: semestre.modules.map((module: any) => ({
+      id: module.id,
+      name: module.name,
+      students: module.students.map((student: any) => ({
+        id: student.id,
+        matricule: student.matricule,
+        name: student.name,
+        notes: [
+          {
+            id_note: student.id_note,
+            note_class: student.note_class,
+            note_exam: student.note_exam,
+            commentaire_etudiant:student.commentaire_etudiant,
+            statut_reclamation: student.statut_reclamation
+          },
+        ],
+        coefficient: student.coefficient,
+      })),
+    })),
+  })),
+}));
+
+// Mettre à jour les classes avec la nouvelle structure
+setClasses(transformedClasses);
+
+          // Mettre à jour les classes avec la nouvelle structure
+          setClasses(transformedClasses);
+
         }
       } catch (error) {
         console.error("Erreur lors de la récupération des filieres :", error);

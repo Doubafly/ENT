@@ -91,6 +91,12 @@ export async function POST(request: NextRequest) {
     const response = {
       id_cours: cours.id_cours,
       semestre: cours.semestre,
+      id_filiere_module: cours.id_filiere_module,
+      filiere_module: {
+        code_module: cours.filiere_module.code_module,
+        volume_horaire: cours.filiere_module.volume_horaire,
+        coefficient: cours.filiere_module.coefficient,
+      },
       module: {
         id_module: cours.filiere_module.module.id_module,
         nom: cours.filiere_module.module.nom,
@@ -154,7 +160,7 @@ export async function GET() {
                       select: {
                         note_exam: true,
                         note_class: true,
-                        commentaire: true,
+                        commentaire_enseignant: true,
                       },
                     },
                     utilisateur: {
@@ -200,7 +206,9 @@ export async function GET() {
             id_note: true,
             note_exam: true,
             note_class: true,
-            commentaire: true,
+            commentaire_enseignant: true,
+            statut_reclamation: true,
+            commentaire_etudiant: true,
             etudiant: {
               select: {
                 id: true,

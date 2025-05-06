@@ -35,6 +35,12 @@
         path: "/admin/etudiants",
         title: "Etudiant",
       },
+      permissions.emplois_du_temps && {
+        image: "/icons/ordre-du-jour.png",
+        path: "/admin/emploisDuTemps",
+        title: "Emplois Du Temps",
+      },
+      
       permissions.annonces && {
         image: "/icons/promotion.png",
         path: "/admin/annonces",

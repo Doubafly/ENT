@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Saisi from "./Saisi";
 import Resultat from "./resultat";
 import { Tabs, Tab, Box } from "@mui/material";
+import Reclamation from "./Reclamation";
 
 interface NoteRegistreProps {
   classes: any;
@@ -53,6 +54,7 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
           >
             <Tab label="Saisi" />
             <Tab label="Resultat" />
+            <Tab label="Reclamation" />
           </Tabs>
         </Box>
 
@@ -65,7 +67,6 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
             onChange={(e) => setSelectedSession(e.target.value)}
             value={selectedSession}
           >
-            <option value="m">-- Choisir --</option>
             {allSessions.map((session) => (
               <option key={session} value={session}>
                 {session}
@@ -78,6 +79,7 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
         {/* Contenu selon l'onglet actif */}
         {tabIndex === 0 && <Saisi classes={filteredClasses} />}
         {tabIndex === 1 && <Resultat classes={filteredClasses} />}
+        {tabIndex === 2 && <Reclamation classes={filteredClasses} />}
       </Box>
     </div>
   );

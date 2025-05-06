@@ -7,35 +7,104 @@ export async function GET(
   try {
  
     // Récupérer les données en parallèle
-    const [enseignantsResponse, allModules, allsession] = await Promise.all(
+    const [ allModules, allsession,filiere] = await Promise.all(
       [
-        fetch(`${process.env.NEXTAUTH_URL}/api/utilisateurs/enseignants`),
         prisma.modules.findMany(), // Tous les modules disponibles
         prisma.sessions.findMany(),
+        prisma.filieres.findMany({
+          include: {
+            annexe: {
+              select: {
+                nom: true,
+                ville: true,
+              },
+            }, 
+            filiere_module: {
+              include: {
+                cours: {
+                  select: {
+                    id_cours: true,
+                    semestre: true,
+                    enseignant: {
+                      select: {
+                        id: true,
+                        specialite: true,
+                        matricule: true,
+                        utilisateur: {
+                          select: {
+                            id_utilisateur: true,
+                            nom: true,
+                            prenom: true,
+                            mot_de_passe: true,
+                            email: true,
+                            sexe: true,
+                            telephone: true,
+                            adresse: true,
+                            profil: true,
+                            date_creation: true,
+                          },
+                        },
+                      },
+                    },
+                    sessions: {
+                      select: {
+                        annee_academique: true,
+                      },
+                    },
+                  },
+                },
+                module: {
+                  select: {
+                    nom: true,
+                    description: true,
+                  },
+                },
+              },
+            },
+            etudiants: {
+              select: {
+                id: true,
+                matricule: true,
+                date_inscription: true,
+                date_naissance: true,
+                utilisateur: {
+                  select: {
+                    id_utilisateur: true,
+                    nom: true,
+                    prenom: true,
+                    email: true,
+                    sexe: true,
+                    profil: true,
+                    telephone: true,
+                    adresse: true,
+                  },
+                },
+                notes: {
+                  select: {
+                    id_note: true,
+                    note_class: true,
+                    note_exam: true,
+                    commentaire_etudiant: true,
+                    commentaire_enseignant: true,
+                    statut_reclamation: true,
+                    statut_note: true
+                  },
+                },
+              },
+            },
+          },
+        })
       ]
     );
-
-    if (!enseignantsResponse.ok) {
-      throw new Error("Erreur lors de la récupération des enseignants");
-    }
-
-    const enseignantsData = await enseignantsResponse.json();
-
     // Formater la réponse
     const response = {
-     
-      enseignants: enseignantsData.utilisateurs.map((e: any) => ({
-        id: e.id,
-        nom: e.utilisateur.nom,
-        prenom: e.utilisateur.prenom,
-        specialite: e.specialite,
-      })),
       allModules: allModules.map((m) => ({
         id_module: m.id_module,
         nom: m.nom,
         description: m.description || undefined,
       })),
       allsession:allsession,
+      filiere:filiere
     };
 
     return NextResponse.json(

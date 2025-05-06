@@ -26,8 +26,6 @@ interface Classe {
 export default function ClasseList() {
   // États pour les données
   const [classes, setClasses] = useState<Classe[]>([]);
-  const [enseignants, setEnseignants] = useState<User[]>(enseignantsData);
-  const [etudiants, setEtudiants] = useState<User[]>(etudiantsData);
 
   // États pour l'UI
   const [loading, setLoading] = useState(true);
@@ -46,7 +44,6 @@ export default function ClasseList() {
 
   // États pour les formulaires
   const [alldata, setalldata] = useState(null);
-  const [newStudent, setNewStudent] = useState("");
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
   const [newClassTeachers, setNewClassTeachers] = useState<string[]>([]);
@@ -56,19 +53,20 @@ export default function ClasseList() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const filieresRes = await fetch("/api/filieres");
+        // const filieresRes = await fetch("/api/filieres");
         const alldataRes = await  fetch(`/api/filieres/modules`);
         const alldata = await alldataRes.json();
         setalldata(alldata)
 
 
-        if (!filieresRes.ok)
-          throw new Error("Erreur de chargement des filières");
+        // if (!filieresRes.ok)
+        //   throw new Error("Erreur de chargement des filières");
 
-        const filieresData = await filieresRes.json();
+        const filieresData = alldata.data.filiere;
+        
 
         setClasses(
-          filieresData.filieres.map((filiere: any) => ({
+          filieresData.map((filiere: any) => ({
             ...filiere,
             enseignants: Array.from(
               new Map(

@@ -11,7 +11,6 @@
         const user = data.user;
 
     const permissions = user.Permission[0];
-        console.log("User data:", user.Permission[0]);
 
             // Générer dynamiquement les liens AdminLinks en fonction des permissions
     AdminLinks = [

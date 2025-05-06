@@ -37,6 +37,7 @@ export default function HomePage() {
 
     fetchUserSession();
   }, []);
+
   return (
     <div className="mt-7 justify-center items-center">
       <ProfilePage user={user} />

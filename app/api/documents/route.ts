@@ -15,6 +15,9 @@ type DocumentsResponse = ApiResponse<any[]>;
 export async function GET() {
   try {
     const documents = await prisma.document.findMany({
+      orderBy: {
+        date_upload: "desc",
+      },
       include: {
         uploader: {
           select: {

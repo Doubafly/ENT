@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@iconify/react": "^5.1.0",
+    "@types/lodash": "^4.17.16",
     "@types/next": "^8.0.7",
     "@types/node": "20.17.19",
     "@types/react": "19.0.10",

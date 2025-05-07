@@ -1,5 +1,6 @@
 
 
+
     let AdminLinks: Array<{ image: string; path: string; title: string }> = [];
 
     const fetchUser = async () => {
@@ -61,6 +62,11 @@
         path: "/admin/paiement",
         title: "Finance",
       },
+     {
+      image: "/icons/finance.svg",
+      path: "/admin/documents",
+      title: "Documents",
+      },
       {
         image: "/icons/assessment.png",
         path: "/admin/sujets",
@@ -94,7 +100,6 @@
     
     export { AdminLinks };
     
-
 
 
 export const EtudiantLinks = [

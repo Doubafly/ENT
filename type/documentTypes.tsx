@@ -1,47 +1,58 @@
 export interface User {
   id: number;
-  nom: string;
-  prenom: string;
-  email: string;
-  telephone?: string;
-  profil?: string;
+  specialite: string;
+  matricule: string;
+  utilisateur: {
+    id_utilisateur: number;
+    nom: string;
+    prenom: string;
+    mot_de_passe: string;
+    email: string;
+    sexe: string;
+    telephone: string;
+    adresse: string;
+    profil: string;
+    date_creation: Date;
+  };
 }
 
 export interface Filiere {
-  id: number;
+  id_filiere: number;
   nom: string;
-  code_filiere: string;
+  niveau: string;
+  filiere_module: {
+    module: Module;
+  }[];
   description?: string;
-  est_actif: boolean;
 }
 
 export interface Module {
-  id: number;
+  id_module: number;
   nom: string;
-  code_module: string;
-  filiere_id: number;
-  description?: string;
-  est_actif: boolean;
+  description: string;
 }
 
-export interface Document {
+export interface ApiDocument {
   id: number;
   titre: string;
-  description?: string;
+  description: string;
   chemin_fichier: string;
-  type_fichier?: string;
-  taille_fichier?: number;
-  date_upload: string;
-  est_actif: boolean;
+  type_fichier: string;
+  taille_fichier: number;
   id_uploader: number;
   id_classe: number;
-  filiere?: Filiere | null;
-  module?: Module | null;
-  uploader?: User | null;
+  utilisateur: {
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone: string;
+  } | null;
+  filiere: string | null;
+  module: string | null;
 }
 
 // Types utilitaires pour les formulaires
-export type DocumentFormData = Omit<Document, 'id' | 'date_upload'> & {
+export type DocumentFormData = Omit<Document, "id" | "date_upload"> & {
   date_upload?: string;
   file?: File;
 };

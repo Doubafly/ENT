@@ -1,13 +1,14 @@
 "use client";
-import { Document, Filiere, Module } from "@/type/documentTypes";
+import { ApiDocument, Filiere, Module } from "@/type/documentTypes";
 import React, { useEffect, useState } from "react";
 import { FiSave, FiUpload, FiX } from "react-icons/fi";
 
 interface DocumentFormProps {
-  document?: Document;
+  document?: ApiDocument;
   filieres: Filiere[];
   modules: Module[];
-  onSubmit: (document: Omit<Document, "id">) => Promise<void>;
+  uploaders: any[];
+  onSubmit: (document: Omit<ApiDocument, "id">) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -15,10 +16,11 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   document,
   filieres,
   modules,
+  uploaders,
   onSubmit,
   onCancel,
 }) => {
-  const [formData, setFormData] = useState<Omit<Document, "id">>({
+  const [formData, setFormData] = useState<Omit<ApiDocument, "id">>({
     titre: document?.titre || "",
     description: document?.description || "",
     chemin_fichier: document?.chemin_fichier || "",
@@ -26,11 +28,9 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     taille_fichier: document?.taille_fichier || 0,
     id_uploader: document?.id_uploader || 0,
     id_classe: document?.id_classe || 0,
+    utilisateur: document?.utilisateur || null,
     filiere: document?.filiere || null,
     module: document?.module || null,
-    uploader: document?.uploader || null,
-    date_upload: document?.date_upload || new Date().toISOString(),
-    est_actif: document?.est_actif || true,
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -39,20 +39,22 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
 
   // Filtrer les modules en fonction de la filière sélectionnée
   useEffect(() => {
-    if (formData.filiere?.id) {
-      const filtered = modules.filter(
-        (module) => module.filiere_id === formData.filiere?.id
-      );
-      setFilteredModules(filtered);
-      setFormData((prev) => ({
-        ...prev,
-        module: null,
-        id_classe: 0,
-      }));
+    if (formData.filiere) {
+      const selectedFiliere = filieres.find((f) => f.nom === formData.filiere);
+
+      setFilteredModules(modules);
+
+      // Réinitialiser le module si incompatible avec la nouvelle filière
+      if (
+        formData.module &&
+        !filteredModules.some((m) => m.nom === formData.module)
+      ) {
+        setFormData((prev) => ({ ...prev, module: "", id_classe: 0 }));
+      }
     } else {
       setFilteredModules(modules);
     }
-  }, [formData.filiere?.id, modules]);
+  }, [formData.filiere, modules, filieres]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -62,17 +64,27 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     const { name, value } = e.target;
 
     if (name === "filiere") {
-      const selectedFiliere = filieres.find((f) => f.id === parseInt(value));
       setFormData((prev) => ({
         ...prev,
-        filiere: selectedFiliere || null,
-        id_classe: selectedFiliere?.id || 0,
+        filiere: value,
+        module: "",
+        id_classe: 0,
       }));
     } else if (name === "module") {
-      const selectedModule = modules.find((m) => m.id === parseInt(value));
       setFormData((prev) => ({
         ...prev,
-        module: selectedModule || null,
+        module: value,
+        id_classe: 0,
+      }));
+    } else if (name === "id_classe") {
+      setFormData((prev) => ({
+        ...prev,
+        id_classe: parseInt(value),
+      }));
+    } else if (name === "id_uploader") {
+      setFormData((prev) => ({
+        ...prev,
+        id_uploader: parseInt(value),
       }));
     } else {
       setFormData((prev) => ({
@@ -99,6 +111,17 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation des champs requis
+    if (!formData.titre || !formData.id_uploader || !formData.id_classe) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    if (!document && !selectedFile) {
+      alert("Veuillez sélectionner un fichier à uploader");
+      return;
+    }
+
     if (selectedFile) {
       setIsUploading(true);
       try {
@@ -111,7 +134,6 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
         await onSubmit({
           ...formData,
           chemin_fichier: fakePath,
-          date_upload: new Date().toISOString(),
         });
       } catch (err) {
         console.error("Erreur lors de l'upload:", err);
@@ -155,7 +177,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             id="description"
             name="description"
             rows={3}
-            value={formData.description}
+            value={formData.description || ""}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
@@ -166,18 +188,19 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             htmlFor="filiere"
             className="block text-sm font-medium text-gray-700"
           >
-            Filière
+            Filière <span className="text-red-500">*</span>
           </label>
           <select
             id="filiere"
             name="filiere"
-            value={formData.filiere?.id || ""}
+            value={formData.filiere || ""}
             onChange={handleChange}
+            required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Sélectionnez une filière</option>
             {filieres.map((filiere) => (
-              <option key={filiere.id} value={filiere.id}>
+              <option key={filiere.id_filiere} value={filiere.nom}>
                 {filiere.nom}
               </option>
             ))}
@@ -189,20 +212,45 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             htmlFor="module"
             className="block text-sm font-medium text-gray-700"
           >
-            Module
+            Module <span className="text-red-500">*</span>
           </label>
           <select
             id="module"
             name="module"
-            value={formData.module?.id || ""}
+            value={formData.module || ""}
             onChange={handleChange}
-            disabled={!formData.filiere?.id}
+            required
+            disabled={!formData.filiere}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
           >
             <option value="">Sélectionnez un module</option>
             {filteredModules.map((module) => (
-              <option key={module.id} value={module.id}>
+              <option key={module.id_module} value={module.nom}>
                 {module.nom}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="id_uploader"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Uploader <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="id_uploader"
+            name="id_uploader"
+            value={formData.id_uploader}
+            onChange={handleChange}
+            required
+            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          >
+            <option value="">Sélectionnez un uploader</option>
+            {uploaders.map((uploader) => (
+              <option key={uploader.id} value={uploader.utilisateur.id}>
+                {uploader.utilisateur.prenom} {uploader.utilisateur.nom}
               </option>
             ))}
           </select>
@@ -210,7 +258,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
 
         <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700">
-            Fichier <span className="text-red-500">*</span>
+            Fichier {!document && <span className="text-red-500">*</span>}
           </label>
           <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
@@ -229,6 +277,18 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
                   >
                     <FiX />
                   </button>
+                </div>
+              ) : document?.chemin_fichier ? (
+                <div className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <div className="flex items-center">
+                    <FiUpload className="flex-shrink-0 h-5 w-5 text-gray-500 mr-2" />
+                    <span className="text-sm text-gray-700 truncate max-w-xs">
+                      {document.chemin_fichier.split("/").pop()}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    (Fichier existant)
+                  </span>
                 </div>
               ) : (
                 <>
@@ -258,7 +318,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
                         type="file"
                         onChange={handleFileChange}
                         className="sr-only"
-                        required={!document} // Requis seulement pour la création
+                        required={!document}
                       />
                     </label>
                     <p className="pl-1">ou glisser-déposer</p>

@@ -1,72 +1,109 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
-import { FiFile, FiUpload, FiSearch, FiFilter, FiX, FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
-import Modal from "@/components/modal/Modal";
 import DocumentForm from "@/components/forms/DocumentForm";
-import { Document, Filiere, Module, User } from "@/type/documentTypes";
-import { debounce } from "lodash";
+import Modal from "@/components/modal/SuperModal";
 import Pagination from "@/components/ui/Pagination";
+import { Filiere, Module, User } from "@/type/documentTypes";
+import { debounce } from "lodash";
+import { useCallback, useEffect, useState } from "react";
+import {
+  FiDownload,
+  FiEdit2,
+  FiFile,
+  FiFilter,
+  FiPlus,
+  FiSearch,
+  FiTrash2,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
+
+export interface ApiDocument {
+  id: number;
+  titre: string;
+  description: string;
+  chemin_fichier: string;
+  type_fichier: string;
+  taille_fichier: number;
+  id_uploader: number;
+  id_classe: number;
+  utilisateur: {
+    nom: string;
+    prenom: string;
+    email: string;
+    telephone: string;
+  } | null;
+  filiere: string | null;
+  module: string | null;
+}
 
 const DocumentsPage = () => {
-  // États pour la gestion des données
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<ApiDocument[]>([]);
+  const [filteredDocuments, setFilteredDocuments] = useState<ApiDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // États pour la pagination
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  
-  // États pour les filtres
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filiereFilter, setFiliereFilter] = useState<string>("");
   const [moduleFilter, setModuleFilter] = useState<string>("");
   const [uploaderFilter, setUploaderFilter] = useState<string>("");
-  
-  // États pour les modals
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  
-  // États pour les données de formulaire
+  const [selectedDocument, setSelectedDocument] = useState<ApiDocument | null>(
+    null
+  );
+
   const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [uploaders, setUploaders] = useState<User[]>([]);
 
-  // Chargement initial des données
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
-        
-        // Chargement en parallèle pour optimiser les performances
-        const [docsRes, filieresRes, modulesRes, uploadersRes] = await Promise.all([
-          fetch('/api/documents'),
-          fetch('/api/filieres'),
-          fetch('/api/modules'),
-          fetch('/api/users/uploaders')
+
+        const [docsRes, filieresRes, uploadersRes] = await Promise.all([
+          fetch("/api/documents"),
+          fetch("/api/filieres"),
+          fetch("/api/utilisateurs/enseignants"),
         ]);
 
-        if (!docsRes.ok || !filieresRes.ok || !modulesRes.ok || !uploadersRes.ok) {
-          throw new Error('Erreur lors du chargement des données');
+        if (!docsRes.ok || !filieresRes.ok || !uploadersRes.ok) {
+          throw new Error("Erreur lors du chargement des données");
         }
 
-        const [docsData, filieresData, modulesData, uploadersData] = await Promise.all([
+        const [docsData, filieresData, uploadersData] = await Promise.all([
           docsRes.json(),
           filieresRes.json(),
-          modulesRes.json(),
-          uploadersRes.json()
+          uploadersRes.json(),
         ]);
 
-        setDocuments(docsData.data);
-        setFilteredDocuments(docsData.data);
-        setFilieres(filieresData.data);
-        setModules(modulesData.data);
-        setUploaders(uploadersData.data);
+        // Extraire tous les modules des filières
+        const allModules: Module[] = [];
+
+        filieresData.filieres.forEach((filiere: Filiere) => {
+          filiere.filiere_module?.forEach((fm) => {
+            const mod = fm.module;
+            if (mod) {
+              allModules.push({
+                id_module: mod.id_module,
+                nom: mod.nom,
+                description: mod.description,
+              });
+            }
+          });
+        });
+
+        setDocuments(docsData.data || []);
+        setFilieres(filieresData.filieres || []);
+        setModules(allModules);
+        setUploaders(uploadersData.utilisateurs || []);
+        setFilteredDocuments(docsData.data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur inconnue est survenue');
-        console.error("Erreur:", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
         setIsLoading(false);
       }
@@ -75,81 +112,107 @@ const DocumentsPage = () => {
     fetchInitialData();
   }, []);
 
-  // Filtrage des documents avec debounce pour optimiser les performances
-  const filterDocuments = useCallback(debounce((search, filiere, module, uploader) => {
-    const filtered = documents.filter(doc => {
-      const matchesSearch = search === "" || 
-        doc.titre.toLowerCase().includes(search.toLowerCase()) || 
-        doc.description?.toLowerCase().includes(search.toLowerCase());
-      
-      const matchesFiliere = filiere === "" || doc.filiere?.nom === filiere;
-      const matchesModule = module === "" || doc.module?.nom === module;
-      const matchesUploader = uploader === "" || 
-        `${doc.uploader?.prenom} ${doc.uploader?.nom}`.includes(uploader);
+  const filterDocuments = useCallback(
+    debounce(
+      (search: string, filiere: string, module: string, uploader: string) => {
+        const filtered = documents.filter((doc: ApiDocument) => {
+          const matchesSearch =
+            search === "" ||
+            doc.titre.toLowerCase().includes(search.toLowerCase()) ||
+            (doc.description &&
+              doc.description.toLowerCase().includes(search.toLowerCase()));
 
-      return matchesSearch && matchesFiliere && matchesModule && matchesUploader;
-    });
+          const matchesFiliere = filiere === "" || doc.filiere === filiere;
+          const matchesModule = module === "" || doc.module === module;
+          const matchesUploader =
+            uploader === "" ||
+            `${doc.utilisateur?.prenom} ${doc.utilisateur?.nom}`.includes(
+              uploader
+            );
 
-    setFilteredDocuments(filtered);
-    setCurrentPage(1); // Reset à la première page après filtrage
-  }, 300), [documents]);
+          return (
+            matchesSearch && matchesFiliere && matchesModule && matchesUploader
+          );
+        });
 
-  // Application des filtres
+        setFilteredDocuments(filtered);
+        setCurrentPage(1);
+      },
+      300
+    ),
+    [documents]
+  );
+
   useEffect(() => {
     filterDocuments(searchTerm, filiereFilter, moduleFilter, uploaderFilter);
-  }, [searchTerm, filiereFilter, moduleFilter, uploaderFilter, filterDocuments]);
+  }, [
+    searchTerm,
+    filiereFilter,
+    moduleFilter,
+    uploaderFilter,
+    filterDocuments,
+  ]);
 
-  // Gestion de la pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredDocuments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
-  // Fonction pour créer un document
-  const handleCreateDocument = async (newDocument: Omit<Document, 'id'>) => {
+  const handleCreateDocument = async (newDocument: any) => {
     try {
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newDocument)
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          titre: newDocument.titre,
+          description: newDocument.description,
+          chemin_fichier: newDocument.chemin_fichier,
+          type_fichier: newDocument.type_fichier,
+          taille_fichier: newDocument.taille_fichier,
+          id_uploader: parseInt(newDocument.id_uploader),
+          id_classe: parseInt(newDocument.id_classe),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la création du document');
+        throw new Error("Erreur lors de la création du document");
       }
 
       const createdDoc = await response.json();
-      setDocuments(prev => [...prev, createdDoc.data]);
+      setDocuments((prev) => [...prev, createdDoc.data]);
       setIsFormOpen(false);
     } catch (err) {
       console.error("Erreur:", err);
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
 
-  // Fonction pour supprimer un document
   const handleDeleteDocument = async () => {
     if (!selectedDocument) return;
 
     try {
       const response = await fetch(`/api/documents/${selectedDocument.id}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de la suppression');
+        throw new Error("Erreur lors de la suppression");
       }
 
-      setDocuments(prev => prev.filter(doc => doc.id !== selectedDocument.id));
+      setDocuments((prev) =>
+        prev.filter((doc) => doc.id !== selectedDocument.id)
+      );
       setIsDeleteModalOpen(false);
       setSelectedDocument(null);
     } catch (err) {
       console.error("Erreur:", err);
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
   };
 
-  // Fonction pour réinitialiser les filtres
   const resetFilters = () => {
     setSearchTerm("");
     setFiliereFilter("");
@@ -170,8 +233,16 @@ const DocumentsPage = () => {
       <div className="bg-red-50 border-l-4 border-red-500 p-4">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            <svg
+              className="h-5 w-5 text-red-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
           <div className="ml-3">
@@ -185,7 +256,9 @@ const DocumentsPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Gestion des Documents</h1>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Gestion des Documents
+        </h1>
         <button
           onClick={() => setIsFormOpen(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -222,8 +295,8 @@ const DocumentsPage = () => {
               className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Toutes les filières</option>
-              {filieres.map(filiere => (
-                <option key={filiere.id} value={filiere.nom}>
+              {filieres.map((filiere) => (
+                <option key={filiere.id_filiere} value={filiere.nom}>
                   {filiere.nom}
                 </option>
               ))}
@@ -241,8 +314,8 @@ const DocumentsPage = () => {
               className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Tous les modules</option>
-              {modules.map(module => (
-                <option key={module.id} value={module.nom}>
+              {modules.map((module) => (
+                <option key={module.id_module} value={module.nom}>
                   {module.nom}
                 </option>
               ))}
@@ -260,9 +333,12 @@ const DocumentsPage = () => {
               className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Tous les uploaders</option>
-              {uploaders.map(uploader => (
-                <option key={uploader.id} value={`${uploader.prenom} ${uploader.nom}`}>
-                  {uploader.prenom} {uploader.nom}
+              {uploaders.map((uploader) => (
+                <option
+                  key={uploader.id}
+                  value={`${uploader.utilisateur.prenom} ${uploader.utilisateur.nom}`}
+                >
+                  {uploader.utilisateur.prenom} {uploader.utilisateur.nom}
                 </option>
               ))}
             </select>
@@ -286,25 +362,40 @@ const DocumentsPage = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Titre
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Description
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Filière
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Module
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Uploader
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
                   Actions
                 </th>
               </tr>
@@ -316,40 +407,44 @@ const DocumentsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <FiFile className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2" />
-                        <div className="text-sm font-medium text-gray-900">{doc.titre}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {doc.titre}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 truncate max-w-xs">{doc.description}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{doc.filiere?.nom || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{doc.module?.nom || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {doc.uploader ? `${doc.uploader.prenom} ${doc.uploader.nom}` : '-'}
+                      <div className="text-sm text-gray-500 truncate max-w-xs">
+                        {doc.description || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {new Date(doc.date_upload).toLocaleDateString('fr-FR')}
+                        {doc.filiere || "-"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {doc.module || "-"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {doc.utilisateur
+                          ? `${doc.utilisateur.prenom} ${doc.utilisateur.nom}`
+                          : "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end space-x-2">
-                        <a 
-                          href={doc.chemin_fichier} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+                        <a
+                          href={doc.chemin_fichier}
+                          download
                           className="text-blue-600 hover:text-blue-900"
                           title="Télécharger"
                         >
-                          <FiUpload />
+                          <FiDownload />
                         </a>
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedDocument(doc);
                             setIsFormOpen(true);
@@ -359,7 +454,7 @@ const DocumentsPage = () => {
                         >
                           <FiEdit2 />
                         </button>
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedDocument(doc);
                             setIsDeleteModalOpen(true);
@@ -375,7 +470,10 @@ const DocumentsPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={6}
+                    className="px-6 py-4 text-center text-sm text-gray-500"
+                  >
                     Aucun document trouvé
                   </td>
                 </tr>
@@ -397,14 +495,19 @@ const DocumentsPage = () => {
       </div>
 
       {/* Modal de création/édition */}
-      <Modal isOpen={isFormOpen} onClose={() => {
-        setIsFormOpen(false);
-        setSelectedDocument(null);
-      }}>
+      <Modal
+        isOpen={isFormOpen}
+        onClose={() => {
+          setIsFormOpen(false);
+          setSelectedDocument(null);
+        }}
+      >
         <div className="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-2xl">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-medium text-gray-900">
-              {selectedDocument ? 'Modifier le document' : 'Ajouter un nouveau document'}
+              {selectedDocument
+                ? "Modifier le document"
+                : "Ajouter un nouveau document"}
             </h2>
           </div>
           <div className="p-6">
@@ -412,7 +515,8 @@ const DocumentsPage = () => {
               document={selectedDocument || undefined}
               filieres={filieres}
               modules={modules}
-              onSubmit={selectedDocument ? handleCreateDocument : handleCreateDocument}
+              uploaders={uploaders}
+              onSubmit={handleCreateDocument}
               onCancel={() => {
                 setIsFormOpen(false);
                 setSelectedDocument(null);
@@ -423,17 +527,24 @@ const DocumentsPage = () => {
       </Modal>
 
       {/* Modal de confirmation de suppression */}
-      <Modal isOpen={isDeleteModalOpen} onClose={() => {
-        setIsDeleteModalOpen(false);
-        setSelectedDocument(null);
-      }}>
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedDocument(null);
+        }}
+      >
         <div className="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-md">
           <div className="px-6 py-4 bg-red-50 border-b border-red-200">
-            <h2 className="text-lg font-medium text-red-800">Confirmer la suppression</h2>
+            <h2 className="text-lg font-medium text-red-800">
+              Confirmer la suppression
+            </h2>
           </div>
           <div className="p-6">
             <p className="text-gray-700 mb-4">
-              Êtes-vous sûr de vouloir supprimer le document <span className="font-semibold">{selectedDocument?.titre}</span> ? Cette action est irréversible.
+              Êtes-vous sûr de vouloir supprimer le document{" "}
+              <span className="font-semibold">{selectedDocument?.titre}</span> ?
+              Cette action est irréversible.
             </p>
             <div className="flex justify-end space-x-3">
               <button

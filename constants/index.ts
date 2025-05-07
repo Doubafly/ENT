@@ -45,6 +45,11 @@ export const AdminLinks = [
     title: "Finance",
   },
   {
+    image: "/icons/finance.svg",
+    path: "/admin/documents",
+    title: "Documents",
+  },
+  {
     image: "/icons/assessment.png",
     path: "/admin/sujets",
     title: "Sujets",

@@ -102,6 +102,7 @@ model Enseignants {
 
   @@map("enseignants")
   EmploisDuTemps EmploisDuTemps[]
+  Finance Finance[]
 }
 
 // Table pour gérer les étudiants
@@ -119,6 +120,7 @@ model Etudiants {
 
   @@index([id_filiere], map: "Etudiants_id_filiere_fkey")
   @@unique([id_utilisateur, id_filiere], map: "Unique_Student_Filiere") // Un étudiant ne peut être inscrit deux fois à la même filière
+  Finance Finance[]
 }
 
 // Table pour gérer les filières et modules
@@ -199,6 +201,8 @@ model Utilisateurs {
 
   Absences Absences[]
   documents Document[]    @relation("UploaderToDocuments")
+
+  Finance Finance[]
 }
 
 model Admin {
@@ -250,6 +254,81 @@ model Notes {
   @@index([id_etudiant], map: "Notes_id_etudiant_fkey")
 }
 
+model Finance {
+  id_finance       Int               @id @default(autoincrement())
+  type_entite      FinanceEntiteType
+  id_entite        Int               // Peut être l'id d'un étudiant, enseignant ou autre
+  type_transaction FinanceTypeTransaction
+  montant          Decimal           @db.Decimal(10, 2)
+  date_transaction DateTime          @default(now())
+  description      String?
+  mode_paiement    FinanceModePaiement
+  reference        String?           @unique
+  statut           FinanceStatut     @default(Valide)
+  id_utilisateur   Int               // Utilisateur qui a enregistré la transaction (secrétaire/admin)
+  utilisateur      Utilisateurs      @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  
+  // Pour lier explicitement aux étudiants ou enseignants si nécessaire
+  etudiant         Etudiants?        @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_etudiant_fkey")
+  enseignant       Enseignants?      @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_enseignant_fkey")
+
+  @@index([id_entite], name: "Finance_id_entite_idx")
+  @@index([type_entite], name: "Finance_type_entite_idx")
+  @@index([type_transaction], name: "Finance_type_transaction_idx")
+  @@index([id_utilisateur], name: "Finance_id_utilisateur_fkey")
+}
+
+model Document {
+  id            Int       @id @default(autoincrement())
+  titre         String
+  description   String?
+  chemin_fichier String
+  type_fichier  String?
+  taille_fichier Int?
+  date_upload   DateTime  @default(now())
+  est_actif     Boolean   @default(true)
+  id_uploader   Int
+  id_classe     Int
+  uploader        Utilisateurs  @relation("UploaderToDocuments", fields: [id_uploader], references: [id_utilisateur])
+  classe          Cours        @relation("FilieresToDocuments", fields: [id_classe], references: [id_cours])
+
+  // Index pour les performances (optionnel mais recommandé)
+  @@index([id_uploader], name: "Document_id_uploader_fkey")
+  @@index([id_classe], name: "Document_id_classe_fkey")
+
+  // Contrainte d'unicité : titre unique par classe
+  @@unique([titre, id_classe], name: "unique_titre_par_classe")
+  @@index([id_uploader], map: "infos_ser")
+  @@index([id_classe], map: "infos_classe")
+  @@map("documents")
+}
+
+
+enum FinanceEntiteType {
+  Etudiant
+  Enseignant
+  Interne  // Pour les dépenses internes
+}
+
+enum FinanceTypeTransaction {
+  Inscription
+  Scolarite
+  Salaire
+  Depense
+  Autre
+}
+
+enum FinanceModePaiement {
+  Espèces
+  Chèque
+}
+
+enum FinanceStatut {
+  Brouillon
+  Valide
+  Annule
+}
+
 
 // Enums modifiés
 enum NoteStatut {
@@ -265,7 +344,6 @@ enum ReclamationStatut {
   Acceptee     // Réclamation acceptée (note modifiée)
   Rejetee      // Réclamation refusée
 }
-
 
 // Enums
 enum EmploisDuTempsJour {
@@ -308,28 +386,4 @@ enum UtilisateursType {
   Admin
 }
 
-model Document {
-  id            Int       @id @default(autoincrement())
-  titre         String
-  description   String?
-  chemin_fichier String
-  type_fichier  String?
-  taille_fichier Int?
-  date_upload   DateTime  @default(now())
-  est_actif     Boolean   @default(true)
-  id_uploader   Int
-  id_classe     Int
-  uploader        Utilisateurs  @relation("UploaderToDocuments", fields: [id_uploader], references: [id_utilisateur])
-  classe          Cours        @relation("FilieresToDocuments", fields: [id_classe], references: [id_cours])
-
-  // Index pour les performances (optionnel mais recommandé)
-  @@index([id_uploader], name: "Document_id_uploader_fkey")
-  @@index([id_classe], name: "Document_id_classe_fkey")
-
-  // Contrainte d'unicité : titre unique par classe
-  @@unique([titre, id_classe], name: "unique_titre_par_classe")
-  @@index([id_uploader], map: "infos_ser")
-  @@index([id_classe], map: "infos_classe")
-  @@map("documents")
-}
 

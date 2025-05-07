@@ -82,7 +82,7 @@ export default function Home() {
       <div className="home-content">
         {/* <EmploieStudent menuStat={statData} /> */}
         <Statistique menuStat={statData} />
-        
+
       </div>
       <RightSidebar />
     </section>

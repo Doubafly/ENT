@@ -133,11 +133,14 @@ const AnnonceList: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: number, adminId: number) => {
+    if (adminId !== currentAdminId) {
+      setError("Vous ne pouvez pas supprimer une annonce qui ne vous appartient pas.");
+      return;
+    }
     setAnnonceToDelete(id);
     setShowDeleteConfirm(true);
   };
-
   // Gestion de la suppression
   const handleDelete = async () => {
     if (!annonceToDelete || !currentAdminId) return;
@@ -172,6 +175,10 @@ const AnnonceList: React.FC = () => {
 
   // Préparation du formulaire d'édition
   const setupEditForm = (annonce: Annonce) => {
+    if (annonce.admin.id_admin !== currentAdminId) {
+      setError("Vous ne pouvez pas modifier une annonce qui ne vous appartient pas.");
+      return;
+    }
     setFormData({
       titre: annonce.titre,
       contenu: annonce.contenu,
@@ -260,7 +267,7 @@ const AnnonceList: React.FC = () => {
                   Modifier
                 </button>
                 <button
-                  onClick={() => handleDeleteClick(selectedAnnonce.id_annonce)}
+                  onClick={() => handleDeleteClick(selectedAnnonce.id_annonce, selectedAnnonce.admin.id_admin)}
                   className="px-3 py-1 bg-red-100 text-red-800 rounded text-sm"
                 >
                   Supprimer

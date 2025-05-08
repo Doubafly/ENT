@@ -94,14 +94,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // const pathProfil = await fetch("api/files/upload",{
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body:
-    // });
-    // Hash du mot de passe
+  
     const hashPass = await bcrypt.hash(mot_de_passe, 10);
 
     const updatedUser = await prisma.utilisateurs.update({

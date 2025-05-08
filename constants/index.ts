@@ -10,7 +10,6 @@
 
         const data = await res.json();
         const user = data.user;
-
     const permissions = user.Permission[0];
 
             // Générer dynamiquement les liens AdminLinks en fonction des permissions
@@ -91,8 +90,7 @@
     };
 
     fetchUser();
-    
-    export { AdminLinks };
+export { AdminLinks };
     
 
 

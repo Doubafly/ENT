@@ -1,4 +1,6 @@
 export default function AdminProfil(user:any) {
+    console.log(user);
+    
     return (
         <div className="flex flex-col items-center justify-center bg-gray-100">
         <div className="bg-white shadow-md rounded-lg p-6 w-96 ">

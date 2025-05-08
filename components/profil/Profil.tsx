@@ -4,6 +4,7 @@ import AdminProfil from "./AdminProfil";
 import EnseigantProfil from "./EnseignantProfil";
 
 interface User {
+  id_utilisateur: string; // Utilisé pour l'upload de l'image
   id: string;
   email: string;
   nom: string;
@@ -65,7 +66,7 @@ console.log("User data:", user);
               
                 const formData = new FormData();
                 formData.append("image", file);
-                formData.append("userId", user.id); // Assure-toi que `user.id` est une string
+                formData.append("userId", user.id_utilisateur); // Assure-toi que `user.id` est une string
               
                 try {
                   const res = await fetch("/api/files/uploads", {

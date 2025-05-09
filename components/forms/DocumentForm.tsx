@@ -40,8 +40,6 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   // Filtrer les modules en fonction de la filière sélectionnée
   useEffect(() => {
     if (formData.filiere) {
-      const selectedFiliere = filieres.find((f) => f.nom === formData.filiere);
-
       setFilteredModules(modules);
 
       // Réinitialiser le module si incompatible avec la nouvelle filière
@@ -112,7 +110,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     e.preventDefault();
 
     // Validation des champs requis
-    if (!formData.titre || !formData.id_uploader || !formData.id_classe) {
+    if (!formData.titre || !formData.id_uploader) {
       alert("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -242,15 +240,20 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
           <select
             id="id_uploader"
             name="id_uploader"
-            value={formData.id_uploader}
-            onChange={handleChange}
-            required
+            value={formData.id_uploader === 0 ? "" : formData.id_uploader}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                id_uploader:
+                  e.target.value === "" ? 0 : parseInt(e.target.value),
+              })
+            }
           >
             <option value="">Sélectionnez un uploader</option>
             {uploaders.map((uploader) => (
-              <option key={uploader.id} value={uploader.utilisateur.id}>
-                {uploader.utilisateur.prenom} {uploader.utilisateur.nom}
+              <option key={uploader.id} value={uploader.id}>
+                {uploader.utilisateur.nom} {uploader.utilisateur.prenom}
               </option>
             ))}
           </select>

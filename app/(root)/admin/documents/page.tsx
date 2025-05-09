@@ -70,7 +70,9 @@ const DocumentsPage = () => {
   const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [uploaders, setUploaders] = useState<User[]>([]);
-  const [sessions, setSessions] = useState<{ id: number; annee: string }[]>([]);
+  const [sessions, setSessions] = useState<
+    { id_sessions: number; annee_academique: string }[]
+  >([]);
   const [annexes, setAnnexes] = useState<{ id: number; nom: string }[]>([]);
   const [enseignants, setEnseignants] = useState<User[]>([]);
 
@@ -167,9 +169,9 @@ const DocumentsPage = () => {
         setModules(allModules);
         setUploaders(uploadersData.utilisateurs || []);
         setSessions(
-          sessionsData.sessions?.map((s: any) => ({
-            id: s.id_sessions,
-            annee: s.annee_academique,
+          sessionsData.data?.map((s: any) => ({
+            id_sessions: s.id_sessions,
+            annee_academique: s.annee_academique,
           })) || []
         );
         setAnnexes(
@@ -301,8 +303,8 @@ const DocumentsPage = () => {
             (m) => m.id_module === parseInt(newDocument.id_module)
           )?.nom,
           session: sessions.find(
-            (s) => s.id === parseInt(newDocument.id_session)
-          )?.annee,
+            (s) => s.id_sessions === parseInt(newDocument.id_session)
+          )?.annee_academique,
           annexe: annexes.find((a) => a.id === parseInt(newDocument.id_annexe))
             ?.nom,
           enseignant: enseignants.find(
@@ -474,7 +476,7 @@ const DocumentsPage = () => {
               onChange={(e) => setUploaderFilter(e.target.value)}
               className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Tous les uploaders</option>
+              <option value="">Tous les enseignants</option>
               {uploaders.map((uploader) => (
                 <option
                   key={uploader.id}
@@ -501,8 +503,11 @@ const DocumentsPage = () => {
             >
               <option value="">Toutes les sessions</option>
               {sessions.map((session) => (
-                <option key={session.id} value={session.annee}>
-                  {session.annee}
+                <option
+                  key={session.id_sessions}
+                  value={session.annee_academique}
+                >
+                  {session.annee_academique}
                 </option>
               ))}
             </select>
@@ -532,21 +537,6 @@ const DocumentsPage = () => {
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiUser className="text-gray-400" />
             </div>
-            <select
-              value={enseignantFilter}
-              onChange={(e) => setEnseignantFilter(e.target.value)}
-              className="pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Tous les enseignants</option>
-              {enseignants.map((enseignant) => (
-                <option
-                  key={enseignant.id}
-                  value={`${enseignant.utilisateur.prenom} ${enseignant.utilisateur.nom}`}
-                >
-                  {enseignant.utilisateur.prenom} {enseignant.utilisateur.nom}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
@@ -601,25 +591,7 @@ const DocumentsPage = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Session
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Annexe
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
                   Enseignant
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Uploader
                 </th>
                 <th
                   scope="col"
@@ -658,24 +630,7 @@ const DocumentsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {doc.session || "-"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {doc.annexe || "-"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
                         {doc.enseignant || "-"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {doc.utilisateur
-                          ? `${doc.utilisateur.prenom} ${doc.utilisateur.nom}`
-                          : "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

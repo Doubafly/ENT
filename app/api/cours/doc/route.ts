@@ -13,6 +13,7 @@ export async function GET() {
               },
             },
             module: true,
+            documents: true, // Les documents sont maintenant inclus via filiere_module
           },
         },
         sessions: true,
@@ -21,7 +22,7 @@ export async function GET() {
             utilisateur: true,
           },
         },
-        documents: true, // Ajout de cette ligne pour inclure les documents
+        // documents: true, // Cette ligne est supprimée car les documents ne sont plus directement liés à Cours
       },
     });
 

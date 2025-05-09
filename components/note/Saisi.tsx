@@ -94,7 +94,9 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
       if (!student) return;
 
-      const { id_note, id: id_etudiant, id_cours } = student;
+      const { notes, id: id_etudiant, id_cours } = student;
+      const id_note = notes?.[0]?.id_note ;
+      
 
       const payload = {
         note_class: note.note_class,

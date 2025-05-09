@@ -43,6 +43,8 @@ export default function ClasseList() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
   // États pour les formulaires
+  const [alldata, setalldata] = useState(null);
+
   const [newStudent, setNewStudent] = useState("");
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
@@ -53,15 +55,20 @@ export default function ClasseList() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [filieresRes] = await Promise.all([fetch("/api/filieres")]);
+        // const filieresRes = await fetch("/api/filieres");
+        const alldataRes = await  fetch(`/api/filieres/modules`);
+        const alldata = await alldataRes.json();
+        setalldata(alldata)
 
-        if (!filieresRes.ok)
-          throw new Error("Erreur de chargement des filières");
 
-        const filieresData = await filieresRes.json();
+        // if (!filieresRes.ok)
+        //   throw new Error("Erreur de chargement des filières");
+
+        const filieresData = alldata.data.filiere;
+        
 
         setClasses(
-          filieresData.filieres.map((filiere: any) => ({
+          filieresData.map((filiere: any) => ({
             ...filiere,
             enseignants: Array.from(
               new Map(
@@ -216,18 +223,19 @@ export default function ClasseList() {
     }
   };
 
-  const handleAddStudent = () => {
-    if (!newStudent.trim() || !selectedClassId) return;
+  // const handleAddStudent = () => {
+  //   if (!newStudent.trim() || !selectedClassId) return;
 
-    setClasses((prev) =>
-      prev.map((c) =>
-        c.id_filiere === selectedClassId
-          ? { ...c, effectif: (c.effectif || 0) + 1 }
-          : c
-      )
-    );
-    setNewStudent("");
-  };
+  //   const trimmedStudent = newStudent.trim();
+  //   setClasses((prev) =>
+  //     prev.map((c) =>
+  //       c.id_filiere === selectedClassId
+  //         ? { ...c, effectif: (c.effectif || 0) + 1 }
+  //         : c
+  //     )
+  //   );
+  //   setNewStudent("");
+  // };
 
   // Utilitaires
   const resetForm = () => {
@@ -236,6 +244,14 @@ export default function ClasseList() {
     setNewClassTeachers([]);
     setTempTeacher("");
   };
+
+  // const addTeacherToNewClass = () => {
+  //   if (tempTeacher.trim() && !newClassTeachers.includes(tempTeacher.trim())) {
+  //     setNewClassTeachers((prev) => [...prev, tempTeacher.trim()]);
+  //     setTempTeacher("");
+  //   }
+  // };
+
 
   // Filtrage et pagination
   const filteredClasses = classes.filter(
@@ -249,12 +265,13 @@ export default function ClasseList() {
     currentPage * itemsPerPage
   );
 
-  const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
+const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
 
-  const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
+const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
 
   if (loading) return <div className="p-10">Chargement en cours...</div>;
   if (error) return <div className="p-10 text-red-500">Erreur: {error}</div>;
+  
 
   return (
     <div className="p-10 mt-4 bg-gray-50 min-h-screen">
@@ -497,7 +514,7 @@ export default function ClasseList() {
 
                 {showSubjects && (
                   <div className="mt-4">
-                    <Configuration filiereId={selectedClassId} />
+                    <Configuration filiereId={selectedClassId} donne={selectedClass} alldata={alldata} />
                   </div>
                 )}
               </div>

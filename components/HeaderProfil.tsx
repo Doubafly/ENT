@@ -146,7 +146,7 @@ export default function UserProfile({ user }: UserProfileProps) {
               onSuccess={handleCreateSuccess}
               onCancel={() => setIsModuleOpen(false)}
               title="Creation d'un Nouveau Module"
-            />
+            /> 
           </div>
         </div>
       )}

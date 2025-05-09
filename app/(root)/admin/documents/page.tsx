@@ -2,7 +2,7 @@
 import DocumentForm from "@/components/forms/DocumentForm";
 import Modal from "@/components/modal/SuperModal";
 import Pagination from "@/components/ui/Pagination";
-import { Filiere, Module, User } from "@/type/documentTypes";
+import { DocumentFormData, Filiere, Module, User } from "@/type/documentTypes";
 import { debounce } from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -296,71 +296,36 @@ const DocumentsPage = () => {
   );
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
-  const handleCreateDocument = async (newDocument: any) => {
-    try {
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          titre: newDocument.titre,
-          description: newDocument.description,
-          chemin_fichier: newDocument.chemin_fichier,
-          type_fichier: newDocument.type_fichier,
-          taille_fichier: newDocument.taille_fichier,
-          id_uploader: parseInt(newDocument.id_uploader),
-          id_classe: parseInt(newDocument.id_classe),
-        }),
-      });
+  const handleCreateDocument = async (formData: DocumentFormData) => {
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append("titre", formData.titre);
+    if (formData.description) formDataToSend.append("description", formData.description);
+    formDataToSend.append("id_uploader", formData.id_uploader.toString());
+    formDataToSend.append("id_classe", formData.id_classe.toString());
+    if (formData.file) formDataToSend.append("file", formData.file);
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la création du document");
-      }
+    const response = await fetch("/api/documents", {
+      method: "POST",
+      body: formDataToSend,
+    });
 
-      const createdDoc = await response.json();
-
-      // Trouver la filière et le module correspondants
-      const relatedFiliereModule = filieres
-        .flatMap((f) => f.filiere_module || [])
-        .find((fm) => fm.id_filiere_module === parseInt(newDocument.id_classe));
-
-      // Mettre à jour l'état local avec le nouveau document
-      const updatedDocuments = [
-        ...documents,
-        {
-          ...createdDoc.data,
-          filiere: relatedFiliereModule?.filiere?.nom || null,
-          module: relatedFiliereModule?.module?.nom || null,
-          session:
-            sessions.find(
-              (s) => s.id_sessions === parseInt(newDocument.id_session)
-            )?.annee_academique || null,
-          annexe: relatedFiliereModule?.filiere?.annexe?.nom || null,
-          enseignant: enseignants.find(
-            (e) => e.id === parseInt(newDocument.id_enseignant)
-          )
-            ? `${
-                enseignants.find(
-                  (e) => e.id === parseInt(newDocument.id_enseignant)
-                )?.utilisateur.prenom
-              } ${
-                enseignants.find(
-                  (e) => e.id === parseInt(newDocument.id_enseignant)
-                )?.utilisateur.nom
-              }`
-            : null,
-          utilisateur:
-            uploaders.find((u) => u.id === parseInt(newDocument.id_uploader))
-              ?.utilisateur || null,
-        },
-      ];
-
-      setDocuments(updatedDocuments);
-      setIsFormOpen(false);
-    } catch (err) {
-      console.error("Erreur:", err);
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    if (!response.ok) {
+      throw new Error("Erreur lors de la création du document");
     }
-  };
+
+    // Recharger les documents après création
+    const documentsRes = await fetch("/api/cours/doc");
+    const documentsData = await documentsRes.json();
+    setDocuments(documentsData.documents || []);
+    setFilteredDocuments(documentsData.documents || []);
+    
+    setIsFormOpen(false);
+  } catch (err) {
+    console.error("Erreur:", err);
+    setError(err instanceof Error ? err.message : "Erreur inconnue");
+  }
+};
 
   const handleDeleteDocument = async () => {
     if (!selectedDocument) return;
@@ -776,8 +741,6 @@ const DocumentsPage = () => {
               modules={modules}
               uploaders={uploaders}
               sessions={sessions}
-              annexes={annexes}
-              enseignants={enseignants}
               onSubmit={handleCreateDocument}
               onCancel={() => {
                 setIsFormOpen(false);

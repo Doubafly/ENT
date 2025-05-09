@@ -78,7 +78,53 @@ const DocumentsPage = () => {
 
   // Modules filtrés en fonction de la filière sélectionnée
   const [filteredModules, setFilteredModules] = useState<Module[]>([]);
+  const findFiliereId = (filiereName: string | null): number | undefined => {
+    if (!filiereName) return undefined;
+    const filiere = filieres.find((f) => f.nom === filiereName);
+    return filiere?.id_filiere;
+  };
 
+  // Fonction pour trouver l'ID du module par son nom
+  const findModuleId = (moduleName: string | null): number | undefined => {
+    if (!moduleName) return undefined;
+    const module = modules.find((m) => m.nom === moduleName);
+    return module?.id_module;
+  };
+  const handleUpdateDocument = async (formData: DocumentFormData) => {
+  try {
+    if (!selectedDocument) return;
+
+    const formDataToSend = new FormData();
+    formDataToSend.append("titre", formData.titre);
+    if (formData.description) formDataToSend.append("description", formData.description);
+    formDataToSend.append("id_uploader", formData.id_uploader.toString());
+    if (formData.id_classe !== undefined) {
+      formDataToSend.append("id_classe", formData.id_classe.toString());
+    }
+    if (formData.file) formDataToSend.append("file", formData.file);
+
+    const response = await fetch(`/api/documents/${selectedDocument.id}`, {
+      method: "PUT",
+      body: formDataToSend,
+    });
+
+    if (!response.ok) {
+      throw new Error("Erreur lors de la mise à jour du document");
+    }
+
+    // Recharger les documents après mise à jour
+    const documentsRes = await fetch("/api/cours/doc");
+    const documentsData = await documentsRes.json();
+    setDocuments(documentsData.documents || []);
+    setFilteredDocuments(documentsData.documents || []);
+    
+    setIsFormOpen(false);
+    setSelectedDocument(null);
+  } catch (err) {
+    console.error("Erreur:", err);
+    setError(err instanceof Error ? err.message : "Erreur inconnue");
+  }
+};
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -297,35 +343,38 @@ const DocumentsPage = () => {
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
   const handleCreateDocument = async (formData: DocumentFormData) => {
-  try {
-    const formDataToSend = new FormData();
-    formDataToSend.append("titre", formData.titre);
-    if (formData.description) formDataToSend.append("description", formData.description);
-    formDataToSend.append("id_uploader", formData.id_uploader.toString());
-    formDataToSend.append("id_classe", formData.id_classe.toString());
-    if (formData.file) formDataToSend.append("file", formData.file);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("titre", formData.titre);
+      if (formData.description)
+        formDataToSend.append("description", formData.description);
+      formDataToSend.append("id_uploader", formData.id_uploader.toString());
+      if (formData.id_classe !== undefined) {
+        formDataToSend.append("id_classe", formData.id_classe.toString());
+      }
+      if (formData.file) formDataToSend.append("file", formData.file);
 
-    const response = await fetch("/api/documents", {
-      method: "POST",
-      body: formDataToSend,
-    });
+      const response = await fetch("/api/documents", {
+        method: "POST",
+        body: formDataToSend,
+      });
 
-    if (!response.ok) {
-      throw new Error("Erreur lors de la création du document");
+      if (!response.ok) {
+        throw new Error("Erreur lors de la création du document");
+      }
+
+      // Recharger les documents après création
+      const documentsRes = await fetch("/api/cours/doc");
+      const documentsData = await documentsRes.json();
+      setDocuments(documentsData.documents || []);
+      setFilteredDocuments(documentsData.documents || []);
+
+      setIsFormOpen(false);
+    } catch (err) {
+      console.error("Erreur:", err);
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     }
-
-    // Recharger les documents après création
-    const documentsRes = await fetch("/api/cours/doc");
-    const documentsData = await documentsRes.json();
-    setDocuments(documentsData.documents || []);
-    setFilteredDocuments(documentsData.documents || []);
-    
-    setIsFormOpen(false);
-  } catch (err) {
-    console.error("Erreur:", err);
-    setError(err instanceof Error ? err.message : "Erreur inconnue");
-  }
-};
+  };
 
   const handleDeleteDocument = async () => {
     if (!selectedDocument) return;
@@ -735,13 +784,27 @@ const DocumentsPage = () => {
             </h2>
           </div>
           <div className="p-6">
+            // Dans le modal de création/édition
             <DocumentForm
-              // document={selectedDocument || undefined}
+              document={
+                selectedDocument
+                  ? {
+                      titre: selectedDocument.titre,
+                      description: selectedDocument.description || "",
+                      id_uploader: selectedDocument.id_uploader,
+                      id_classe: selectedDocument.id_classe,
+                      // On va ajouter une fonction pour trouver la filière et le module
+                      id_filiere: findFiliereId(selectedDocument.filiere),
+                      id_module: findModuleId(selectedDocument.module),
+                    }
+                  : undefined
+              }
               filieres={filieres}
               modules={modules}
               uploaders={uploaders}
-              sessions={sessions}
-              onSubmit={handleCreateDocument}
+              onSubmit={
+                selectedDocument ? handleUpdateDocument : handleCreateDocument
+              }
               onCancel={() => {
                 setIsFormOpen(false);
                 setSelectedDocument(null);

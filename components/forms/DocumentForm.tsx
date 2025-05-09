@@ -29,25 +29,60 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     id_classe: document?.id_classe || undefined,
     file: undefined,
   });
-
+  // Fonction pour trouver l'ID de la filière par son nom
+  
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [filteredModules, setFilteredModules] = useState<Module[]>(modules);
-  const [filiereModuleId, setFiliereModuleId] = useState<number | undefined>(document?.id_classe);
+  const [filiereModuleId, setFiliereModuleId] = useState<number | undefined>(
+    document?.id_classe
+  );
+  const [fileName, setFileName] = useState<string | null>(
+    document?.chemin_fichier?.split("/").pop() || null
+  );
+
+  // Effet pour charger les donnFées initiales lors de la modification
+  useEffect(() => {
+    if (document) {
+      // Trouver la filière et le module correspondants au document
+      const findInitialData = () => {
+        if (!document.id_classe) return;
+
+        // Trouver la filière_module correspondante
+        const filiereModule = filieres
+          .flatMap((f) => f.filiere_module)
+          .find((fm) => fm.id_filiere_module === document.id_classe);
+
+        if (filiereModule) {
+          setFormData((prev) => ({
+            ...prev,
+            id_filiere: filiereModule.id_filiere,
+            id_module: filiereModule.id_module,
+          }));
+          setFiliereModuleId(filiereModule.id_filiere_module);
+        }
+      };
+
+      findInitialData();
+    }
+  }, [document, filieres]);
 
   // Filtrer les modules selon la filière sélectionnée
   useEffect(() => {
     if (formData.id_filiere) {
-      const selectedFiliere = filieres.find(f => f.id_filiere === formData.id_filiere);
-      const filtered = selectedFiliere?.filiere_module
-        .map(fm => modules.find(m => m.id_module === fm.id_module))
-        .filter((m): m is Module => m !== undefined) || [];
-      
+      const selectedFiliere = filieres.find(
+        (f) => f.id_filiere === formData.id_filiere
+      );
+      const filtered =
+        selectedFiliere?.filiere_module
+          .map((fm) => modules.find((m) => m.id_module === fm.id_module))
+          .filter((m): m is Module => m !== undefined) || [];
+
       setFilteredModules(filtered);
-      
+
       // Si un seul module est disponible, le sélectionner automatiquement
       if (filtered.length === 1) {
-        setFormData(prev => ({ ...prev, id_module: filtered[0].id_module }));
+        setFormData((prev) => ({ ...prev, id_module: filtered[0].id_module }));
       }
     } else {
       setFilteredModules(modules);
@@ -57,10 +92,13 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   // Trouver l'id_filiere_module quand filière et module sont sélectionnés
   useEffect(() => {
     if (formData.id_filiere && formData.id_module) {
-      const selectedFiliere = filieres.find(f => f.id_filiere === formData.id_filiere);
-      const filiereModule = selectedFiliere?.filiere_module
-        .find(fm => fm.id_module === formData.id_module);
-      
+      const selectedFiliere = filieres.find(
+        (f) => f.id_filiere === formData.id_filiere
+      );
+      const filiereModule = selectedFiliere?.filiere_module.find(
+        (fm) => fm.id_module === formData.id_module
+      );
+
       setFiliereModuleId(filiereModule?.id_filiere_module);
     } else {
       setFiliereModuleId(undefined);
@@ -68,13 +106,19 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
   }, [formData.id_filiere, formData.id_module, filieres]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name.includes('id_') ? (value ? parseInt(value) : undefined) : value
+      [name]: name.includes("id_")
+        ? value
+          ? parseInt(value)
+          : undefined
+        : value,
     }));
   };
 
@@ -82,8 +126,15 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      setFormData(prev => ({ ...prev, file }));
+      setFormData((prev) => ({ ...prev, file }));
+      setFileName(file.name);
     }
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFormData((prev) => ({ ...prev, file: undefined }));
+    setFileName(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,9 +153,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
 
       // Préparer les données à envoyer
       const submissionData: DocumentFormData = {
-        titre: formData.titre,
-        description: formData.description,
-        id_uploader: formData.id_uploader,
+        ...formData,
         id_classe: filiereModuleId,
         file: selectedFile || undefined,
       };
@@ -163,7 +212,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Sélectionnez une filière</option>
-            {filieres.map(filiere => (
+            {filieres.map((filiere) => (
               <option key={filiere.id_filiere} value={filiere.id_filiere}>
                 {filiere.nom}
               </option>
@@ -185,7 +234,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
           >
             <option value="">Sélectionnez un module</option>
-            {filteredModules.map(module => (
+            {filteredModules.map((module) => (
               <option key={module.id_module} value={module.id_module}>
                 {module.nom}
               </option>
@@ -206,7 +255,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="">Sélectionnez un uploader</option>
-            {uploaders.map(uploader => (
+            {uploaders.map((uploader) => (
               <option key={uploader.id} value={uploader.id}>
                 {`${uploader.utilisateur.prenom} ${uploader.utilisateur.nom}`}
               </option>
@@ -221,17 +270,17 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
           </label>
           <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
             <div className="space-y-1 text-center">
-              {selectedFile ? (
+              {selectedFile || fileName ? (
                 <div className="flex items-center justify-between bg-blue-50 p-2 rounded">
                   <div className="flex items-center">
                     <FiUpload className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2" />
                     <span className="text-sm text-blue-700 truncate max-w-xs">
-                      {selectedFile.name}
+                      {selectedFile ? selectedFile.name : fileName}
                     </span>
                   </div>
                   <button
                     type="button"
-                    onClick={() => setSelectedFile(null)}
+                    onClick={handleRemoveFile}
                     className="text-red-500 hover:text-red-700"
                   >
                     <FiX />

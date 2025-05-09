@@ -8,12 +8,12 @@ export interface User {
     nom: string;
     prenom: string;
     email: string;
-    sexe: 'M' | 'F';
+    sexe: "M" | "F";
     telephone?: string;
     adresse?: string;
     profil?: string;
     date_creation: Date;
-    type: 'Etudiant' | 'Enseignant' | 'Admin';
+    type: "Etudiant" | "Enseignant" | "Admin";
   };
 }
 
@@ -21,7 +21,13 @@ export interface Filiere {
   id_filiere: number;
   nom: string;
   description?: string;
-  niveau: 'Primaire' | 'Secondaire' | 'Licence' | 'Master1' | 'Master2' | 'Doctorat';
+  niveau:
+    | "Primaire"
+    | "Secondaire"
+    | "Licence"
+    | "Master1"
+    | "Master2"
+    | "Doctorat";
   id_annexe?: number;
   filiere_module: FiliereModule[];
   annexe?: {
@@ -132,12 +138,14 @@ export interface ApiDocument {
 }
 
 // Types utilitaires pour les formulaires
+
 export interface DocumentFormData {
   titre: string;
   description?: string;
   id_uploader: number;
   id_filiere?: number;
   id_module?: number;
-  id_classe?: number; // Allow id_classe to be undefined
+  id_classe?: number;
   file?: File;
+  chemin_fichier?: string; // Added this property
 }

@@ -14,6 +14,7 @@ export default function HomePage() {
     isAdmin: boolean;
     adresse: string;
     sexe: string;
+    password: string;
     telephone: string;
     date_creation: string;
     permissions: {
@@ -37,6 +38,7 @@ export default function HomePage() {
     isAdmin: false,
     adresse: "",
     sexe: "",
+    password: "",
     telephone: "",
     date_creation: "",
     permissions: {
@@ -70,6 +72,7 @@ export default function HomePage() {
             isAdmin: userData.user.isAdmin,
             adresse: userData.user.adresse,
             sexe: userData.user.sexe,
+            password: userData.user.mot_de_passe,
             telephone: userData.user.telephone,
             date_creation: userData.user.date_creation,
             permissions: {

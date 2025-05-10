@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import EtudiantProfil from "./EtudiantProfil";
 import AdminProfil from "./AdminProfil";
+import EnseigantProfil from "./EnseignantProfil";
 
 interface User {
-  id: string;
+  etudiant: any;
+  id_utilisateur: string;
   email: string;
   nom: string;
   prenom: string;
   type: "Etudiant" | "Enseignant" | "Admin";
   profil: string;
+
 }
 
 const ProfilePage = ({ user }: { user: User }) => {
@@ -30,10 +33,10 @@ const ProfilePage = ({ user }: { user: User }) => {
     };
 
     fetchProfileImage();
-  }, [user.id]);
+  }, [user.id_utilisateur]);
 
 
-
+console.log("User databnbxjs:", user);
   return (
     <div className="flex bg-gray-100  xl:ml-5 mr-1 h-screen">
       <div className="flex-1 overflow-y-auto">
@@ -57,16 +60,32 @@ const ProfilePage = ({ user }: { user: User }) => {
               type="file"
               id="upload-button"
               style={{ display: "none" }}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setProfileImage(reader.result as string);
-                  };
-                  reader.readAsDataURL(file);
+                if (!file) return;
+              
+                const formData = new FormData();
+                formData.append("image", file);
+                formData.append("userId", user.id_utilisateur); // Assure-toi que `user.id` est une string
+              
+                try {
+                  const res = await fetch("/api/files/uploads", {
+                    method: "POST",
+                    body: formData,
+                  });
+              
+                  const data = await res.json();
+              
+                  if (res.ok) {
+                    setProfileImage(data.filePath); // Utilise le vrai chemin renvoyé
+                  } else {
+                    console.error("Erreur :", data.message);
+                  }
+                } catch (err) {
+                  console.error("Erreur lors de l’upload :", err);
                 }
               }}
+              
             />
           </div>
         </div>
@@ -101,20 +120,31 @@ const ProfilePage = ({ user }: { user: User }) => {
 
         {/* Modal */}
         {isModalOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            onClick={() => setIsModalOpen(false)} // Fermer la modal en cliquant à l'extérieur
-          >
-            <div
-              className="bg-white p-6 rounded-lg shadow-lg w-96"
-              onClick={(e) => e.stopPropagation()} // Empêcher la fermeture en cliquant sur le contenu
-            >
-              {user.type === "Etudiant" && <EtudiantProfil user={user} />}
-              {user.type === "Enseignant" && <EtudiantProfil user={user} />}
-              {user.type === "Admin" && <AdminProfil user={user} />}
-            </div>
-          </div>
-        )}
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    onClick={() => setIsModalOpen(false)} // Fermer la modal en cliquant à l'extérieur
+  >
+    <div
+     // className="bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+      onClick={(e) => e.stopPropagation()} // Empêcher la fermeture en cliquant sur le contenu
+    >
+      {user.type === "Etudiant" && (
+  <EtudiantProfil user={user} onClose={() => setIsModalOpen(false)} />
+)}
+     {user.type === "Enseignant" && (
+  <EnseigantProfil 
+  user={user} 
+  onClose={() => setIsModalOpen(false)}
+        
+   />
+)}
+     {user.type === "Admin" && (
+  <AdminProfil user={user} onClose={() => setIsModalOpen(false)} />
+)}
+    </div>
+  </div>
+)}
+
    
       </div>
     </div>
@@ -122,4 +152,3 @@ const ProfilePage = ({ user }: { user: User }) => {
 };
 
 export default ProfilePage;
-

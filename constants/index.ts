@@ -6,9 +6,16 @@ const fetchUser = async () => {
       credentials: "include",
     });
 
-    const data = await res.json();
-    const user = data.user;
+    let AdminLinks: Array<{ image: string; path: string; title: string }> = [];
 
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("/api/auth/session", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        const user = data.user;
     const permissions = user.Permission[0];
 
     // Générer dynamiquement les liens AdminLinks en fonction des permissions
@@ -84,11 +91,18 @@ const fetchUser = async () => {
         path: "/deconnexion",
         title: "Déconnexion",
       }, // Déconnexion toujours affiché
-    ].filter(Boolean);
-  } catch (error) {
-    console.error("Erreur lors de la récupération de l'utilisateur:", error);
-  }
-};
+    ].filter(Boolean); 
+        
+
+      } 
+      catch (error) {
+        console.error("Erreur lors de la récupération de l'utilisateur:", error);
+      }
+    };
+
+    fetchUser();
+export { AdminLinks };
+    
 
 fetchUser();
 

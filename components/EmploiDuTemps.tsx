@@ -1,20 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import Modal from './modal/Modal';
 
-type Seance = {
-  id_emploi?: number;
-  matiere: string;
-  enseignant: string;
+interface Emploi {
+  id_emploi: number;
+  jour: string;
+  heure_debut: string;
+  heure_fin: string;
   salle: string;
-};
-
-type EmploiDuTempsType = Record<string, Record<string, Seance | null>>;
+  cours: {
+    id_cours: number;
+    semestre: string;
+    filiere_module: {
+      filiere: {
+        nom: string;
+        niveau: string;
+      };
+      module: {
+        nom: string;
+      };
+    };
+    enseignant: {
+      utilisateur: {
+        nom: string;
+        prenom: string;
+      };
+    };
+  };
+}
 
 const heures = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00'];
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
-const creerTableauVide = (): EmploiDuTempsType => {
-  const tableau: EmploiDuTempsType = {};
+const creerTableauVide = () => {
+  const tableau: Record<string, Record<string, { matiere: string; enseignant: string; salle: string } | null>> = {};
   heures.forEach(h => {
     tableau[h] = {};
     jours.forEach(j => {
@@ -25,166 +43,283 @@ const creerTableauVide = (): EmploiDuTempsType => {
 };
 
 const EmploiDuTemps = () => {
-  const [emploiDuTemps, setEmploiDuTemps] = useState<EmploiDuTempsType>(creerTableauVide);
+  const [classe, setClasse] = useState('');
+  const [emploiDuTemps, setEmploiDuTemps] = useState(creerTableauVide());
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [matiere, setMatiere] = useState('');
-  const [enseignant, setEnseignant] = useState('');
-  const [salle, setSalle] = useState('');
-  const [jour, setJour] = useState('');
-  const [heure, setHeure] = useState('');
-  const [selectedCell, setSelectedCell] = useState<{ jour: string; heure: string; id_emploi?: number } | null>(null);
+  const [formData, setFormData] = useState({
+    matiere: '',
+    enseignant: '',
+    salle: '',
+    jour: '',
+    heure: '',
+    id_cours: '',
+    id_emploi: null as number | null
+  });
+  const [selectedCell, setSelectedCell] = useState<{ jour: string; heure: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [emplois, setEmplois] = useState<Emploi[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
-  const [classe, setClasse] = useState('');
+  const [coursOptions, setCoursOptions] = useState<{ id: number; label: string }[]>([]);
+  const [mode, setMode] = useState<'create' | 'edit' | null>(null);
 
+  // Charger les données initiales
   useEffect(() => {
-    const chargerDonneesInitiales = async () => {
-      setLoading(true);
+    const fetchInitialData = async () => {
       try {
-        const classesResponse = await fetch('/api/cours');
-        if (!classesResponse.ok) throw new Error('Erreur de chargement des classes');
-        const classesData = await classesResponse.json();
-        setClasses(classesData.classes);
-      } catch (err: unknown) {
-        setError("Erreur lors du chargement initial des données");
-        console.error(err);
+        setLoading(true);
+        setError('');
+
+        const emploisResponse = await fetch('/api/emploisDuTemps');
+        if (!emploisResponse.ok) throw new Error('Erreur de chargement des emplois');
+        const emploisData = await emploisResponse.json();
+        setEmplois(emploisData.emploisDuTemps);
+
+        const filieres = new Set<string>();
+        emploisData.emploisDuTemps.forEach((e: Emploi) => {
+          const f = e.cours?.filiere_module?.filiere;
+          if (f) filieres.add(`${f.niveau} ${f.nom}`);
+        });
+        setClasses(Array.from(filieres));
+
+        const coursResponse = await fetch('/api/cours');
+        if (coursResponse.ok) {
+          const coursData = await coursResponse.json();
+          if (Array.isArray(coursData?.cours)) {
+            setCoursOptions(coursData.cours.map((c: any) => ({
+              id: c.id_cours,
+              label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+            })));
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
       } finally {
         setLoading(false);
       }
     };
 
-    chargerDonneesInitiales();
+    fetchInitialData();
   }, []);
 
-  useEffect(() => {
-    if (classe) {
-      chargerEmploiDuTemps(classe);
-    }
-  }, [classe]);
-
-  const chargerEmploiDuTemps = async (classeSelectionnee: string) => {
-    setLoading(true);
-    setError(null);
+  const formatHeureAffichage = (dateTime: string) => {
     try {
-      const response = await fetch(`/api/emploisDuTemps?classe=${classeSelectionnee}`);
-      if (!response.ok) throw new Error('Erreur de chargement');
+      const date = new Date(dateTime);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch {
+      return '00:00';
+    }
+  };
 
-      const data = await response.json();
-      const edt = creerTableauVide();
+  const chargerEmploiDuTemps = (classeSelectionnee: string) => {
+    if (!classeSelectionnee) return setEmploiDuTemps(creerTableauVide());
 
-      data.emploisDuTemps.forEach((emploi: any) => {
-        const heureDebut = new Date(emploi.heure_debut).toTimeString().substring(0, 5);
-        const heureFin = new Date(emploi.heure_fin).toTimeString().substring(0, 5);
+    const [niveau, nomFiliere] = classeSelectionnee.split(' ');
+    const edt = creerTableauVide();
+
+    emplois.forEach((emploi) => {
+      if (emploi.cours.filiere_module.filiere.niveau === niveau &&
+          emploi.cours.filiere_module.filiere.nom === nomFiliere) {
+        const heureDebut = formatHeureAffichage(emploi.heure_debut);
+        const heureFin = formatHeureAffichage(emploi.heure_fin);
         const heureKey = `${heureDebut}-${heureFin}`;
 
-        if (edt[heureKey]) {
+        if (edt[heureKey]?.[emploi.jour] !== undefined) {
           edt[heureKey][emploi.jour] = {
-            id_emploi: emploi.id_emploi,
             matiere: emploi.cours.filiere_module.module.nom,
             enseignant: `${emploi.cours.enseignant.utilisateur.prenom} ${emploi.cours.enseignant.utilisateur.nom}`,
-            salle: emploi.salle,
+            salle: emploi.salle
           };
         }
-      });
+      }
+    });
 
-      setEmploiDuTemps(edt);
-    } catch (err: unknown) {
-      setError("Erreur lors du chargement de l'emploi du temps");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    setEmploiDuTemps(edt);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClasse = e.target.value;
     setClasse(selectedClasse);
+    chargerEmploiDuTemps(selectedClasse);
   };
 
   const handleCellClick = (jour: string, heure: string) => {
     const seance = emploiDuTemps[heure]?.[jour];
-    setJour(jour);
-    setHeure(heure);
-    setMatiere(seance?.matiere || '');
-    setEnseignant(seance?.enseignant || '');
-    setSalle(seance?.salle || '');
-    setSelectedCell({ jour, heure, id_emploi: seance?.id_emploi });
+    
+    if (seance) {
+      // Mode édition
+      const [niveau, nomFiliere] = classe.split(' ');
+      const [heureDebut] = heure.split('-');
+      
+      const emploiComplet = emplois.find(e => 
+        e.jour === jour &&
+        formatHeureAffichage(e.heure_debut) === heureDebut &&
+        e.cours.filiere_module.filiere.niveau === niveau &&
+        e.cours.filiere_module.filiere.nom === nomFiliere
+      );
+
+      setFormData({
+        jour,
+        heure,
+        matiere: seance.matiere,
+        enseignant: seance.enseignant,
+        salle: seance.salle,
+        id_cours: emploiComplet?.cours.id_cours.toString() || '',
+        id_emploi: emploiComplet?.id_emploi || null
+      });
+      setMode('edit');
+    } else {
+      // Mode création
+      setFormData({
+        jour,
+        heure,
+        matiere: '',
+        enseignant: '',
+        salle: '',
+        id_cours: '',
+        id_emploi: null
+      });
+      setMode('create');
+    }
+    
+    setSelectedCell({ jour, heure });
     setShowForm(true);
+  };
+
+  const handleAddClick = () => {
+    if (!classe) {
+      setError('Veuillez sélectionner une classe');
+      return;
+    }
+    setFormData({
+      jour: '',
+      heure: '',
+      matiere: '',
+      enseignant: '',
+      salle: '',
+      id_cours: '',
+      id_emploi: null
+    });
+    setMode('create');
+    setSelectedCell(null);
+    setShowForm(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!classe) return;
-
+    
     try {
       setLoading(true);
+      setError('');
 
-      const [heureDebut, heureFin] = heure.split('-');
-      const heure_debut = new Date(`1970-01-01T${heureDebut}:00`);
-      const heure_fin = new Date(`1970-01-01T${heureFin}:00`);
+      if (!formData.jour || !formData.heure || !formData.matiere) {
+        throw new Error('Tous les champs obligatoires doivent être remplis');
+      }
 
-      const payload = {
-        id_cours: 1, // À remplacer
-        jour,
-        heure_debut,
-        heure_fin,
-        salle,
+      const [heureDebut, heureFin] = formData.heure.split('-');
+      const coursSelectionne = coursOptions.find(c => c.label.includes(formData.matiere));
+      if (!coursSelectionne) throw new Error('Cours non trouvé');
+
+      const emploiData = {
+        id_cours: coursSelectionne.id,
+        jour: formData.jour,
+        heure_debut: new Date(`1970-01-01T${heureDebut}:00`).toISOString(),
+        heure_fin: new Date(`1970-01-01T${heureFin}:00`).toISOString(),
+        salle: formData.salle
       };
 
-      const url = selectedCell?.id_emploi
-        ? `/api/emploisDuTemps/${selectedCell.id_emploi}`
-        : '/api/emploisDuTemps';
+      let response;
+      if (mode === 'edit' && formData.id_emploi) {
+        response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emploiData)
+        });
+      } else {
+        response = await fetch('/api/emploisDuTemps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emploiData)
+        });
+      }
 
-      const method = selectedCell?.id_emploi ? 'PUT' : 'POST';
+      if (!response.ok) throw new Error('Erreur lors de la requête');
 
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) throw new Error('Erreur lors de la sauvegarde');
-
-      await chargerEmploiDuTemps(classe);
+      const emploisResponse = await fetch('/api/emploisDuTemps');
+      setEmplois(await emploisResponse.json());
+      chargerEmploiDuTemps(classe);
       setShowForm(false);
-    } catch (err: unknown) {
-      setError("Erreur lors de la sauvegarde des données");
-      console.error(err);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }
   };
 
-  const supprimerSeance = async () => {
-    if (!selectedCell?.id_emploi) return;
+  const handleDelete = async () => {
+    
+    if (!formData.id_emploi) {
+      setError('ID de séance manquant pour la suppression');
+      return;
+    }
 
     try {
       setLoading(true);
-      const response = await fetch(`/api/emploisDuTemps/${selectedCell.id_emploi}`, {
+      setError('');
+
+      // 1. Confirmation de suppression
+      // const confirmDelete = window.confirm('Voulez-vous vraiment supprimer cette séance ?');
+      // if (!confirmDelete) return;
+
+      // 2. Envoi de la requête DELETE
+      const response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
       });
 
-      if (!response.ok) throw new Error('Erreur lors de la suppression');
+      // 3. Vérification de la réponse
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Échec de la suppression');
+      }
 
-      await chargerEmploiDuTemps(classe);
+      // 4. Mise à jour optimiste de l'état local
+      setEmplois(prev => prev.filter(e => e.id_emploi !== formData.id_emploi));
+      chargerEmploiDuTemps(classe);
+
+      // 5. Fermeture du modal et réinitialisation
       setShowForm(false);
-      setSelectedCell(null);
-    } catch (err: unknown) {
-      setError("Erreur lors de la suppression");
-      console.error(err);
+      setFormData({
+        matiere: '',
+        enseignant: '',
+        salle: '',
+        jour: '',
+        heure: '',
+        id_cours: '',
+        id_emploi: null
+      });
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Emploi du Temps</h1>
 
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">
           {error}
         </div>
       )}
@@ -211,76 +346,161 @@ const EmploiDuTemps = () => {
         </select>
 
         <button
-          onClick={() => setShowForm(true)}
+          onClick={handleAddClick}
+          className="w-1/10 p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200"
           disabled={loading}
-          className="p-3 border rounded-lg text-sm bg-green-600 text-white hover:bg-green-700 transition duration-200 disabled:bg-gray-400"
         >
           + Ajouter
         </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="mt-2">Chargement en cours...</p>
-        </div>
-      ) : (
-        <div className="overflow-auto">
-          <table className="table-auto border-collapse w-full">
-            <thead>
-              <tr>
-                <th className="border p-2">Heure</th>
-                {jours.map((jour) => (
-                  <th key={jour} className="border p-2">{jour}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {heures.map((heureStr) => (
-                <tr key={heureStr}>
-                  <td className="border p-2 font-medium">{heureStr}</td>
-                  {jours.map((jour) => {
-                    const seance = emploiDuTemps[heureStr]?.[jour];
-                    const match = searchTerm
-                      ? seance?.enseignant?.toLowerCase().includes(searchTerm.toLowerCase())
-                      : true;
-
-                    return (
-                      <td
-                        key={`${jour}-${heureStr}`}
-                        className="border p-2 text-center text-sm hover:bg-gray-50 cursor-pointer"
-                        onClick={() => handleCellClick(jour, heureStr)}
-                      >
-                        {match && seance ? (
-                          <>
-                            <div className="font-semibold">{seance.matiere}</div>
-                            <div className="text-xs">{seance.enseignant}</div>
-                            <div className="text-xs">{seance.salle}</div>
-                          </>
-                        ) : null}
-                      </td>
-                    );
-                  })}
-                </tr>
+      <div className="overflow-auto">
+        <table className="table-auto border-collapse w-full">
+          <thead>
+            <tr>
+              <th className="border p-2">Heure</th>
+              {jours.map((jour) => (
+                <th key={jour} className="border p-2">{jour}</th>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </tr>
+          </thead>
+          <tbody>
+            {heures.map((heure) => (
+              <tr key={heure}>
+                <td className="border p-2 font-medium">{heure}</td>
+                {jours.map((jour) => {
+                  const seance = emploiDuTemps[heure]?.[jour];
+                  const match = searchTerm
+                    ? seance?.enseignant?.toLowerCase().includes(searchTerm.toLowerCase())
+                    : true;
+
+                  return (
+                    <td 
+                      key={jour} 
+                      className="border p-2 text-center text-sm hover:bg-gray-50 cursor-pointer" 
+                      onClick={() => handleCellClick(jour, heure)}
+                    >
+                      {seance && match ? (
+                        <>
+                          <div className="font-medium">{seance.matiere}</div>
+                          <div className="text-gray-600 text-xs">{seance.enseignant}</div>
+                          <div className="text-gray-500 text-xs italic">{seance.salle}</div>
+                        </>
+                      ) : null}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {showForm && (
-        <Modal
-          matiere={matiere}
-          enseignant={enseignant}
-          salle={salle}
-          onClose={() => setShowForm(false)}
-          onSubmit={handleSubmit}
-          onDelete={supprimerSeance}
-          setMatiere={setMatiere}
-          setEnseignant={setEnseignant}
-          setSalle={setSalle}
-          isEditing={!!selectedCell?.id_emploi}
-        />
+        <Modal onClose={() => setShowForm(false)}>
+          <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
+            <h2 className="text-lg font-bold mb-4">
+              {mode === 'edit' ? "Modifier une séance" : "Ajouter une séance"}
+            </h2>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <label className="block text-sm font-medium mb-1">Jour *</label>
+                <select 
+                  name="jour"
+                  value={formData.jour}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                >
+                  <option value="">Sélectionner un jour</option>
+                  {jours.map(j => (
+                    <option key={j} value={j}>{j}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Heure *</label>
+                <select 
+                  name="heure"
+                  value={formData.heure}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                >
+                  <option value="">Sélectionner une heure</option>
+                  {heures.map(h => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Matière *</label>
+                <input
+                  type="text"
+                  name="matiere"
+                  value={formData.matiere}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="Ex: Maths"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Enseignant</label>
+                <input
+                  type="text"
+                  name="enseignant"
+                  value={formData.enseignant}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="Ex: M. Dupont"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Salle</label>
+                <input
+                  type="text"
+                  name="salle"
+                  value={formData.salle}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-lg"
+                  placeholder="Ex: Salle 101"
+                />
+              </div>
+
+              <div className="flex space-x-2">
+                <button
+                  type="submit"
+                  className="flex-1 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
+                  disabled={loading}
+                >
+                  {loading ? 'En cours...' : mode === 'edit' ? 'Modifier' : 'Créer'}
+                </button>
+
+                {mode === 'edit' && (
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="flex-1 p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
+                    disabled={loading}
+                  >
+                    {loading ? 'En cours...' : 'Supprimer'}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </Modal>
+      )}
+
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-lg">Chargement...</div>
+        </div>
       )}
     </div>
   );

@@ -161,16 +161,22 @@ export default function SemestreNotesList({ notes }: SemestreNotesListProps) {
                     <tbody>
                       {filterNote.map((note) => (
                         <>
-                          <tr
+                         <tr
                             key={note.id_cours}
                             className={`border-b hover:bg-gray-50 transition duration-150 cursor-pointer ${
                               selectedModuleId === note.id_cours ? "bg-blue-50" : ""  
                             } ${
-                              note.statut_reclamation === "EnAttente" ? "bg-amber-100" : ""  
+                              note.statut_reclamation === "EnAttente"&& "bg-amber-100"  
+                            } ${
+                              note.statut_note === "Valide" && "bg-green-100"  
                             }`}
                             onClick={() => {
+                              if (note.statut_note === "Valide") {
+                                alert("Cette note est déjà validée, vous ne pouvez plus effectuer de reclamation.");
+                                return;
+                              }
                               setSelectedModuleId(note.id_cours);
-                              setcommentaire_etudiant(note.commentaire_etudiant?note.commentaire_etudiant:"" );
+                              setcommentaire_etudiant(note.commentaire_etudiant ? note.commentaire_etudiant : "");
                             }}
                           >
                             <td className="p-3 font-medium">

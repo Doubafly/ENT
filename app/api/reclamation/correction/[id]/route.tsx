@@ -11,10 +11,10 @@ export async function PUT(request: NextRequest) {
 
 
     // Extraire les données de la requête
-    const { commentaire_etudiant, statut_reclamation } = await request.json();
+    const { commentaire_enseignant, statut_reclamation,statut_note,note_class,note_exam } = await request.json();
 
     // Validation des données
-    if (!commentaire_etudiant) { 
+    if (!commentaire_enseignant) { 
       return NextResponse.json(
         { message: "Aucune donnée à mettre à jour" },
         { status: 400 }
@@ -25,8 +25,11 @@ export async function PUT(request: NextRequest) {
     const noteMaj = await prisma.notes.update({
       where: { id_note: id ? parseInt(id) : 0 },
       data: {
-        commentaire_etudiant,
+        commentaire_enseignant,
         statut_reclamation,
+        statut_note,
+        note_class,
+        note_exam,
       },
     });
 

@@ -1,4 +1,10 @@
+let AdminLinks: Array<{ image: string; path: string; title: string }> = [];
 
+const fetchUser = async () => {
+  try {
+    const res = await fetch("/api/auth/session", {
+      credentials: "include",
+    });
 
     let AdminLinks: Array<{ image: string; path: string; title: string }> = [];
 
@@ -12,7 +18,7 @@
         const user = data.user;
     const permissions = user.Permission[0];
 
-            // Générer dynamiquement les liens AdminLinks en fonction des permissions
+    // Générer dynamiquement les liens AdminLinks en fonction des permissions
     AdminLinks = [
       permissions.admin && {
         image: "/icons/home.png",
@@ -39,7 +45,7 @@
         path: "/admin/emploisDuTemps",
         title: "Emplois Du Temps",
       },
-      
+
       permissions.annonces && {
         image: "/icons/promotion.png",
         path: "/admin/annonces",
@@ -59,6 +65,11 @@
         image: "/icons/finance.svg",
         path: "/admin/paiement",
         title: "Finance",
+      },
+      {
+        image: "/icons/documentation.png",
+        path: "/admin/documents",
+        title: "Documents",
       },
       {
         image: "/icons/assessment.png",
@@ -93,7 +104,9 @@
 export { AdminLinks };
     
 
+fetchUser();
 
+export { AdminLinks };
 
 export const EtudiantLinks = [
   {

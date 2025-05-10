@@ -2,6 +2,7 @@ import prisma from "@/app/api/prisma";
 import { UtilisateursType } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
+
 export async function GET(request: NextRequest) {
   try {
     const id = request.nextUrl.pathname.split("/").pop();

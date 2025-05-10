@@ -15,7 +15,7 @@ export default function HomePage() {
     email: "",
     nom: "",
     prenom: "",
-    type: "Etudiant",
+    type: "Enseignant",
   });
 
   useEffect(() => {

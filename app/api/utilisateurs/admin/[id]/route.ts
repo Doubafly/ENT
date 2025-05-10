@@ -94,6 +94,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+  
     const hashPass = await bcrypt.hash(mot_de_passe, 10);
 
     const updatedUser = await prisma.utilisateurs.update({

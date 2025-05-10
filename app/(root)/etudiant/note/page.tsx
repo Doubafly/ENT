@@ -1,5 +1,6 @@
 "use client";
 import FiliereTable from "@/components/table/FiliereTable";
+
 import NoteTable from "@/components/table/NoteTable";
 import Semestre from "@/components/table/SemestreTableau";
 import { useEffect, useState } from "react";
@@ -74,6 +75,7 @@ export default function page() {
       <h1 className="text-2xl font-bold mb-4 ml-2">Les Notes</h1>
       <div className="mt-8 ml-2 mb-4 flex">
         {/* <Semesters /> */}
+        
         <Semestre
           semestreData={notesParSemestre}
           setSemestre={setSelectedSemestre}

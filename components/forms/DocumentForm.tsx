@@ -30,7 +30,7 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     file: undefined,
   });
   // Fonction pour trouver l'ID de la filière par son nom
-  
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [filteredModules, setFilteredModules] = useState<Module[]>(modules);
@@ -256,7 +256,10 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
           >
             <option value="">Sélectionnez un uploader</option>
             {uploaders.map((uploader) => (
-              <option key={uploader.id} value={uploader.id}>
+              <option
+                key={uploader.id}
+                value={uploader.utilisateur.id_utilisateur}
+              >
                 {`${uploader.utilisateur.prenom} ${uploader.utilisateur.nom}`}
               </option>
             ))}

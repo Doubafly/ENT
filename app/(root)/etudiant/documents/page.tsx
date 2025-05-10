@@ -655,12 +655,6 @@ const DocumentsPage = () => {
                   scope="col"
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                 >
-                  Session
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
                   Enseignant
                 </th>
                 <th
@@ -700,13 +694,7 @@ const DocumentsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {doc.session || "-"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {doc.utilisateur?.nom + " " + doc.utilisateur?.prenom ||
-                          "-"}
+                        {doc.utilisateur?.nom + " " + doc.utilisateur?.prenom || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

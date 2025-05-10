@@ -126,6 +126,11 @@ export const EtudiantLinks = [
     title: "Note",
   },
   {
+    image: "/icons/documentation.png",
+    path: "/etudiant/documents",
+    title: "Documents",
+  },
+  {
     image: "/icons/user.png",
     path: "/etudiant/profil",
     title: "Profil",
@@ -173,6 +178,11 @@ export const ProfesseurLinks = [
     image: "/icons/assessment.png",
     path: "/professeur/sujets",
     title: "Sujets",
+  },
+  {
+    image: "/icons/documentation.png",
+    path: "/professeur/documents",
+    title: "Documents",
   },
 
   {

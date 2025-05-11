@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const [user, setUser] = useState<{
-    id: string;
+    id_utilisateur: string;
     email: string;
     nom: string;
     prenom: string;
@@ -29,7 +29,7 @@ export default function HomePage() {
       parametres: boolean|null;
     };
   }>({
-    id: "",
+    id_utilisateur: "",
     email: "",
     nom: "",
     prenom: "",
@@ -63,7 +63,7 @@ export default function HomePage() {
         
 
           setUser({
-            id: userData.user.id_utilisateur,
+            id_utilisateur: userData.user.id_utilisateur,
             email: userData.user.email,
             nom: userData.user.nom,
             prenom: userData.user.prenom,

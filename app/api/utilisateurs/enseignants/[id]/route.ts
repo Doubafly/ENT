@@ -75,22 +75,32 @@ export async function PUT(req: NextRequest) {
     } = await req.json();
 
     // Validation des données
-    if (
-      !nom?.trim() ||
-      !prenom?.trim() ||
-      !email?.trim() ||
-      !sexe?.trim() ||
-      !telephone?.trim() ||
-      !adresse?.trim() ||
-      !profil?.trim() ||
-      !matricule?.trim() ||
-      !specialite?.trim()
-    ) {
+    const requiredFields = {
+      nom,
+      prenom,
+      email,
+      sexe,
+      telephone,
+      adresse,
+      profil,
+      matricule,
+      specialite,
+    };
+    
+    const missingFields = Object.entries(requiredFields)
+      .filter(([_, value]) => !value?.toString().trim())
+      .map(([key]) => key);
+    
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { message: "Veuillez remplir tous les champs correctement" },
+        {
+          message: "Certains champs sont manquants ou vides",
+          missingFields,
+        },
         { status: 400 }
       );
     }
+    
     // Vérifier que le mot de passe n'est pas vide
     let hashPass = mot_de_passe;
     if (mot_de_passe && mot_de_passe.trim() !== "") {

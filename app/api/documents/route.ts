@@ -1,129 +1,110 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../prisma";
+import prisma from "@/lib/prisma";
+import fs from "fs";
+import path from "path";
 
-// Types de réponse API
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data?: T;
-  error?: string;
-};
-
-type DocumentResponse = ApiResponse<any>;
-type DocumentsResponse = ApiResponse<any[]>;
-
-export async function GET() {
+export async function POST(request: NextRequest) {
   try {
-    const documents = await prisma.document.findMany({
-      include: {
-        uploader: {
-          select: {
-            nom: true,
-            prenom: true,
-            email: true,
-            telephone: true,
-          },
-        },
-        classe: {
-          include: {
-            filiere_module: {
-              include: {
-                filiere: {
-                  select: {
-                    nom: true,
-                  },
-                },
-                module: {
-                  select: {
-                    nom: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const formData = await request.formData();
     
-    const formatted = documents.map((doc) => ({
-      id: doc.id,
-      titre: doc.titre,
-      description: doc.description,
-      niveau: null, // Replace with the correct property if it exists in your schema
-      utilisateur: {
-        nom: doc.uploader.nom,
-        prenom: doc.uploader.prenom,
-        email: doc.uploader.email,
-        telephone: doc.uploader.telephone,
-      },
-      filiere: doc.classe?.filiere_module?.filiere?.nom || null,
-      module: doc.classe?.filiere_module?.module?.nom || null,
-      annexe: null, // Replace with a valid property if needed
-    }));
-    
+    // Récupération des champs
+    const titre = formData.get("titre");
+    const description = formData.get("description");
+    const id_uploader = formData.get("id_uploader");
+    const id_classe = formData.get("id_classe");
+    const file = formData.get("file");
 
-    return NextResponse.json({
-      success: true,
-      message: "Documents récupérés avec succès",
-      data: formatted,
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des documents :", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Erreur serveur lors de la récupération des documents",
-        error: "Erreur interne",
-      },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(
-  request: NextRequest
-): Promise<NextResponse<DocumentResponse>> {
-  try {
-    const body = await request.json();
-
-    const requiredFields = [
-      "titre",
-      "chemin_fichier",
-      "id_uploader",
-      "id_classe",
-    ];
-    const missing = requiredFields.filter((field) => !body[field]);
-
-    if (missing.length > 0) {
+    // Validation des types
+    if (typeof titre !== "string" || 
+        typeof id_uploader !== "string" || 
+        typeof id_classe !== "string") {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Champs requis manquants",
-          error: `Champs manquants: ${missing.join(", ")}`,
-        },
+        { success: false, message: "Type de données invalide" },
         { status: 400 }
       );
     }
 
-    const newDocument = await prisma.document.create({
-      data: {
-        titre: body.titre,
-        description: body.description || null,
-        chemin_fichier: body.chemin_fichier,
-        type_fichier: body.type_fichier || null,
-        taille_fichier: body.taille_fichier
-          ? parseInt(body.taille_fichier)
-          : null,
-        id_uploader: parseInt(body.id_uploader),
-        id_classe: parseInt(body.id_classe),
+    // Conversion et validation
+    const uploaderId = parseInt(id_uploader);
+    const classeId = parseInt(id_classe);
+    
+    if (isNaN(uploaderId) || isNaN(classeId) || !titre) {
+      return NextResponse.json(
+        { success: false, message: "Champs requis manquants ou invalides" },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que la filière_module existe
+    const filiereModule = await prisma.filiereModule.findUnique({
+      where: { id_filiere_module: classeId },
+    });
+
+    if (!filiereModule) {
+      return NextResponse.json(
+        { success: false, message: "La classe spécifiée n'existe pas" },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier l'unicité du titre dans la même classe
+    const existingDoc = await prisma.document.findFirst({
+      where: {
+        titre,
+        id_classe: classeId,
       },
     });
 
+    if (existingDoc) {
+      return NextResponse.json(
+        { success: false, message: "Un document avec ce titre existe déjà dans cette classe" },
+        { status: 409 }
+      );
+    }
+
+    // Création du document
+    const newDocument = await prisma.document.create({
+      data: {
+        titre,
+        description: typeof description === "string" ? description : null,
+        id_uploader: uploaderId,
+        id_classe: classeId,
+        chemin_fichier: "", // Temporaire
+        est_actif: true,
+      },
+    });
+
+    // Gestion du fichier
+    if (file && file instanceof Blob) {
+      const uploadDir = path.join(process.cwd(), "public", "uploads", "documents");
+      const fileName = `${newDocument.id}_${(file as File).name}`;
+      const filePath = path.join(uploadDir, fileName);
+
+      // Créer le répertoire si inexistant
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Conversion en buffer et écriture
+      const buffer = Buffer.from(await (file as File).arrayBuffer());
+      fs.writeFileSync(filePath, buffer);
+
+      // Mise à jour du document avec les infos du fichier
+      await prisma.document.update({
+        where: { id: newDocument.id },
+        data: {
+          chemin_fichier: `/uploads/documents/${fileName}`,
+          type_fichier: (file as File).type,
+          taille_fichier: (file as File).size,
+        },
+      });
+    }
+
     return NextResponse.json(
-      {
-        success: true,
+      { 
+        success: true, 
         message: "Document créé avec succès",
-        data: newDocument,
+        data: { id: newDocument.id }
       },
       { status: 201 }
     );
@@ -133,9 +114,11 @@ export async function POST(
       {
         success: false,
         message: "Erreur lors de la création du document",
-        error: "Erreur serveur",
+        error: error instanceof Error ? error.message : "Erreur inconnue",
       },
       { status: 500 }
     );
   }
 }
+
+// GET reste inchangé

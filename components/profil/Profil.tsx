@@ -42,7 +42,6 @@ console.log("User data:", user);
     console.log(e);
     
   }
-
   return (
     <div className="flex bg-gray-100  xl:ml-5 mr-1 h-screen">
       <div className="flex-1 overflow-y-auto">

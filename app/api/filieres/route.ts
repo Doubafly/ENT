@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../prisma";
-import { Select } from "@mui/material";
-
 export async function GET() {
   try {
     const filieres = await prisma.filieres.findMany({
@@ -11,7 +9,7 @@ export async function GET() {
             nom: true,
             ville: true,
           },
-        }, 
+        },
         filiere_module: {
           include: {
             cours: {
@@ -48,6 +46,7 @@ export async function GET() {
             },
             module: {
               select: {
+                id_module: true,
                 nom: true,
                 description: true,
               },
@@ -80,7 +79,7 @@ export async function GET() {
                 commentaire_etudiant: true,
                 commentaire_enseignant: true,
                 statut_reclamation: true,
-                statut_note: true
+                statut_note: true,
               },
             },
           },

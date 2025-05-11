@@ -15,7 +15,7 @@ const permissions = user.Permission[0];
 
         // Générer dynamiquement les liens AdminLinks en fonction des permissions
         AdminLinks = [
-          permissions.admin && {
+          {
             image: "/icons/home.png",
             path: "/admin",
             title: "Acceuil",
@@ -24,6 +24,11 @@ const permissions = user.Permission[0];
             image: "/icons/presentation.png",
             path: "/admin/classes",
             title: "Classes",
+          },
+          permissions.admin && {
+            image: "/icons/user.png",
+            path: "/admin/admins",
+            title: "Admin",
           },
           permissions.enseignants && {
             image: "/icons/friends.png",
@@ -51,11 +56,6 @@ const permissions = user.Permission[0];
             path: "/admin/note",
             title: "Note",
           },
-          {
-            image: "/icons/email.png",
-            path: "/admin/messages",
-            title: "Messages",
-          }, // Messages toujours affiché
           permissions.paiement && {
             image: "/icons/finance.svg",
             path: "/admin/paiement",
@@ -66,11 +66,6 @@ const permissions = user.Permission[0];
             path: "/admin/documents",
             title: "Documents",
           },
-          {
-            image: "/icons/assessment.png",
-            path: "/admin/sujets",
-            title: "Sujets",
-          }, // Sujets toujours affiché
           {
             image: "/icons/user.png",
             path: "/admin/profil",

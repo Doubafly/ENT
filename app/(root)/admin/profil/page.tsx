@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 export default function HomePage() {
   const [user, setUser] = useState<{
-    id: string;
+    id_utilisateur: string;
     email: string;
     nom: string;
     prenom: string;
@@ -14,6 +14,7 @@ export default function HomePage() {
     isAdmin: boolean;
     adresse: string;
     sexe: string;
+    password: string;
     telephone: string;
     date_creation: string;
     permissions: {
@@ -28,7 +29,7 @@ export default function HomePage() {
       parametres: boolean|null;
     };
   }>({
-    id: "",
+    id_utilisateur: "",
     email: "",
     nom: "",
     prenom: "",
@@ -37,6 +38,7 @@ export default function HomePage() {
     isAdmin: false,
     adresse: "",
     sexe: "",
+    password: "",
     telephone: "",
     date_creation: "",
     permissions: {
@@ -61,7 +63,7 @@ export default function HomePage() {
         
 
           setUser({
-            id: userData.user.id_utilisateur,
+            id_utilisateur: userData.user.id_utilisateur,
             email: userData.user.email,
             nom: userData.user.nom,
             prenom: userData.user.prenom,
@@ -70,6 +72,7 @@ export default function HomePage() {
             isAdmin: userData.user.isAdmin,
             adresse: userData.user.adresse,
             sexe: userData.user.sexe,
+            password: userData.user.mot_de_passe,
             telephone: userData.user.telephone,
             date_creation: userData.user.date_creation,
             permissions: {

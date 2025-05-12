@@ -98,85 +98,97 @@ export { AdminLinks };
 
 
 export const EtudiantLinks = [
-{
-image: "/icons/home.png",
-path: "/etudiant",
-title: "Acceuil",
-},
-// {
-//   image: "/icons/presentation.png",
-//   path: "/etudiant/classe",
-//   title: "Classe",
-// },
-{
-image: "/icons/promotion.png",
-path: "/etudiant/annonces",
-title: "Annonces",
-},
-{
-image: "/icons/grades.png",
-path: "/etudiant/result",
-title: "Résulat",
-},
-// {
-//   image: "/icons/email.png",
-//   path: "/etudiant/messages",
-//   title: "Messages",
-// },
-{
-image: "/icons/grades.png",
-path: "/etudiant/note",
-title: "Note",
-},
-{
-image: "/icons/user.png",
-path: "/etudiant/profil",
-title: "Profil",
-},
-{
-image: "/icons/out.png",
-path: "/deconnexion",
-title: "Déconnexion",
-},
+
+  {
+    image: "/icons/home.png",
+    path: "/etudiant",
+    title: "Acceuil",
+  },
+  // {
+  //   image: "/icons/presentation.png",
+  //   path: "/etudiant/classe",
+  //   title: "Classe",
+  // },
+  {
+    image: "/icons/promotion.png",
+    path: "/etudiant/annonces",
+    title: "Annonces",
+  },
+  {
+    image: "/icons/grades.png",
+    path: "/etudiant/result",
+    title: "Résulat",
+  },
+  // {
+  //   image: "/icons/email.png",
+  //   path: "/etudiant/messages",
+  //   title: "Messages",
+  // },
+  {
+    image: "/icons/grades.png",
+    path: "/etudiant/note",
+    title: "Note",
+  },
+  {
+    image: "/icons/documentation.png",
+    path: "/etudiant/documents",
+    title: "Documents",
+  },
+  {
+    image: "/icons/user.png",
+    path: "/etudiant/profil",
+    title: "Profil",
+  },
+  {
+    image: "/icons/out.png",
+    path: "/deconnexion",
+    title: "Déconnexion",
+  },
 ];
 
 //TODO A Modifier selon le Besoin
 export const ProfesseurLinks = [
-{
-image: "/icons/home.png",
-path: "/professeur",
-title: "Acceuil",
-},
-{
-image: "/icons/presentation.png",
-path: "/professeur/classe",
-title: "Classe",
-},
-{
-image: "/icons/graduation-cap.png",
-path: "/professeur/etudiant",
-title: "Etudiant",
-},
-{
-image: "/icons/promotion.png",
-path: "/professeur/annonces",
-title: "Annonces",
-},
-{
-image: "/icons/grades.png",
-path: "/professeur/note",
-title: "Note",
-},
-{
-image: "/icons/email.png",
-path: "/professeur/messages",
-title: "Messages",
-},
-{
-image: "/icons/assessment.png",
-path: "/professeur/sujets",
-title: "Sujets",
-},
+  {
+    image: "/icons/home.png",
+    path: "/professeur",
+    title: "Acceuil",
+  },
+  {
+    image: "/icons/presentation.png",
+    path: "/professeur/classe",
+    title: "Classe",
+  },
+  {
+    image: "/icons/graduation-cap.png",
+    path: "/professeur/etudiant",
+    title: "Etudiant",
+  },
+  {
+    image: "/icons/promotion.png",
+    path: "/professeur/annonces",
+    title: "Annonces",
+  },
+  {
+    image: "/icons/grades.png",
+    path: "/professeur/note",
+    title: "Note",
+  },
+  {
+    image: "/icons/email.png",
+    path: "/professeur/messages",
+    title: "Messages",
+  },
+  {
+    image: "/icons/assessment.png",
+    path: "/professeur/sujets",
+    title: "Sujets",
+  },
+  {
+    image: "/icons/documentation.png",
+    path: "/professeur/documents",
+    title: "Documents",
+  },
+
 
 {
 image: "/icons/user.png",

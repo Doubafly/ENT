@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import fs from "fs";
+import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    
+
     // Récupération des champs
     const titre = formData.get("titre");
     const description = formData.get("description");
@@ -15,9 +15,11 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file");
 
     // Validation des types
-    if (typeof titre !== "string" || 
-        typeof id_uploader !== "string" || 
-        typeof id_classe !== "string") {
+    if (
+      typeof titre !== "string" ||
+      typeof id_uploader !== "string" ||
+      typeof id_classe !== "string"
+    ) {
       return NextResponse.json(
         { success: false, message: "Type de données invalide" },
         { status: 400 }
@@ -27,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Conversion et validation
     const uploaderId = parseInt(id_uploader);
     const classeId = parseInt(id_classe);
-    
+
     if (isNaN(uploaderId) || isNaN(classeId) || !titre) {
       return NextResponse.json(
         { success: false, message: "Champs requis manquants ou invalides" },
@@ -57,7 +59,10 @@ export async function POST(request: NextRequest) {
 
     if (existingDoc) {
       return NextResponse.json(
-        { success: false, message: "Un document avec ce titre existe déjà dans cette classe" },
+        {
+          success: false,
+          message: "Un document avec ce titre existe déjà dans cette classe",
+        },
         { status: 409 }
       );
     }
@@ -76,7 +81,12 @@ export async function POST(request: NextRequest) {
 
     // Gestion du fichier
     if (file && file instanceof Blob) {
-      const uploadDir = path.join(process.cwd(), "public", "uploads", "documents");
+      const uploadDir = path.join(
+        process.cwd(),
+        "public",
+        "uploads",
+        "documents"
+      );
       const fileName = `${newDocument.id}_${(file as File).name}`;
       const filePath = path.join(uploadDir, fileName);
 
@@ -101,10 +111,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: "Document créé avec succès",
-        data: { id: newDocument.id }
+        data: { id: newDocument.id },
       },
       { status: 201 }
     );
@@ -121,4 +131,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET reste inchangé
+// On n'a besoin de GET ici parce que je fait la récupperation avec /api/cours/doc

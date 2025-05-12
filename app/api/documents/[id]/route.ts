@@ -1,23 +1,8 @@
 import prisma from "@/lib/prisma";
-import { Document as PrismaDocument } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
 
-// Types pour une meilleure lisibilité
-type DocumentWithRelations = PrismaDocument & {
-  uploader: {
-    id: number;
-    nom: string;
-    prenom: string;
-    email: string;
-  };
-  filiere: {
-    id: number;
-    nom: string;
-    code_filiere: string;
-  };
-};
 
 // Champs sélectionnés pour toutes les opérations
 const selectOptions = {
@@ -46,7 +31,7 @@ const selectOptions = {
   },
 };
 
-// ✅ GET /api/documents/:id
+// GET /api/documents/:id
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -64,7 +49,7 @@ export async function GET(
     : notFound("Document introuvable");
 }
 
-// ✏️ PUT /api/documents/:id
+// PUT /api/documents/:id
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -184,7 +169,7 @@ export async function DELETE(
   return ok("Document supprimé");
 }
 
-// 📦 Fonctions utilitaires pour réponses standardisées
+//  Fonctions utilitaires pour réponses standardisées
 function ok(message: string, data?: any) {
   return NextResponse.json({ success: true, message, data }, { status: 200 });
 }

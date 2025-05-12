@@ -255,28 +255,29 @@ model Notes {
 }
 
 model Finance {
-  id_finance       Int               @id @default(autoincrement())
-  type_entite      FinanceEntiteType
-  id_entite        Int               // Peut être l'id d'un étudiant, enseignant ou autre
-  type_transaction FinanceTypeTransaction
-  montant          Decimal           @db.Decimal(10, 2)
-  date_transaction DateTime          @default(now())
-  description      String?
-  mode_paiement    FinanceModePaiement
-  reference        String?           @unique
-  statut           FinanceStatut     @default(Valide)
-  id_utilisateur   Int               // Utilisateur qui a enregistré la transaction (secrétaire/admin)
-  utilisateur      Utilisateurs      @relation(fields: [id_utilisateur], references: [id_utilisateur])
-  
-  // Pour lier explicitement aux étudiants ou enseignants si nécessaire
-  etudiant         Etudiants?        @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_etudiant_fkey")
-  enseignant       Enseignants?      @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_enseignant_fkey")
+  id_finance        Int                    @id @default(autoincrement())
+  type_transaction  FinanceTypeTransaction
+  montant           Decimal                @db.Decimal(10, 2)
+  date_transaction  DateTime              @default(now())
+  description       String?
+  mode_paiement     FinanceModePaiement
+  reference         String?               @unique
+  statut            FinanceStatut         @default(Valide)
 
-  @@index([id_entite], name: "Finance_id_entite_idx")
-  @@index([type_entite], name: "Finance_type_entite_idx")
-  @@index([type_transaction], name: "Finance_type_transaction_idx")
-  @@index([id_utilisateur], name: "Finance_id_utilisateur_fkey")
+  // Utilisateur qui enregistre
+  id_utilisateur    Int
+  utilisateur       Utilisateurs          @relation(fields: [id_utilisateur], references: [id_utilisateur])
+
+  // Nouvelles relations claires
+  id_etudiant       Int?                 
+  etudiant          Etudiants?           @relation(fields: [id_etudiant], references: [id])
+
+  id_enseignant     Int?                  
+  enseignant        Enseignants?         @relation(fields: [id_enseignant], references: [id])
+
+  @@index([id_utilisateur])
 }
+
 
 model Document {
   id            Int       @id @default(autoincrement())

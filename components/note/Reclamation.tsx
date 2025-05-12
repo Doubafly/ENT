@@ -64,8 +64,6 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         });
         return count;
       };
-    
-
   // Fonction pour compter le nombre total d'étudiants dans une classe
   const countStudents = (classe: Classe): number => {
     return classe.semestres[0]?.modules[0]?.students.length || 0;
@@ -84,18 +82,16 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         setIsSubmitting(true);
         
         // Ici vous devrez implémenter l'appel API pour sauvegarder les changements
-       
-
           const payload = {
-            date_reclamation: Date(),
             statut_reclamation: status,
+            statut_note:"Valide",
             note_class: selectedStudent.notes[0].note_class,
             note_exam: selectedStudent.notes[0].note_exam,
             commentaire_enseignant: teacherComment,
           };
           console.log(payload);
           if (selectedStudent.notes[0].id_note) {
-            const res = await fetch(`/api/reclamation/${selectedStudent.notes[0].id_note}`, {
+            const res = await fetch(`/api/reclamation/correction/${selectedStudent.notes[0].id_note}`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",

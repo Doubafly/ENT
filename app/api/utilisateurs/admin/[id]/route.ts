@@ -82,7 +82,6 @@ export async function PUT(req: NextRequest) {
       !prenom?.trim() ||
       !email?.trim() ||
       !sexe?.trim() ||
-      !mot_de_passe ||
       !telephone?.trim() ||
       !adresse?.trim() ||
       !profil?.trim() ||
@@ -94,15 +93,14 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    // const pathProfil = await fetch("api/files/upload",{
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body:
-    // });
-    // Hash du mot de passe
-    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+    // Gestion du mot de passe : ne pas le modifier si le champ est vide
+    let hashPass = mot_de_passe;
+    if (mot_de_passe && mot_de_passe.trim() !== "") {
+      hashPass = await bcrypt.hash(mot_de_passe, 10);
+    } else {
+      // Si le mot de passe est vide, ne pas tenter de le hacher
+      console.warn("Mot de passe vide, le mot de passe ne sera pas modifié.");
+    }
 
     const updatedUser = await prisma.utilisateurs.update({
       where: {
@@ -114,14 +112,14 @@ export async function PUT(req: NextRequest) {
         email,
         sexe,
         type: UtilisateursType.Admin,
-        mot_de_passe: hashPass,
+        mot_de_passe: hashPass === "" ? undefined : hashPass, // Ne pas modifier si vide
         telephone,
         adresse,
         profil,
       },
     });
 
-    //modification des permissions
+    // Modification des permissions
     const permission = await prisma.permission.update({
       where: {
         id_utilisateur: updatedUser.id_utilisateur,

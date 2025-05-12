@@ -33,6 +33,7 @@ export interface Session {
     id_note: number;
     id_cours: number;
     statut_reclamation: string;
+    statut_note:string;
     commentaire_etudiant: string;
     id_etudiant: number;
     note_class: number;

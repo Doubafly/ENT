@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RightSidebar from "@/components/RightSidebar";
-import EmploieStudent from "@/components/EmploiDuTemps";
+import EmploieStudent from "@/components/emploisDuTemps/EmploiDuTemps";
 import Statistique from "@/components/statistique/statistique";
 export default function Home() {
   const [user, setUser] = useState(null); // Stocker les informations de l'utilisateur connecté

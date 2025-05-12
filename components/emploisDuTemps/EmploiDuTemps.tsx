@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Modal from './modal/Modal';
+import Modal from '../modal/Modal';
 
 interface Emploi {
   id_emploi: number;
@@ -28,7 +28,7 @@ interface Emploi {
   };
 }
 
-const heures = ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00'];
+const heures = ['08:00-10:00', '10:30-12:30', '12:30-14:30', '17:00-20:00'];
 const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
 const creerTableauVide = () => {
@@ -103,6 +103,10 @@ const EmploiDuTemps = () => {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    chargerEmploiDuTemps(classe);
+  }, [emplois, classe]);
+
   const formatHeureAffichage = (dateTime: string) => {
     try {
       const date = new Date(dateTime);
@@ -119,8 +123,8 @@ const EmploiDuTemps = () => {
     const edt = creerTableauVide();
 
     emplois.forEach((emploi) => {
-      if (emploi.cours.filiere_module.filiere.niveau === niveau &&
-          emploi.cours.filiere_module.filiere.nom === nomFiliere) {
+      if (emploi.cours?.filiere_module?.filiere?.niveau === niveau &&
+          emploi.cours?.filiere_module?.filiere?.nom === nomFiliere) {
         const heureDebut = formatHeureAffichage(emploi.heure_debut);
         const heureFin = formatHeureAffichage(emploi.heure_fin);
         const heureKey = `${heureDebut}-${heureFin}`;
@@ -128,7 +132,7 @@ const EmploiDuTemps = () => {
         if (edt[heureKey]?.[emploi.jour] !== undefined) {
           edt[heureKey][emploi.jour] = {
             matiere: emploi.cours.filiere_module.module.nom,
-            enseignant: `${emploi.cours.enseignant.utilisateur.prenom} ${emploi.cours.enseignant.utilisateur.nom}`,
+            enseignant: `${emploi.cours.enseignant?.utilisateur?.prenom || ''} ${emploi.cours.enseignant?.utilisateur?.nom || ''}`,
             salle: emploi.salle
           };
         }
@@ -141,12 +145,11 @@ const EmploiDuTemps = () => {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedClasse = e.target.value;
     setClasse(selectedClasse);
-    chargerEmploiDuTemps(selectedClasse);
   };
 
   const handleCellClick = (jour: string, heure: string) => {
     const seance = emploiDuTemps[heure]?.[jour];
-    
+
     if (seance) {
       // Mode édition
       const [niveau, nomFiliere] = classe.split(' ');
@@ -182,7 +185,7 @@ const EmploiDuTemps = () => {
       });
       setMode('create');
     }
-    
+
     setSelectedCell({ jour, heure });
     setShowForm(true);
   };
@@ -213,7 +216,7 @@ const EmploiDuTemps = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setLoading(true);
       setError('');
@@ -234,6 +237,42 @@ const EmploiDuTemps = () => {
         salle: formData.salle
       };
 
+      // Mise à jour optimiste de l'état local
+      const newEmploi = {
+        id_emploi: formData.id_emploi || Math.floor(Math.random() * 10000), // ID temporaire si création
+        jour: formData.jour,
+        heure_debut: emploiData.heure_debut,
+        heure_fin: emploiData.heure_fin,
+        salle: formData.salle,
+        cours: {
+          id_cours: coursSelectionne.id,
+          semestre: '', // Ajoutez la valeur appropriée ici si disponible
+          filiere_module: {
+            filiere: {
+              niveau: classe.split(' ')[0],
+              nom: classe.split(' ')[1]
+            },
+            module: {
+              nom: formData.matiere
+            }
+          },
+          enseignant: {
+            utilisateur: {
+              nom: formData.enseignant.split(' ')[1] || '',
+              prenom: formData.enseignant.split(' ')[0] || ''
+            }
+          }
+        }
+      };
+
+      if (mode === 'edit' && formData.id_emploi) {
+        setEmplois(prev => prev.map(e => 
+          e.id_emploi === formData.id_emploi ? newEmploi : e
+        ));
+      } else {
+        setEmplois(prev => [...prev, newEmploi]);
+      }
+
       let response;
       if (mode === 'edit' && formData.id_emploi) {
         response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
@@ -251,20 +290,24 @@ const EmploiDuTemps = () => {
 
       if (!response.ok) throw new Error('Erreur lors de la requête');
 
+      // Recharger les données fraîches après la requête
       const emploisResponse = await fetch('/api/emploisDuTemps');
-      setEmplois(await emploisResponse.json());
-      chargerEmploiDuTemps(classe);
+      const freshData = await emploisResponse.json();
+      setEmplois(freshData.emploisDuTemps);
+
       setShowForm(false);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      // En cas d'erreur, recharger les données pour revenir à l'état précédent
+      const emploisResponse = await fetch('/api/emploisDuTemps');
+      setEmplois(await emploisResponse.json());
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    
     if (!formData.id_emploi) {
       setError('ID de séance manquant pour la suppression');
       return;
@@ -274,27 +317,19 @@ const EmploiDuTemps = () => {
       setLoading(true);
       setError('');
 
-      // 1. Confirmation de suppression
-      // const confirmDelete = window.confirm('Voulez-vous vraiment supprimer cette séance ?');
-      // if (!confirmDelete) return;
+      // Mise à jour optimiste
+      setEmplois(prev => prev.filter(e => e.id_emploi !== formData.id_emploi));
 
-      // 2. Envoi de la requête DELETE
       const response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
 
-      // 3. Vérification de la réponse
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Échec de la suppression');
       }
 
-      // 4. Mise à jour optimiste de l'état local
-      setEmplois(prev => prev.filter(e => e.id_emploi !== formData.id_emploi));
-      chargerEmploiDuTemps(classe);
-
-      // 5. Fermeture du modal et réinitialisation
       setShowForm(false);
       setFormData({
         matiere: '',
@@ -308,11 +343,13 @@ const EmploiDuTemps = () => {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
+      // En cas d'erreur, recharger les données
+      const emploisResponse = await fetch('/api/emploisDuTemps');
+      setEmplois(await emploisResponse.json());
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="p-4">

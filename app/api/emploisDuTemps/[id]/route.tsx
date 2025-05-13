@@ -1,53 +1,53 @@
 import prisma from "@/app/api/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(request: NextRequest) {
-    try {
-      const { id_cours, jour, heure_debut, heure_fin, salle } = await request.json();
-  
-      // Extraction de l'ID depuis l'URL
-      const id_emploi = request.nextUrl.pathname.split("/").pop();
-  
-      // Vérification des paramètres
-      if (!id_cours || !jour || !heure_debut || !heure_fin || !salle) {
-        return NextResponse.json(
-          { message: "Paramètres manquants" },
-          { status: 400 }
-        );
-      }
-  
-      // Mise à jour de l'emploi du temps
-      const emploiMisAJour = await prisma.emploisDuTemps.update({
-        where: { id_emploi: id_emploi ? parseInt(id_emploi) : 0 },
-        data: {
-          id_cours,
-          jour,
-          heure_debut: new Date(heure_debut),
-          heure_fin: new Date(heure_fin),
-          salle
-        }
-      });
-  
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id_cours, jour, heure_debut, heure_fin, salle } = await request.json();
+    const id_emploi = params.id;
+
+    if (!id_emploi || isNaN(parseInt(id_emploi))) {
       return NextResponse.json(
-        { message: "Succès", emploi: emploiMisAJour },
-        { status: 200 }
-      );
-    } catch (e) {
-      console.error("Erreur lors de la mise à jour de l'emploi du temps :", e);
-      return NextResponse.json(
-        { message: "Une erreur est survenue" },
-        { status: 500 }
+        { message: "ID invalide ou manquant" },
+        { status: 400 }
       );
     }
+
+    const emploiMisAJour = await prisma.emploisDuTemps.update({
+      where: { id_emploi: parseInt(id_emploi) },
+      data: {
+        id_cours,
+        jour,
+        heure_debut: new Date(heure_debut),
+        heure_fin: new Date(heure_fin),
+        salle
+      }
+    });
+
+    return NextResponse.json(
+      { message: "Succès", emploi: emploiMisAJour },
+      { status: 200 }
+    );
+  } catch (e) {
+    console.error("Erreur lors de la mise à jour de l'emploi du temps :", e);
+    return NextResponse.json(
+      { message: "Une erreur est survenue" },
+      { status: 500 }
+    );
   }
+}
+
 
   
   
-export async function DELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest,  { params }: { params: { id: string } }) {
     try {
       // Extraction de l'ID depuis l'URL
-      const id_emploi = request.nextUrl.pathname.split("/").pop();
-  
+      // const id_emploi = request.nextUrl.pathname.split("/").pop();
+      const id_emploi = params.id;
       // Vérification si l'ID est valide
       if (!id_emploi || isNaN(parseInt(id_emploi))) {
         return NextResponse.json(
@@ -88,11 +88,11 @@ export async function DELETE(request: NextRequest) {
 
 
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
     try {
       // Extraction de l'ID depuis l'URL
-      const id_emploi = request.nextUrl.pathname.split("/").pop();
-  
+      // const id_emploi = request.nextUrl.pathname.split("/").pop();
+  const id_emploi = params.id;
       // Vérification si l'ID est valide
       if (!id_emploi || isNaN(parseInt(id_emploi))) {
         return NextResponse.json(

@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest) {
     const { commentaire_etudiant, statut_reclamation } = await request.json();
 
     // Validation des données
-    if (!commentaire_etudiant) {
+    if (!commentaire_etudiant) { 
       return NextResponse.json(
         { message: "Aucune donnée à mettre à jour" },
         { status: 400 }

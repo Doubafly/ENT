@@ -4,6 +4,7 @@ import RightSidebar from "@/components/RightSidebar";
 import EmploieStudent from "@/components/EmploiDuTemps";
 import StatistiqueEtudiant from "@/components/statistique/StatistiqueEtudiant";
 
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [statData, setStatData] = useState([

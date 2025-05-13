@@ -96,6 +96,7 @@ const Statistique = ({ menuStat }) => {
   }, [user]); // Recharger les données si l'utilisateur change
 
   return (
+    
     <div className="statistique">
       <h2 className="statistique-title">Statistiques</h2>
       <div className="gridStat">
@@ -118,6 +119,11 @@ const Statistique = ({ menuStat }) => {
           {chartData && <Bar data={chartData} />}
         </div>
       </div>
+
+{renderContent()}
+
+
+
     </div>
   );
 };

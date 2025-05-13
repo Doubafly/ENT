@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import Modal from "../modal/Modal";
 
-// Interfaces pour typer les données des étudiants et de l'emploi du temps
+// Interfaces
 interface Student {
   id: number;
   firstName: string;
@@ -23,81 +23,81 @@ interface EmploiDuTemps {
   cours_id: string;
 }
 
-// Données statiques des étudiants et emploi du temps
+// Données statiques
 const initialRows: Student[] = [
   { id: 1, lastName: 'Diallo', firstName: 'Kadidia', Heure: '8H-10H', justifier: 'malade', classe: 'Licence' },
   { id: 2, lastName: 'Cisse', firstName: 'Moussa', Heure: '10H-12H', justifier: '_', classe: 'Licence' },
   { id: 3, lastName: 'Konaté', firstName: 'Souleymane', Heure: '10H-12H', justifier: '_', classe: 'Secondaire' },
-  // Ajout d'autres étudiants...
 ];
 
 const emploiDuTemps: EmploiDuTemps[] = [
   { id: '1', jour: 'lundi', heure_debut: '08:00', heure_fin: '10:00', classe_id: 'Licence', cours_id: 'math' },
   { id: '2', jour: 'lundi', heure_debut: '10:00', heure_fin: '12:00', classe_id: 'Secondaire', cours_id: 'physique' },
   { id: '3', jour: 'lundi', heure_debut: '14:00', heure_fin: '16:00', classe_id: 'Primaire', cours_id: 'lecture' },
-  // Ajout d'autres horaires...
+  { id: '4', jour: 'mardi', heure_debut: '08:00', heure_fin: '10:00', classe_id: 'Licence', cours_id: 'chimie' },
+  { id: '5', jour: 'samedi', heure_debut: '10:00', heure_fin: '12:00', classe_id: 'Secondaire', cours_id: 'histoire' },
+  { id: '6', jour: 'samedi', heure_debut: '21:00', heure_fin: '23:00', classe_id: 'Licence', cours_id: 'maths' },
 ];
 
-// Fonction principale pour afficher la liste des absences
+// Composant principal
 export default function AbsenceEtudiantList() {
-  // Hooks d'état pour gérer les filtres et les données
-  const [searchTerm, setSearchTerm] = useState(""); // Pour filtrer par nom de l'étudiant
-  const [classFilter, setClassFilter] = useState(""); // Pour filtrer par classe
-  const [rows] = useState<Student[]>(initialRows); // Données des étudiants
-  const [selectedTeacher, setSelectedTeacher] = useState<Student | null>(null); // Étudiant sélectionné pour voir ses absences
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]); // Date sélectionnée
+  const [searchTerm, setSearchTerm] = useState("");
+  const [classFilter, setClassFilter] = useState("");
+  const [rows] = useState<Student[]>(initialRows);
+  const [selectedTeacher, setSelectedTeacher] = useState<Student | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
-  // Tableau des jours de la semaine
   const jours = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"] as const;
-  const dayName = jours[new Date(selectedDate).getDay()]; // Nom du jour de la semaine basé sur la date sélectionnée
+  const dayName = jours[new Date(selectedDate).getDay()];
 
-  // Modèle de pagination
   const paginationModel = { page: 0, pageSize: 5 };
 
-  // Fonction pour vérifier si un cours est en cours maintenant
   const classeHasCoursNow = (classe: string) => {
     const now = new Date();
-    const day = now.toLocaleDateString('fr-FR', { weekday: 'long' }).toLowerCase(); // Jour actuel
-    const hour = now.getHours(); // Heure actuelle
+    const day = now.toLocaleDateString('fr-FR', { weekday: 'long' }).toLowerCase();
+    const hour = now.getHours();
     const minute = now.getMinutes();
-    const currentTime = hour * 60 + minute; // Conversion de l'heure actuelle en minutes
+    const currentTime = hour * 60 + minute;
 
-    // Filtrer les cours de la classe actuelle pour le jour sélectionné
     const classeCours = emploiDuTemps.filter(
       (cours) => cours.classe_id === classe && cours.jour.toLowerCase() === day
     );
 
-    // Vérifier si l'heure actuelle se situe dans l'intervalle d'un des cours
     for (const cours of classeCours) {
-      const [startHour, startMinute] = cours.heure_debut.split(':').map(Number); // Début du cours
-      const [endHour, endMinute] = cours.heure_fin.split(':').map(Number); // Fin du cours
+      const [startHour, startMinute] = cours.heure_debut.split(':').map(Number);
+      const [endHour, endMinute] = cours.heure_fin.split(':').map(Number);
 
-      const startTime = startHour * 60 + startMinute; // Heure de début en minutes
-      const endTime = endHour * 60 + endMinute; // Heure de fin en minutes
+      const startTime = startHour * 60 + startMinute;
+      const endTime = endHour * 60 + endMinute;
 
-      // Si l'heure actuelle est entre l'heure de début et de fin, le cours est en cours
       if (currentTime >= startTime && currentTime <= endTime) {
         return true;
       }
     }
 
-    return false; // Aucun cours en cours
+    return false;
   };
 
-  // Filtrage des étudiants en fonction des critères de recherche et de classe
   const filteredRows = rows.filter((row) => {
     const matchesSearch = `${row.firstName} ${row.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesClass = classFilter ? row.classe === classFilter : true;
-    const hasCoursNow = classeHasCoursNow(row.classe ?? ""); // Vérifier si l'étudiant a un cours en cours maintenant
-    return matchesSearch && matchesClass && hasCoursNow; // Retourne les étudiants qui correspondent aux critères
+    const hasCoursNow = classeHasCoursNow(row.classe ?? "");
+    return matchesSearch && matchesClass && hasCoursNow;
   });
 
-  // Ouvrir la modal avec les informations de l'étudiant sélectionné
   const handleOpenModal = (student: Student) => {
     setSelectedTeacher(student);
   };
 
-  // Colonnes du tableau
+  const handleEnregistrer = () => {
+    const enseignantsSelectionnes = rows.filter((row) =>
+      selectedRows.includes(row.id)
+    );
+    console.log('Enseignants sélectionnés :', enseignantsSelectionnes);
+    alert(`${enseignantsSelectionnes.length} enseignant(s) enregistré(s).`);
+  };
+
   const columns: GridColDef[] = [
     { field: 'id', headerName: 'ID', width: 70 },
     { field: 'firstName', headerName: 'Nom', width: 130 },
@@ -114,7 +114,7 @@ export default function AbsenceEtudiantList() {
           className="text-blue-500 hover:underline"
           onClick={(e) => {
             e.stopPropagation();
-            handleOpenModal(params.row); // Ouvrir la modal pour voir les absences
+            handleOpenModal(params.row);
           }}
         >
           Voir ses absences
@@ -125,18 +125,18 @@ export default function AbsenceEtudiantList() {
 
   return (
     <div className="ml-0 px-1 py-5 text-xl">
-      {/* Section de filtres */}
+      {/* Filtres */}
       <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
         <input
           type="text"
           placeholder="Rechercher un étudiant..."
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)} // Mise à jour du terme de recherche
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         />
         <select
           value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)} // Mise à jour du filtre de classe
+          onChange={(e) => setClassFilter(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         >
           <option value="">Filtrer par Classe</option>
@@ -148,25 +148,38 @@ export default function AbsenceEtudiantList() {
         </select>
       </div>
 
-      {/* Affichage du jour actuel */}
-      <div className="flex items-center text-ml text-green-600 mb-4">
-        <span>Jour :</span>
-        <span className="ml-2 font-medium capitalize">{dayName}</span>
+      {/* Enregistrer + Jour */}
+      <div className="flex justify-between items-center min-w-[200px] p-3 border rounded-lg text-sm">
+        <div className="flex items-center text-ml text-green-600">
+          <span>Jour :</span>
+          <span className="ml-2 font-medium capitalize">{dayName}</span>
+        </div>
+        <button
+          onClick={handleEnregistrer}
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          disabled={selectedRows.length === 0}
+        >
+          Enregistrer
+        </button>
       </div>
 
-      {/* Tableau des étudiants */}
+      {/* Tableau */}
       <Paper sx={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={filteredRows}
           columns={columns}
           initialState={{ pagination: { paginationModel } }}
           pageSizeOptions={[5, 10]}
+          checkboxSelection
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection as unknown as number[]);
+          }}
           disableRowSelectionOnClick
           sx={{ border: 0 }}
         />
       </Paper>
 
-      {/* Modal pour afficher les détails d'un étudiant */}
+      {/* Modal étudiant */}
       {selectedTeacher && (
         <Modal onClose={() => setSelectedTeacher(null)}>
           <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
@@ -182,8 +195,6 @@ export default function AbsenceEtudiantList() {
               <p className="text-gray-500 text-sm">Classe: {selectedTeacher.classe}</p>
               <p className="text-green-500 text-sm font-bold">Justification: {selectedTeacher.justifier}</p>
             </div>
-
-            {/* Liste des absences */}
             <div className="mt-4 text-center">
               <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
               <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
@@ -191,9 +202,6 @@ export default function AbsenceEtudiantList() {
                 <li>Absence le 05/05/2025</li>
                 <li>Absence le 10/05/2025</li>
                 <li>Absence le 15/05/2025</li>
-                <li>Absence le 20/05/2025</li>
-                <li>Absence le 25/05/2025</li>
-                <li>Absence le 30/05/2025</li>
               </ul>
             </div>
           </div>

@@ -17,6 +17,8 @@ export default function Page() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
 
     const payload = {
       email: data.email,

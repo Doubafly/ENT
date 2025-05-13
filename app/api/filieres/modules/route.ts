@@ -121,7 +121,8 @@ export async function GET(
       enseignants:enseignants.map((e)=>({
         nom: e.utilisateur.nom,
         prenom: e.utilisateur.prenom,
-        id_utilisateur: e.utilisateur.id_utilisateur
+        id_utilisateur: e.utilisateur.id_utilisateur,
+        id: e.id
       })),
     };
 

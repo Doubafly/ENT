@@ -18,14 +18,15 @@ interface Filiere {
   niveau: string;
 }
 
-interface Payment {
+interface Paiement {
   id_finance: number;
   date_transaction: string;
   montant: Decimal | number;
   type_transaction: string;
+  statut: string;
   description: string;
   mode_paiement: string;
-  id_etudiant?: number;
+  id_etudiant: number;
   etudiant?: {
     matricule: string;
     utilisateur: {
@@ -35,24 +36,24 @@ interface Payment {
   };
 }
 
-type FinanceTypeTransaction = 'Inscription' | 'Scolarite' | 'Salaire' | 'Depense' | 'Autre';
+type FinanceTypeTransaction = 'Inscription' | 'Scolarite' | 'Remboursement' | 'Autre';
 type FinanceModePaiement = 'Espèces' | 'Chèque' | 'Virement' | 'Carte Bancaire';
 
-const paymentTypes: FinanceTypeTransaction[] = ['Inscription', 'Scolarite', 'Salaire', 'Depense', 'Autre'];
+const paymentTypes: FinanceTypeTransaction[] = ['Inscription', 'Scolarite', 'Remboursement', 'Autre'];
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque', 'Virement', 'Carte Bancaire'];
 
 export default function Etudiant() {
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
   const [filieres, setFilieres] = useState<Filiere[]>([]);
-  const [selectedFiliere, setSelectedFiliere] = useState("");
-  const [selectedNiveau, setSelectedNiveau] = useState("");
-  const [selectedEtudiant, setSelectedEtudiant] = useState("");
-  const [paymentAmount, setPaymentAmount] = useState("");
+  const [selectedFiliere, setSelectedFiliere] = useState<string>("");
+  const [selectedNiveau, setSelectedNiveau] = useState<string>("");
+  const [selectedEtudiant, setSelectedEtudiant] = useState<string>("");
+  const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [paymentType, setPaymentType] = useState<FinanceTypeTransaction>("Scolarite");
-  const [paymentMode, setPaymentMode] = useState<FinanceModePaiement>("Espèces");
-  const [paymentDescription, setPaymentDescription] = useState("");
-  const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [paymentMode, setPaymentMode] = useState<FinanceModePaiement>("Virement");
+  const [paymentDescription, setPaymentDescription] = useState<string>("");
+  const [paymentHistory, setPaymentHistory] = useState<Paiement[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState({
     filieres: false,
     etudiants: false,
@@ -67,15 +68,17 @@ export default function Etudiant() {
       setLoading(prev => ({...prev, filieres: true, paiements: true}));
       setError(null);
       try {
+        // Charger les filières
         const filieresResponse = await fetch('/api/filieres');
         if (!filieresResponse.ok) throw new Error("Erreur de chargement des filières");
         const filieresData = await filieresResponse.json();
         setFilieres(filieresData.filieres || []);
 
-        const paymentsResponse = await fetch('/api/finance');
-        if (!paymentsResponse.ok) throw new Error("Erreur de chargement des paiements");
-        const paymentsData = await paymentsResponse.json();
-        setPaymentHistory(paymentsData.finances || []);
+        // Charger tous les paiements des étudiants
+        const paiementsResponse = await fetch('/api/finance?type_entite=Etudiant');
+        if (!paiementsResponse.ok) throw new Error("Erreur de chargement des paiements");
+        const paiementsData = await paiementsResponse.json();
+        setPaymentHistory(paiementsData.finances || []);
 
       } catch (err) {
         console.error("Erreur initiale:", err);
@@ -111,28 +114,48 @@ export default function Etudiant() {
     fetchEtudiants();
   }, [selectedFiliere, selectedNiveau]);
 
+  // Filtrer les étudiants par recherche
+  const filteredEtudiants = etudiants.filter(etudiant =>
+    `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Niveaux disponibles pour la filière sélectionnée
+  const niveauxDisponibles = Array.from(
+    new Set(
+      filieres
+        .filter(f => selectedFiliere ? f.id_filiere === parseInt(selectedFiliere) : true)
+        .map(f => f.niveau)
+    )
+  );
+
+  // Filtrer l'historique pour l'étudiant sélectionné
+  const filteredPaymentHistory = selectedEtudiant
+    ? paymentHistory.filter(p => p.id_etudiant === parseInt(selectedEtudiant))
+    : paymentHistory.filter(p => p.id_etudiant); // Seulement les paiements avec id_etudiant
+
   const handlePayment = async () => {
     if (!selectedEtudiant || !paymentAmount) {
       setError("Sélectionnez un étudiant et entrez un montant");
       return;
     }
-  
+
     setLoading(prev => ({...prev, envoi: true}));
-    
+    setError(null);
     try {
       const etudiant = etudiants.find(e => e.id === parseInt(selectedEtudiant));
       if (!etudiant) throw new Error("Étudiant introuvable");
-  
+
       const montant = parseFloat(paymentAmount);
       if (isNaN(montant)) throw new Error("Montant invalide");
 
-      // Description par défaut si non fournie
       const description = paymentDescription || 
         `Paiement ${paymentType} pour ${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom}`;
-  
+
       const response = await fetch('/api/finance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           type_transaction: paymentType,
           montant: montant,
@@ -142,63 +165,27 @@ export default function Etudiant() {
           id_etudiant: etudiant.id
         })
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Erreur serveur");
       }
-  
-      const result = await response.json();
-      
-      // Mise à jour de l'historique
-      setPaymentHistory(prev => [{
-        ...result.transaction,
-        etudiant: {
-          matricule: etudiant.matricule,
-          utilisateur: {
-            nom: etudiant.utilisateur.nom,
-            prenom: etudiant.utilisateur.prenom
-          }
-        }
-      }, ...prev]);
-  
-      // Réinitialisation du formulaire
+
+      const newPayment = await response.json();
+      setPaymentHistory(prev => [newPayment.transaction, ...prev]);
       setPaymentAmount("");
       setPaymentDescription("");
-      setError(null);
-  
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur inconnue s'est produite");
-      console.error("Erreur:", err);
+      console.error("Erreur paiement:", err);
+      setError(err instanceof Error ? err.message : "Erreur lors du paiement");
     } finally {
       setLoading(prev => ({...prev, envoi: false}));
     }
   };
 
-  // Filtrer les étudiants
-  const filteredEtudiants = etudiants.filter(etudiant =>
-    `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
-
-  // Niveaux disponibles
-  const niveauxDisponibles = Array.from(
-    new Set(
-      filieres
-        .filter(f => selectedFiliere ? f.id_filiere === parseInt(selectedFiliere) : true)
-        .map(f => f.niveau)
-    )
-  );
-
-  // Historique filtré
-  const filteredPaymentHistory = selectedEtudiant
-    ? paymentHistory.filter(p => p.id_etudiant === parseInt(selectedEtudiant))
-    : paymentHistory;
-
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Paiements</h1>
+      <h1 className="text-2xl font-bold mb-6">Paiements Étudiants</h1>
 
       {error && (
         <Alert severity="error" className="mb-4" onClose={() => setError(null)}>
@@ -207,7 +194,7 @@ export default function Etudiant() {
       )}
 
       <Box display="flex" flexDirection="column" gap={3}>
-        {/* Filtres */}
+        {/* Filtres Filière → Niveau → Étudiant */}
         <Box display="flex" gap={2}>
           <Select
             value={selectedFiliere}
@@ -223,7 +210,7 @@ export default function Etudiant() {
             <MenuItem value="">Toutes les filières</MenuItem>
             {filieres.map((filiere) => (
               <MenuItem key={filiere.id_filiere} value={filiere.id_filiere.toString()}>
-                {filiere.nom} ({filiere.niveau})
+                {filiere.nom}
               </MenuItem>
             ))}
           </Select>
@@ -319,19 +306,19 @@ export default function Etudiant() {
               disabled={!selectedEtudiant || !paymentAmount || loading.envoi}
               className="bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:bg-gray-400"
             >
-              {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer"}
+              {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
             </button>
           </Box>
 
           <TextField
-            label="Description du paiement"
+            label="Description"
             variant="outlined"
             fullWidth
             multiline
             rows={2}
             value={paymentDescription}
             onChange={(e) => setPaymentDescription(e.target.value)}
-            placeholder="Détails supplémentaires sur ce paiement..."
+            placeholder="Détails du paiement..."
           />
         </Box>
 
@@ -347,15 +334,15 @@ export default function Etudiant() {
               <CircularProgress />
             </Box>
           ) : filteredPaymentHistory.length === 0 ? (
-            <p>Aucun paiement enregistré{selectedEtudiant ? " pour cet étudiant" : ""}</p>
+            <p>Aucun paiement enregistré</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-gray-100">
+                    <th className="border p-2 text-left">Étudiant</th>
                     <th className="border p-2 text-left">Date</th>
                     <th className="border p-2 text-left">Type</th>
-                    <th className="border p-2 text-left">Étudiant</th>
                     <th className="border p-2 text-left">Montant</th>
                     <th className="border p-2 text-left">Mode</th>
                     <th className="border p-2 text-left">Description</th>
@@ -363,19 +350,20 @@ export default function Etudiant() {
                 </thead>
                 <tbody>
                   {filteredPaymentHistory.map((paiement) => {
-                    const montant = Number(paiement.montant);
-                    const etudiantInfo = paiement.etudiant 
-                      ? `${paiement.etudiant.utilisateur.nom} ${paiement.etudiant.utilisateur.prenom} (${paiement.etudiant.matricule})`
+                    const etudiant = etudiants.find(e => e.id === paiement.id_etudiant) || 
+                                   paiement.etudiant;
+                    const nomEtudiant = etudiant 
+                      ? `${etudiant.utilisateur?.nom || ''} ${etudiant.utilisateur?.prenom || ''} (${etudiant.matricule})`
                       : `ID: ${paiement.id_etudiant}`;
 
                     return (
                       <tr key={paiement.id_finance}>
+                        <td className="border p-2">{nomEtudiant}</td>
                         <td className="border p-2">
                           {new Date(paiement.date_transaction).toLocaleDateString()}
                         </td>
                         <td className="border p-2">{paiement.type_transaction}</td>
-                        <td className="border p-2">{etudiantInfo}</td>
-                        <td className="border p-2">{montant} FCFA</td>
+                        <td className="border p-2">{Number(paiement.montant)} FCFA</td>
                         <td className="border p-2">{paiement.mode_paiement}</td>
                         <td className="border p-2">{paiement.description}</td>
                       </tr>

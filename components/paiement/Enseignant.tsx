@@ -1,6 +1,7 @@
 "use client";
 import { Box, MenuItem, Select, TextField, CircularProgress, Alert } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Decimal } from "@prisma/client/runtime/library";
 
 interface Enseignant {
   id: number;
@@ -10,15 +11,29 @@ interface Enseignant {
     prenom: string;
   };
   specialite: string;
+  cours: {
+    filiere_module: {
+      module: {
+        id_module: number;
+        nom: string;
+      };
+    };
+  }[];
+}
+
+interface Module {
+  id_module: number;
+  nom: string;
 }
 
 interface Paiement {
   id_finance: number;
   date_transaction: string;
-  montant: number;
+  montant: Decimal | number;
   type_transaction: string;
   statut: string;
   description: string;
+  mode_paiement: string;
   id_enseignant: number;
   enseignant?: {
     matricule: string;
@@ -29,52 +44,99 @@ interface Paiement {
   };
 }
 
+type FinanceTypeTransaction = 'Salaire' | 'Prime' | 'Remboursement' | 'Autre';
+type FinanceModePaiement = 'Espèces' | 'Chèque' | 'Virement' | 'Carte Bancaire';
+
+const paymentTypes: FinanceTypeTransaction[] = ['Salaire', 'Prime', 'Remboursement', 'Autre'];
+const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque', 'Virement', 'Carte Bancaire'];
+
 export default function Enseignant() {
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [selectedModule, setSelectedModule] = useState<string>("");
   const [selectedEnseignant, setSelectedEnseignant] = useState<string>("");
   const [paymentAmount, setPaymentAmount] = useState<string>("");
-  const [paymentType, setPaymentType] = useState<string>("Salaire");
+  const [paymentType, setPaymentType] = useState<FinanceTypeTransaction>("Salaire");
+  const [paymentMode, setPaymentMode] = useState<FinanceModePaiement>("Virement");
   const [paymentDescription, setPaymentDescription] = useState<string>("");
   const [paymentHistory, setPaymentHistory] = useState<Paiement[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState({
-    enseignants: false,
-    paiements: false,
+    initial: true,
     envoi: false
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Récupérer la liste des enseignants et tous les paiements au chargement
+  // Récupérer les données initiales
   useEffect(() => {
     const fetchInitialData = async () => {
-      setLoading(prev => ({...prev, enseignants: true, paiements: true}));
       setError(null);
       try {
-        // Charger les enseignants
-        const enseignantsResponse = await fetch('/api/enseignants');
+        // Charger les modules et enseignants en parallèle
+        const [modulesResponse, enseignantsResponse, paiementsResponse] = await Promise.all([
+          fetch('/api/cours'),
+          fetch('/api/utilisateurs/enseignants'),
+          fetch('/api/finance?type_entite=Enseignant')
+        ]);
+
+        if (!modulesResponse.ok) throw new Error("Erreur de chargement des modules");
         if (!enseignantsResponse.ok) throw new Error("Erreur de chargement des enseignants");
-        const enseignantsData = await enseignantsResponse.json();
+        if (!paiementsResponse.ok) throw new Error("Erreur de chargement des paiements");
+
+        const [modulesData, enseignantsData, paiementsData] = await Promise.all([
+          modulesResponse.json(),
+          enseignantsResponse.json(),
+          paiementsResponse.json()
+        ]);
+
+        // Traitement des modules
+        const modulesUniques = modulesData.cours?.reduce((acc: Module[], cours: any) => {
+          const module = cours.filiere_module?.module;
+          if (module && !acc.some(m => m.id_module === module.id_module)) {
+            acc.push({
+              id_module: module.id_module,
+              nom: module.nom
+            });
+          }
+          return acc;
+        }, []) || [];
+        setModules(modulesUniques);
+
+        // Traitement des enseignants
         setEnseignants(enseignantsData.enseignants || []);
 
-        // Charger tous les paiements des enseignants
-        const paiementsResponse = await fetch('/api/finance?type_transaction=Salaire');
-        if (!paiementsResponse.ok) throw new Error("Erreur de chargement des paiements");
-        const paiementsData = await paiementsResponse.json();
+        // Traitement des paiements
         setPaymentHistory(paiementsData.finances || []);
 
       } catch (err) {
         console.error("Erreur initiale:", err);
         setError("Impossible de charger les données initiales");
       } finally {
-        setLoading(prev => ({...prev, enseignants: false, paiements: false}));
+        setLoading(prev => ({...prev, initial: false}));
       }
     };
     fetchInitialData();
   }, []);
 
-  // Filtrer l'historique quand un enseignant est sélectionné
+  // Filtrer les enseignants par recherche et module
+  const filteredEnseignants = enseignants.filter(enseignant => {
+    const matchesSearch = searchTerm 
+      ? `${enseignant.utilisateur.nom} ${enseignant.utilisateur.prenom} ${enseignant.matricule} ${enseignant.specialite}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      : true;
+    
+    const matchesModule = selectedModule
+      ? (enseignant.cours?.some(c => c.filiere_module?.module?.id_module === parseInt(selectedModule)) || false)
+      : true;
+    
+    return matchesSearch && matchesModule;
+  });
+
+  // Filtrer l'historique pour l'enseignant sélectionné
   const filteredPaymentHistory = selectedEnseignant
     ? paymentHistory.filter(p => p.id_enseignant === parseInt(selectedEnseignant))
-    : paymentHistory;
+    : paymentHistory.filter(p => p.id_enseignant); // Seulement les paiements avec id_enseignant
 
   const handlePayment = async () => {
     if (!selectedEnseignant || !paymentAmount) {
@@ -101,7 +163,7 @@ export default function Enseignant() {
           type_transaction: paymentType,
           montant: montant,
           description: description,
-          mode_paiement: "Virement",
+          mode_paiement: paymentMode,
           id_utilisateur: 1, // À remplacer par l'ID de l'utilisateur connecté
           id_enseignant: enseignant.id
         })
@@ -124,6 +186,14 @@ export default function Enseignant() {
     }
   };
 
+  if (loading.initial) {
+    return (
+      <div className="container mx-auto p-4 flex justify-center items-center h-64">
+        <CircularProgress />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Paiements Enseignants</h1>
@@ -135,17 +205,43 @@ export default function Enseignant() {
       )}
 
       <Box display="flex" flexDirection="column" gap={3}>
-        {/* Sélection de l'enseignant */}
+        {/* Filtres Module → Enseignant */}
         <Box display="flex" gap={2}>
+          <Select
+            value={selectedModule}
+            onChange={(e) => {
+              setSelectedModule(e.target.value);
+              setSelectedEnseignant("");
+            }}
+            displayEmpty
+            fullWidth
+          >
+            <MenuItem value="">Tous les modules</MenuItem>
+            {modules.map((module) => (
+              <MenuItem key={module.id_module} value={module.id_module.toString()}>
+                {module.nom}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <TextField
+            label="Rechercher un enseignant"
+            variant="outlined"
+            fullWidth
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
           <Select
             value={selectedEnseignant}
             onChange={(e) => setSelectedEnseignant(e.target.value)}
             displayEmpty
             fullWidth
-            disabled={loading.enseignants}
           >
-            <MenuItem value="">Tous les enseignants</MenuItem>
-            {enseignants.map((enseignant) => (
+            <MenuItem value="" disabled>
+              Sélectionner un enseignant
+            </MenuItem>
+            {filteredEnseignants.map((enseignant) => (
               <MenuItem key={enseignant.id} value={enseignant.id.toString()}>
                 {enseignant.utilisateur.nom} {enseignant.utilisateur.prenom} - {enseignant.specialite}
               </MenuItem>
@@ -153,64 +249,74 @@ export default function Enseignant() {
           </Select>
         </Box>
 
-        {/* Formulaire de paiement (visible seulement si un enseignant est sélectionné) */}
-        {selectedEnseignant && (
-          <Box display="flex" flexDirection="column" gap={2}>
-            <Box display="flex" gap={2}>
-              <Select
-                value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value)}
-                fullWidth
-              >
-                <MenuItem value="Salaire">Salaire</MenuItem>
-                <MenuItem value="Prime">Prime</MenuItem>
-                <MenuItem value="Remboursement">Remboursement</MenuItem>
-                <MenuItem value="Autre">Autre</MenuItem>
-              </Select>
+        {/* Formulaire de paiement */}
+        <Box display="flex" flexDirection="column" gap={2}>
+          <Box display="flex" gap={2}>
+            <Select
+              value={paymentType}
+              onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
+              fullWidth
+            >
+              {paymentTypes.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
+            </Select>
 
-              <TextField
-                type="number"
-                label="Montant (FCFA)"
-                variant="outlined"
-                fullWidth
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-              />
-            </Box>
+            <Select
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
+              fullWidth
+            >
+              {paymentModes.map((mode) => (
+                <MenuItem key={mode} value={mode}>
+                  {mode}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
 
+          <Box display="flex" gap={2} alignItems="center">
             <TextField
-              label="Description"
+              type="number"
+              label="Montant (FCFA)"
               variant="outlined"
               fullWidth
-              multiline
-              rows={2}
-              value={paymentDescription}
-              onChange={(e) => setPaymentDescription(e.target.value)}
-              placeholder="Détails du paiement..."
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              disabled={!selectedEnseignant}
             />
 
             <button
               onClick={handlePayment}
-              disabled={!paymentAmount || loading.envoi}
+              disabled={!selectedEnseignant || !paymentAmount || loading.envoi}
               className="bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:bg-gray-400"
             >
               {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
             </button>
           </Box>
-        )}
+
+          <TextField
+            label="Description"
+            variant="outlined"
+            fullWidth
+            multiline
+            rows={2}
+            value={paymentDescription}
+            onChange={(e) => setPaymentDescription(e.target.value)}
+            placeholder="Détails du paiement..."
+          />
+        </Box>
 
         {/* Historique des paiements */}
         <Box mt={4}>
           <h2 className="text-xl font-semibold mb-3">
             Historique des paiements
-            {selectedEnseignant && " pour l'enseignant sélectionné"}
+            {selectedEnseignant && ` pour l'enseignant sélectionné`}
           </h2>
           
-          {loading.paiements ? (
-            <Box display="flex" justifyContent="center">
-              <CircularProgress />
-            </Box>
-          ) : paymentHistory.length === 0 ? (
+          {filteredPaymentHistory.length === 0 ? (
             <p>Aucun paiement enregistré</p>
           ) : (
             <div className="overflow-x-auto">
@@ -221,15 +327,16 @@ export default function Enseignant() {
                     <th className="border p-2 text-left">Date</th>
                     <th className="border p-2 text-left">Type</th>
                     <th className="border p-2 text-left">Montant</th>
-                    <th className="border p-2 text-left">Statut</th>
+                    <th className="border p-2 text-left">Mode</th>
                     <th className="border p-2 text-left">Description</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredPaymentHistory.map((paiement) => {
-                    const enseignant = enseignants.find(e => e.id === paiement.id_enseignant);
+                    const enseignant = enseignants.find(e => e.id === paiement.id_enseignant) || 
+                                     paiement.enseignant;
                     const nomEnseignant = enseignant 
-                      ? `${enseignant.utilisateur.nom} ${enseignant.utilisateur.prenom}`
+                      ? `${enseignant.utilisateur?.nom || ''} ${enseignant.utilisateur?.prenom || ''}`
                       : `ID: ${paiement.id_enseignant}`;
 
                     return (
@@ -239,8 +346,8 @@ export default function Enseignant() {
                           {new Date(paiement.date_transaction).toLocaleDateString()}
                         </td>
                         <td className="border p-2">{paiement.type_transaction}</td>
-                        <td className="border p-2">{paiement.montant} FCFA</td>
-                        <td className="border p-2">{paiement.statut}</td>
+                        <td className="border p-2">{Number(paiement.montant)} FCFA</td>
+                        <td className="border p-2">{paiement.mode_paiement}</td>
                         <td className="border p-2">{paiement.description}</td>
                       </tr>
                     );

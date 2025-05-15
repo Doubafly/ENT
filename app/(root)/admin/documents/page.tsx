@@ -35,6 +35,7 @@ export interface ApiDocument {
     telephone: string;
   } | null;
   filiere: string | null;
+  id_filier: number;
   module: string | null;
   session: string | null;
   annexe: string | null;
@@ -791,7 +792,6 @@ const DocumentsPage = () => {
               }
               filieres={filieres}
               modules={modules}
-              uploaders={uploaders}
               onSubmit={
                 selectedDocument ? handleUpdateDocument : handleCreateDocument
               }

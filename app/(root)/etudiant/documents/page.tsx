@@ -20,6 +20,7 @@ export interface ApiDocument {
     email: string;
     telephone: string;
   } | null;
+  id_filiere: number;
   filiere: string | null;
   module: string | null;
   session: string | null;
@@ -29,12 +30,12 @@ export interface ApiDocument {
 
 // Fonction utilitaire pour lire les cookies
 const getCookieValue = (name: string): any => {
-  if (typeof window === 'undefined') return null;
-  
+  if (typeof window === "undefined") return null;
+
   const value = document.cookie
-    .split('; ')
-    .find(row => row.startsWith(`${name}=`))
-    ?.split('=')[1];
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`))
+    ?.split("=")[1];
 
   return value ? JSON.parse(decodeURIComponent(value)) : null;
 };
@@ -45,7 +46,7 @@ const StudentDocumentsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [studentFiliere, setStudentFiliere] = useState<string | null>(null);
+  const [studentFiliereId, setStudentFiliereId] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
@@ -60,11 +61,11 @@ const StudentDocumentsPage = () => {
 
   // Charger l'utilisateur courant et sa filière au montage
   useEffect(() => {
-    const userData = getCookieValue('userInfo');
+    const userData = getCookieValue("userInfo");
     if (userData) {
       setCurrentUser(userData);
-      if (userData.type === 'ETUDIANT' && userData.etudiant) {
-        setStudentFiliere(userData.etudiant.filiere.nom);
+      if (userData.type === "Etudiant" && userData.etudiant) {
+        setStudentFiliereId(userData.etudiant.id_filiere);
       }
     }
   }, []);
@@ -76,7 +77,7 @@ const StudentDocumentsPage = () => {
 
         // Seulement charger les documents de la filière de l'étudiant
         const documentsRes = await fetch("/api/cours/doc");
-        
+
         if (!documentsRes.ok) {
           throw new Error("Erreur lors du chargement des documents");
         }
@@ -85,8 +86,8 @@ const StudentDocumentsPage = () => {
         const allDocuments: ApiDocument[] = documentsData.documents || [];
 
         // Filtrer les documents par filière de l'étudiant
-        const studentDocuments = studentFiliere 
-          ? allDocuments.filter(doc => doc.filiere === studentFiliere)
+        const studentDocuments = studentFiliereId
+          ? allDocuments.filter((doc) => doc.id_filiere === studentFiliereId)
           : [];
 
         // Charger les modules spécifiques à la filière de l'étudiant
@@ -97,20 +98,24 @@ const StudentDocumentsPage = () => {
 
         const filieresData = await filieresRes.json();
         const studentFiliereData = filieresData.filieres.find(
-          (f: Filiere) => f.nom === studentFiliere
+          (f: Filiere) => f.id_filiere === studentFiliereId
         );
 
         const studentModules: Module[] = [];
         if (studentFiliereData) {
-          studentFiliereData.filiere_module?.forEach((fm: { module: { id_module: any; nom: any; description: any; }; }) => {
-            if (fm.module) {
-              studentModules.push({
-                id_module: fm.module.id_module,
-                nom: fm.module.nom,
-                description: fm.module.description,
-              });
+          studentFiliereData.filiere_module?.forEach(
+            (fm: {
+              module: { id_module: any; nom: any; description: any };
+            }) => {
+              if (fm.module) {
+                studentModules.push({
+                  id_module: fm.module.id_module,
+                  nom: fm.module.nom,
+                  description: fm.module.description,
+                });
+              }
             }
-          });
+          );
         }
 
         setDocuments(studentDocuments);
@@ -125,30 +130,27 @@ const StudentDocumentsPage = () => {
     };
 
     fetchInitialData();
-  }, [studentFiliere]);
+  }, [studentFiliereId]);
 
   const filterDocuments = useCallback(
-    debounce(
-      (search: string, module: string) => {
-        const filtered = documents.filter((doc: ApiDocument) => {
-          const matchesSearch =
-            search === "" ||
-            doc.titre.toLowerCase().includes(search.toLowerCase()) ||
-            (doc.description &&
-              doc.description.toLowerCase().includes(search.toLowerCase()));
+    debounce((search: string, module: string) => {
+      const filtered = documents.filter((doc: ApiDocument) => {
+        const matchesSearch =
+          search === "" ||
+          doc.titre.toLowerCase().includes(search.toLowerCase()) ||
+          (doc.description &&
+            doc.description.toLowerCase().includes(search.toLowerCase()));
 
-          const matchesModule =
-            module === "" ||
-            (doc.module && doc.module.toLowerCase() === module.toLowerCase());
+        const matchesModule =
+          module === "" ||
+          (doc.module && doc.module.toLowerCase() === module.toLowerCase());
 
-          return matchesSearch && matchesModule;
-        });
+        return matchesSearch && matchesModule;
+      });
 
-        setFilteredDocuments(filtered);
-        setCurrentPage(1);
-      },
-      300
-    ),
+      setFilteredDocuments(filtered);
+      setCurrentPage(1);
+    }, 300),
     [documents]
   );
 
@@ -158,7 +160,10 @@ const StudentDocumentsPage = () => {
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredDocuments.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
 
   const resetFilters = () => {
@@ -203,7 +208,7 @@ const StudentDocumentsPage = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">
-          Documents de ma filière {studentFiliere}
+          Documents de ma filière {studentFiliereId}
         </h1>
       </div>
 
@@ -301,7 +306,8 @@ const StudentDocumentsPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-500">
-                        {doc.utilisateur?.nom + " " + doc.utilisateur?.prenom || "-"}
+                        {doc.utilisateur?.nom + " " + doc.utilisateur?.prenom ||
+                          "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -324,7 +330,7 @@ const StudentDocumentsPage = () => {
                     colSpan={5}
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
-                    {studentFiliere 
+                    {studentFiliereId
                       ? "Aucun document trouvé pour votre filière"
                       : "Impossible de déterminer votre filière"}
                   </td>

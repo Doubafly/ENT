@@ -164,7 +164,6 @@ model Document {
   @@index([id_classe], map: "infos_classe")
   @@map("documents")
 }
-
 // Table pour gérer les filières
 model Filieres {
   id_filiere    Int             @id @default(autoincrement())

@@ -94,11 +94,12 @@ export default function AbsenceProfList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [moduleFilter, setModuleFilter] = useState("");
-  const [rows, setRows] = useState<Teacher[]>(initialRows);
+  const [rows] = useState<Teacher[]>(initialRows);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
   const jours = [
     "dimanche",
@@ -122,16 +123,20 @@ export default function AbsenceProfList() {
     return matchesSearch && matchesClass && matchesModule;
   });
 
-  // Fonction pour ouvrir le modal
   const handleOpenModal = (teacher: Teacher) => {
     setSelectedTeacher(teacher);
   };
 
-  // Colonnes du tableau
+   const handleEnregistrer = () => {
+    const enseignantsSelectionnes = rows.filter((row) =>
+      selectedRows.includes(row.id)
+    )
+    console.log('Enseignants sélectionnés :', enseignantsSelectionnes)
+    alert(`${enseignantsSelectionnes.length} enseignant(s) enregistré(s).`)
+  }
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
     { field: "firstName", headerName: "Nom", width: 130 },
-    { field: "lastName", headerName: "Prenom", width: 130 },
+    { field: "lastName", headerName: "Prénom", width: 130 },
     { field: "Heure", headerName: "Heure", width: 130 },
     { field: "module", headerName: "Module", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
@@ -145,7 +150,7 @@ export default function AbsenceProfList() {
         <button
           className="text-blue-500 hover:underline"
           onClick={(e) => {
-            e.stopPropagation(); //  Empecher la sélection quand on clique
+            e.stopPropagation();
             handleOpenModal(params.row);
           }}
         >
@@ -191,12 +196,23 @@ export default function AbsenceProfList() {
           ))}
         </select>
       </div>
+      {/* Bouton Enregistrer et Jour alignés sur la même ligne */}
+<div className="flex justify-between items-center min-w-[200px] p-3 border rounded-lg text-sm">
 
-      {/* Jour */}
-      <div className="flex items-center text-ml text-green-600 mb-4">
-        <span>Jour :</span>
-        <span className="ml-2 font-medium capitalize">{dayName}</span>
-      </div>
+  {/* Jour à droite */}
+  <div className="flex items-center text-ml text-green-600">
+    <span>Jour :</span>
+    <span className="ml-2 font-medium capitalize">{dayName}</span>
+  </div>
+  {/* Bouton Enregistrer à gauche */}
+  <button
+    onClick={handleEnregistrer}
+    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+    disabled={selectedRows.length === 0}
+  >
+    Enregistrer
+  </button>
+</div>
 
       {/* Tableau */}
       <Paper sx={{ height: 500, width: "100%" }}>
@@ -205,7 +221,11 @@ export default function AbsenceProfList() {
           columns={columns}
           initialState={{ pagination: { paginationModel } }}
           pageSizeOptions={[5, 10]}
-          disableRowSelectionOnClick //  pour que cliquer ne coche pas
+          checkboxSelection
+          onRowSelectionModelChange={(newSelection) => {
+            setSelectedRows(newSelection as unknown as number[]);
+          }}
+          disableRowSelectionOnClick
           sx={{ border: 0 }}
         />
       </Paper>
@@ -232,6 +252,7 @@ export default function AbsenceProfList() {
               </p>
             </div>
 
+
             {/* Liste d'absences */}
             <div className="mt-4 text-center">
               <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
@@ -243,7 +264,6 @@ export default function AbsenceProfList() {
                 <li>Absence le 20/05/2025</li>
                 <li>Absence le 25/05/2025</li>
                 <li>Absence le 30/05/2025</li>
-                {/* Remplacer plus tard par les vraies données */}
               </ul>
             </div>
           </div>

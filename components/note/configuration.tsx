@@ -101,6 +101,7 @@ export default function Configuration({
   donne: Classe
   alldata: any
 }) {
+  console.log(alldata);
   
   const [data, setData] = useState<FiliereData | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -328,7 +329,8 @@ export default function Configuration({
       setError("Veuillez sélectionner une session et un enseignant");
       return;
     }
-
+    console.log(selectedEnseignant);
+    
     try {
       const method = editingCours ? "PUT" : "POST";
       const url = editingCours

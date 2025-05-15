@@ -59,7 +59,7 @@ export default function EnseignantList() {
             adresse: enseignant.utilisateur.adresse,
             specialite: enseignant.specialite,
             profil: enseignant.utilisateur.profil,
-            date_naissance: formatDate(enseignant.date_naissance),
+            date_naissance: formatDate(enseignant.date_naissance || ""),
           })
         );
 
@@ -214,7 +214,7 @@ export default function EnseignantList() {
             key={enseignant.id_utilisateur}
             item={{
               ...enseignant,
-              date_naissance: formatDate(enseignant.date_naissance),
+              date_naissance: formatDate(enseignant.date_naissance || ""),
             }}
             onrecharge={fetchEnseignants}
             onDelete={() => confirmDeleteEnseignant(enseignant)}

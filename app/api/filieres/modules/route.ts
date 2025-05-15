@@ -7,7 +7,7 @@ export async function GET(
   try {
  
     // Récupérer les données en parallèle
-    const [ allModules, allsession,filiere] = await Promise.all(
+    const [ allModules, allsession,filiere,enseignants] = await Promise.all(
       [
         prisma.modules.findMany(), // Tous les modules disponibles
         prisma.sessions.findMany(),
@@ -93,7 +93,20 @@ export async function GET(
               },
             },
           },
-        })
+        }),
+        prisma.enseignants.findMany(
+          {
+            include:{
+              utilisateur:{
+                select:{
+                  id_utilisateur:true,
+                  nom:true,
+                  prenom:true
+                }
+              }
+            }
+          }
+        )
       ]
     );
     // Formater la réponse
@@ -104,7 +117,13 @@ export async function GET(
         description: m.description || undefined,
       })),
       allsession:allsession,
-      filiere:filiere
+      filiere:filiere,
+      enseignants:enseignants.map((e)=>({
+        nom: e.utilisateur.nom,
+        prenom: e.utilisateur.prenom,
+        id_utilisateur: e.utilisateur.id_utilisateur,
+        id: e.id
+      })),
     };
 
     return NextResponse.json(

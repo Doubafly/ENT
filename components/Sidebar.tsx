@@ -4,40 +4,22 @@ import { useEffect, useState } from "react";
 import { AdminLinks, EtudiantLinks, ProfesseurLinks } from "@/constants";
 import Image from "next/image";
 import Link from "next/link";
-
+interface UserProfileProps {
+  user: {
+    prenom: string;
+    nom: string;
+    type: string;
+    profil?: string;
+  };
+}
 import { usePathname } from "next/navigation";
-const Sidebar = () => {
-  const [users, setUser] = useState({
-    id: "",
-    email: "",
-    nom: "",
-    prenom: "",
-    type: "",
-  });
-
-  useEffect(() => {
-    const fetchUserSession = async () => {
-      try {
-        const response = await fetch("/api/auth/session");
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData.user);
-        } else {
-          console.error("Failed to fetch user session");
-        }
-      } catch (error) {
-        console.error("Error fetching user session:", error);
-      }
-    };
-
-    fetchUserSession();
-  }, []);
+const Sidebar = ({ user }: UserProfileProps) => {
   const links: any[] =
-    users.type === "Admin"
+    user.type === "Admin"
       ? AdminLinks
-      : users.type === "Enseignant"
+      : user.type === "Enseignant"
       ? ProfesseurLinks
-      : users.type === "Etudiant"
+      : user.type === "Etudiant"
       ? EtudiantLinks
       : [];
   const pathname = usePathname();
@@ -66,7 +48,7 @@ const Sidebar = () => {
               const isActive =
                 pathname === items.path ||
                 (pathname &&
-                  pathname.startsWith(`${users.type}/${items.path}/`));
+                  pathname.startsWith(`${user.type}/${items.path}/`));
               return (
                 <Link
                   href={items.path}
@@ -105,7 +87,7 @@ const Sidebar = () => {
               const isActive =
                 pathname === items.path ||
                 (pathname &&
-                  pathname.startsWith(`${users.type}/${items.path}/`));
+                  pathname.startsWith(`${user.type}/${items.path}/`));
               return (
                 <Link
                   href={items.path}

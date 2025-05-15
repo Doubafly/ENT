@@ -398,7 +398,7 @@ const AnnonceList: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteClick(annonce.id_annonce);
+                          handleDeleteClick(annonce.id_annonce, annonce.admin.id_admin);
                         }}
                         className="text-red-600 hover:text-red-800 text-sm"
                       >

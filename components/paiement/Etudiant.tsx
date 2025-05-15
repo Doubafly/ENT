@@ -1,5 +1,5 @@
 "use client";
-import { Box, MenuItem, Select, TextField, CircularProgress, Alert } from "@mui/material";
+import { Box, MenuItem, Select, TextField, CircularProgress, Alert, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -41,6 +41,7 @@ type FinanceModePaiement = 'Espèces' | 'Chèque' | 'Virement' | 'Carte Bancaire
 
 const paymentTypes: FinanceTypeTransaction[] = ['Inscription', 'Scolarite', 'Remboursement', 'Autre'];
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque', 'Virement', 'Carte Bancaire'];
+const SESSION_API_URL = "/api/auth/session";
 
 export default function Etudiant() {
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
@@ -55,71 +56,118 @@ export default function Etudiant() {
   const [paymentHistory, setPaymentHistory] = useState<Paiement[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState({
-    filieres: false,
-    etudiants: false,
-    paiements: false,
-    envoi: false
+    initial: true,
+    envoi: false,
+    session: true
   });
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  // Vérification de la session et récupération de l'ID utilisateur
+  useEffect(() => {
+    const checkUserSession = async () => {
+      try {
+        const response = await fetch(SESSION_API_URL, {
+          credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Erreur de session");
+
+        const { user } = await response.json();
+        if (user?.id_utilisateur) {
+          setCurrentUserId(user.id_utilisateur);
+        }
+      } catch (err) {
+        console.error("Erreur vérification session:", err);
+      } finally {
+        setLoading(prev => ({...prev, session: false}));
+      }
+    };
+
+    checkUserSession();
+  }, []);
 
   // Récupérer les données initiales
   useEffect(() => {
+    if (loading.session) return; // Attendre que la session soit vérifiée
+
     const fetchInitialData = async () => {
-      setLoading(prev => ({...prev, filieres: true, paiements: true}));
       setError(null);
       try {
-        // Charger les filières
-        const filieresResponse = await fetch('/api/filieres');
-        if (!filieresResponse.ok) throw new Error("Erreur de chargement des filières");
-        const filieresData = await filieresResponse.json();
-        setFilieres(filieresData.filieres || []);
+        // Charger les filières et paiements en parallèle
+        const [filieresResponse, paiementsResponse] = await Promise.all([
+          fetch('/api/filieres'),
+          fetch('/api/finance?type_entite=Etudiant')
+        ]);
 
-        // Charger tous les paiements des étudiants
-        const paiementsResponse = await fetch('/api/finance?type_entite=Etudiant');
+        if (!filieresResponse.ok) throw new Error("Erreur de chargement des filières");
         if (!paiementsResponse.ok) throw new Error("Erreur de chargement des paiements");
-        const paiementsData = await paiementsResponse.json();
+
+        const [filieresData, paiementsData] = await Promise.all([
+          filieresResponse.json(),
+          paiementsResponse.json()
+        ]);
+
+        setFilieres(filieresData.filieres || []);
         setPaymentHistory(paiementsData.finances || []);
 
       } catch (err) {
         console.error("Erreur initiale:", err);
         setError("Impossible de charger les données initiales");
       } finally {
-        setLoading(prev => ({...prev, filieres: false, paiements: false}));
+        setLoading(prev => ({...prev, initial: false}));
       }
     };
     fetchInitialData();
-  }, []);
+  }, [loading.session]);
 
   // Récupérer les étudiants filtrés
-  useEffect(() => {
-    const fetchEtudiants = async () => {
-      setLoading(prev => ({...prev, etudiants: true}));
-      setError(null);
-      try {
-        let url = '/api/utilisateurs/etudiants?';
-        if (selectedFiliere) url += `filiere=${selectedFiliere}&`;
-        if (selectedNiveau) url += `niveau=${selectedNiveau}`;
-        
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Erreur de chargement des étudiants");
-        const data = await response.json();
-        setEtudiants(data.etudiants || []);
-      } catch (err) {
-        console.error("Erreur étudiants:", err);
-        setError("Impossible de charger les étudiants");
-      } finally {
-        setLoading(prev => ({...prev, etudiants: false}));
-      }
-    };
-    fetchEtudiants();
-  }, [selectedFiliere, selectedNiveau]);
+ useEffect(() => {
+  const fetchEtudiants = async () => {
+    setLoading(prev => ({ ...prev, initial: true }));
+    setError(null);
+    try {
+      const response = await fetch('/api/utilisateurs/etudiants');
+      if (!response.ok) throw new Error("Erreur de chargement des étudiants");
+      const data = await response.json();
+      setEtudiants(data.etudiants || []);
+    } catch (err) {
+      console.error("Erreur étudiants:", err);
+      setError("Impossible de charger les étudiants");
+    } finally {
+      setLoading(prev => ({ ...prev, initial: false }));
+    }
+  };
+
+  fetchEtudiants();
+}, []); 
+ 
 
   // Filtrer les étudiants par recherche
-  const filteredEtudiants = etudiants.filter(etudiant =>
-    `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+ const filteredEtudiants = etudiants.filter((etudiant) => {
+  const matchNom = `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase());
+
+  // Find the filiere for this etudiant (assuming etudiant.matricule or etudiant.id matches with filiere)
+  // You may need to adjust the matching logic based on your actual data model
+  const filiere = filieres.find(f =>
+    
+    // @ts-ignore
+    etudiant.id_filiere && f.id_filiere === etudiant.id_filiere
   );
+
+  const matchFiliere = selectedFiliere
+    ? filiere && filiere.id_filiere === parseInt(selectedFiliere)
+    : true;
+
+  const matchNiveau = selectedNiveau
+    ? filiere && filiere.niveau === selectedNiveau
+    : true;
+
+  return matchNom && matchFiliere && matchNiveau;
+});
+
 
   // Niveaux disponibles pour la filière sélectionnée
   const niveauxDisponibles = Array.from(
@@ -138,6 +186,11 @@ export default function Etudiant() {
   const handlePayment = async () => {
     if (!selectedEtudiant || !paymentAmount) {
       setError("Sélectionnez un étudiant et entrez un montant");
+      return;
+    }
+
+    if (!currentUserId) {
+      setError("Vous devez être connecté pour effectuer un paiement");
       return;
     }
 
@@ -161,7 +214,7 @@ export default function Etudiant() {
           montant: montant,
           description: description,
           mode_paiement: paymentMode,
-          id_utilisateur: 1, // À remplacer par l'ID de l'utilisateur connecté
+          id_utilisateur: currentUserId, // Utilisation de l'ID utilisateur connecté
           id_etudiant: etudiant.id
         })
       });
@@ -182,6 +235,14 @@ export default function Etudiant() {
       setLoading(prev => ({...prev, envoi: false}));
     }
   };
+
+  if (loading.initial || loading.session) {
+    return (
+      <div className="container mx-auto p-4 flex justify-center items-center h-64">
+        <CircularProgress />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -205,7 +266,6 @@ export default function Etudiant() {
             }}
             displayEmpty
             fullWidth
-            disabled={loading.filieres}
           >
             <MenuItem value="">Toutes les filières</MenuItem>
             {filieres.map((filiere) => (
@@ -223,7 +283,7 @@ export default function Etudiant() {
             }}
             displayEmpty
             fullWidth
-            disabled={!selectedFiliere || loading.filieres}
+            disabled={!selectedFiliere}
           >
             <MenuItem value="">Tous les niveaux</MenuItem>
             {niveauxDisponibles.map((niveau, index) => (
@@ -249,10 +309,10 @@ export default function Etudiant() {
             onChange={(e) => setSelectedEtudiant(e.target.value)}
             displayEmpty
             fullWidth
-            disabled={loading.etudiants}
+            disabled={loading.initial}
           >
             <MenuItem value="" disabled>
-              {loading.etudiants ? <CircularProgress size={20} /> : "Sélectionner un étudiant"}
+              {loading.initial ? "Chargement..." : "Sélectionner un étudiant"}
             </MenuItem>
             {filteredEtudiants.map((etudiant) => (
               <MenuItem key={etudiant.id} value={etudiant.id.toString()}>
@@ -263,64 +323,67 @@ export default function Etudiant() {
         </Box>
 
         {/* Formulaire de paiement */}
-        <Box display="flex" flexDirection="column" gap={2}>
-          <Box display="flex" gap={2}>
-            <Select
-              value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
-              fullWidth
-            >
-              {paymentTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
+        {currentUserId && (
+          <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" gap={2}>
+              <Select
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
+                fullWidth
+              >
+                {paymentTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
 
-            <Select
-              value={paymentMode}
-              onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
-              fullWidth
-            >
-              {paymentModes.map((mode) => (
-                <MenuItem key={mode} value={mode}>
-                  {mode}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+              <Select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
+                fullWidth
+              >
+                {paymentModes.map((mode) => (
+                  <MenuItem key={mode} value={mode}>
+                    {mode}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
 
-          <Box display="flex" gap={2} alignItems="center">
+            <Box display="flex" gap={2} alignItems="center">
+              <TextField
+                type="number"
+                label="Montant (FCFA)"
+                variant="outlined"
+                fullWidth
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                disabled={!selectedEtudiant}
+              />
+
+              <Button
+                variant="contained"
+                onClick={handlePayment}
+                disabled={!selectedEtudiant || !paymentAmount || loading.envoi}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
+              </Button>
+            </Box>
+
             <TextField
-              type="number"
-              label="Montant (FCFA)"
+              label="Description"
               variant="outlined"
               fullWidth
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-              disabled={!selectedEtudiant}
+              multiline
+              rows={2}
+              value={paymentDescription}
+              onChange={(e) => setPaymentDescription(e.target.value)}
+              placeholder="Détails du paiement..."
             />
-
-            <button
-              onClick={handlePayment}
-              disabled={!selectedEtudiant || !paymentAmount || loading.envoi}
-              className="bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:bg-gray-400"
-            >
-              {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
-            </button>
           </Box>
-
-          <TextField
-            label="Description"
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={2}
-            value={paymentDescription}
-            onChange={(e) => setPaymentDescription(e.target.value)}
-            placeholder="Détails du paiement..."
-          />
-        </Box>
+        )}
 
         {/* Historique des paiements */}
         <Box mt={4}>
@@ -329,11 +392,7 @@ export default function Etudiant() {
             {selectedEtudiant && ` pour l'étudiant sélectionné`}
           </h2>
           
-          {loading.paiements ? (
-            <Box display="flex" justifyContent="center">
-              <CircularProgress />
-            </Box>
-          ) : filteredPaymentHistory.length === 0 ? (
+          {paymentHistory.length === 0 ? (
             <p>Aucun paiement enregistré</p>
           ) : (
             <div className="overflow-x-auto">

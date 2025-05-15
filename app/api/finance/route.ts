@@ -79,9 +79,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Un seul des deux : id_etudiant ou id_enseignant
-    if ((id_etudiant && id_enseignant) || (!id_etudiant && !id_enseignant)) {
+      if (body.id_etudiant && body.id_enseignant) {
       return NextResponse.json(
-        { message: "Spécifiez soit id_etudiant soit id_enseignant, pas les deux ou aucun." },
+        { message: "Spécifiez soit un étudiant, soit un enseignant, pas les deux" },
         { status: 400 }
       );
     }

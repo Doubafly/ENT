@@ -1,5 +1,5 @@
 "use client";
-import { Box, MenuItem, Select, TextField, CircularProgress, Alert } from "@mui/material";
+import { Box, MenuItem, Select, TextField, CircularProgress, Alert, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Decimal } from "@prisma/client/runtime/library";
 
@@ -11,7 +11,7 @@ interface Enseignant {
     prenom: string;
   };
   specialite: string;
-  cours: {
+  cours?: {
     filiere_module: {
       module: {
         id_module: number;
@@ -49,6 +49,7 @@ type FinanceModePaiement = 'Espèces' | 'Chèque' | 'Virement' | 'Carte Bancaire
 
 const paymentTypes: FinanceTypeTransaction[] = ['Salaire', 'Prime', 'Remboursement', 'Autre'];
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque', 'Virement', 'Carte Bancaire'];
+const SESSION_API_URL = "/api/auth/session";
 
 export default function Enseignant() {
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
@@ -63,16 +64,44 @@ export default function Enseignant() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState({
     initial: true,
-    envoi: false
+    envoi: false,
+    session: true
   });
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+
+  // Vérification de la session et récupération de l'ID utilisateur
+  useEffect(() => {
+    const checkUserSession = async () => {
+      try {
+        const response = await fetch(SESSION_API_URL, {
+          credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Erreur de session");
+
+        const { user } = await response.json();
+        if (user?.id_utilisateur) {
+          setCurrentUserId(user.id_utilisateur);
+        }
+      } catch (err) {
+        console.error("Erreur vérification session:", err);
+      } finally {
+        setLoading(prev => ({...prev, session: false}));
+      }
+    };
+
+    checkUserSession();
+  }, []);
 
   // Récupérer les données initiales
   useEffect(() => {
+    if (loading.session) return; // Attendre que la session soit vérifiée
+
     const fetchInitialData = async () => {
       setError(null);
       try {
-        // Charger les modules et enseignants en parallèle
+        // Charger les modules, enseignants et paiements en parallèle
         const [modulesResponse, enseignantsResponse, paiementsResponse] = await Promise.all([
           fetch('/api/cours'),
           fetch('/api/utilisateurs/enseignants'),
@@ -91,19 +120,32 @@ export default function Enseignant() {
 
         // Traitement des modules
         const modulesUniques = modulesData.cours?.reduce((acc: Module[], cours: any) => {
-          const module = cours.filiere_module?.module;
-          if (module && !acc.some(m => m.id_module === module.id_module)) {
-            acc.push({
-              id_module: module.id_module,
-              nom: module.nom
-            });
+          if (cours.filiere_module?.module) {
+            const module = cours.filiere_module.module;
+            if (!acc.some(m => m.id_module === module.id_module)) {
+              acc.push({
+                id_module: module.id_module,
+                nom: module.nom
+              });
+            }
           }
           return acc;
         }, []) || [];
         setModules(modulesUniques);
 
-        // Traitement des enseignants
-        setEnseignants(enseignantsData.enseignants || []);
+        // Traitement des enseignants avec leurs cours
+        const enseignantsAvecCours = enseignantsData.utilisateurs?.map((enseignant: any) => {
+          const coursEnseignant = modulesData.cours?.filter((c: any) => 
+            c.enseignant?.id === enseignant.id
+          ) || [];
+          
+          return {
+            ...enseignant,
+            cours: coursEnseignant
+          };
+        }) || [];
+        
+        setEnseignants(enseignantsAvecCours);
 
         // Traitement des paiements
         setPaymentHistory(paiementsData.finances || []);
@@ -116,7 +158,7 @@ export default function Enseignant() {
       }
     };
     fetchInitialData();
-  }, []);
+  }, [loading.session]);
 
   // Filtrer les enseignants par recherche et module
   const filteredEnseignants = enseignants.filter(enseignant => {
@@ -127,7 +169,8 @@ export default function Enseignant() {
       : true;
     
     const matchesModule = selectedModule
-      ? (enseignant.cours?.some(c => c.filiere_module?.module?.id_module === parseInt(selectedModule)) || false)
+      ? (enseignant.cours?.some(c => 
+          c.filiere_module?.module?.id_module === parseInt(selectedModule)) || false)
       : true;
     
     return matchesSearch && matchesModule;
@@ -136,11 +179,16 @@ export default function Enseignant() {
   // Filtrer l'historique pour l'enseignant sélectionné
   const filteredPaymentHistory = selectedEnseignant
     ? paymentHistory.filter(p => p.id_enseignant === parseInt(selectedEnseignant))
-    : paymentHistory.filter(p => p.id_enseignant); // Seulement les paiements avec id_enseignant
+    : paymentHistory.filter(p => p.id_enseignant);
 
   const handlePayment = async () => {
     if (!selectedEnseignant || !paymentAmount) {
       setError("Sélectionnez un enseignant et entrez un montant");
+      return;
+    }
+
+    if (!currentUserId) {
+      setError("Vous devez être connecté pour effectuer un paiement");
       return;
     }
 
@@ -164,7 +212,7 @@ export default function Enseignant() {
           montant: montant,
           description: description,
           mode_paiement: paymentMode,
-          id_utilisateur: 1, // À remplacer par l'ID de l'utilisateur connecté
+          id_utilisateur: currentUserId, // Utilisation de l'ID utilisateur connecté
           id_enseignant: enseignant.id
         })
       });
@@ -186,7 +234,7 @@ export default function Enseignant() {
     }
   };
 
-  if (loading.initial) {
+  if (loading.initial || loading.session) {
     return (
       <div className="container mx-auto p-4 flex justify-center items-center h-64">
         <CircularProgress />
@@ -237,9 +285,10 @@ export default function Enseignant() {
             onChange={(e) => setSelectedEnseignant(e.target.value)}
             displayEmpty
             fullWidth
+            disabled={!modules.length || !enseignants.length}
           >
             <MenuItem value="" disabled>
-              Sélectionner un enseignant
+              {modules.length && enseignants.length ? "Sélectionner un enseignant" : "Chargement..."}
             </MenuItem>
             {filteredEnseignants.map((enseignant) => (
               <MenuItem key={enseignant.id} value={enseignant.id.toString()}>
@@ -250,64 +299,67 @@ export default function Enseignant() {
         </Box>
 
         {/* Formulaire de paiement */}
-        <Box display="flex" flexDirection="column" gap={2}>
-          <Box display="flex" gap={2}>
-            <Select
-              value={paymentType}
-              onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
-              fullWidth
-            >
-              {paymentTypes.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
+        {currentUserId && (
+          <Box display="flex" flexDirection="column" gap={2}>
+            <Box display="flex" gap={2}>
+              <Select
+                value={paymentType}
+                onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
+                fullWidth
+              >
+                {paymentTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type}
+                  </MenuItem>
+                ))}
+              </Select>
 
-            <Select
-              value={paymentMode}
-              onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
-              fullWidth
-            >
-              {paymentModes.map((mode) => (
-                <MenuItem key={mode} value={mode}>
-                  {mode}
-                </MenuItem>
-              ))}
-            </Select>
-          </Box>
+              <Select
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
+                fullWidth
+              >
+                {paymentModes.map((mode) => (
+                  <MenuItem key={mode} value={mode}>
+                    {mode}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Box>
 
-          <Box display="flex" gap={2} alignItems="center">
+            <Box display="flex" gap={2} alignItems="center">
+              <TextField
+                type="number"
+                label="Montant (FCFA)"
+                variant="outlined"
+                fullWidth
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                disabled={!selectedEnseignant}
+              />
+
+              <Button
+                variant="contained"
+                onClick={handlePayment}
+                disabled={!selectedEnseignant || !paymentAmount || loading.envoi}
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
+              </Button>
+            </Box>
+
             <TextField
-              type="number"
-              label="Montant (FCFA)"
+              label="Description"
               variant="outlined"
               fullWidth
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-              disabled={!selectedEnseignant}
+              multiline
+              rows={2}
+              value={paymentDescription}
+              onChange={(e) => setPaymentDescription(e.target.value)}
+              placeholder="Détails du paiement..."
             />
-
-            <button
-              onClick={handlePayment}
-              disabled={!selectedEnseignant || !paymentAmount || loading.envoi}
-              className="bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:bg-gray-400"
-            >
-              {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
-            </button>
           </Box>
-
-          <TextField
-            label="Description"
-            variant="outlined"
-            fullWidth
-            multiline
-            rows={2}
-            value={paymentDescription}
-            onChange={(e) => setPaymentDescription(e.target.value)}
-            placeholder="Détails du paiement..."
-          />
-        </Box>
+        )}
 
         {/* Historique des paiements */}
         <Box mt={4}>

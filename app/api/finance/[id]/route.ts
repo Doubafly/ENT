@@ -1,107 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../prisma";
+import prisma from "@/lib/prisma";
 
-interface Params {
-  params: { id: string };
-}
-
-// GET : Récupérer une transaction par ID
-export async function GET(request: NextRequest, { params }: Params) {
-  const id = parseInt(params.id);
-
+// GET: Récupère une transaction par ID
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const transaction = await prisma.finance.findUnique({
-      where: { id_finance: id },
+      where: { id_finance: Number(params.id) },
       include: {
-        utilisateur: {
-          select: {
-            nom: true,
-            prenom: true
-          }
-        },
+        utilisateur: { select: { nom: true, prenom: true } },
         etudiant: {
           select: {
             matricule: true,
-            utilisateur: {
-              select: {
-                nom: true,
-                prenom: true
-              }
-            }
+            utilisateur: { select: { nom: true, prenom: true } }
           }
         },
         enseignant: {
           select: {
             matricule: true,
-            utilisateur: {
-              select: {
-                nom: true,
-                prenom: true
-              }
-            }
+            utilisateur: { select: { nom: true, prenom: true } }
           }
         }
       }
     });
 
     if (!transaction) {
-      return NextResponse.json({ message: "Transaction non trouvée" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Transaction non trouvée" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json({ message: "Succès", transaction }, { status: 200 });
+    return NextResponse.json({ transaction });
   } catch (e) {
-    console.error("Erreur GET transaction :", e);
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+    console.error("Erreur GET /finance/[id]:", e);
+    return NextResponse.json(
+      { message: "Erreur serveur" },
+      { status: 500 }
+    );
   }
 }
 
-// PUT : Modifier une transaction
-export async function PUT(request: NextRequest, { params }: Params) {
-  const id = parseInt(params.id);
-  const { 
-    type_transaction, 
-    montant, 
-    description, 
-    mode_paiement, 
-    reference,
-    statut
-  } = await request.json();
-
+// PUT: Met à jour une transaction
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const transactionModifiee = await prisma.finance.update({
-      where: { id_finance: id },
-      data: { 
-        type_transaction,
-        montant,
-        description,
-        mode_paiement,
-        reference,
-        statut
+    const body = await request.json();
+    
+    const transaction = await prisma.finance.update({
+      where: { id_finance: Number(params.id) },
+      data: {
+        type_transaction: body.type_transaction,
+        montant: body.montant,
+        description: body.description,
+        mode_paiement: body.mode_paiement,
+        reference: body.reference,
+        statut: body.statut
       }
     });
 
     return NextResponse.json(
-      { message: "Transaction modifiée avec succès", transaction: transactionModifiee },
+      { transaction, message: "Transaction mise à jour" },
       { status: 200 }
     );
   } catch (e) {
-    console.error("Erreur PUT transaction :", e);
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+    console.error("Erreur PUT /finance/[id]:", e);
+    return NextResponse.json(
+      { message: "Erreur lors de la mise à jour" },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE : Supprimer une transaction
-export async function DELETE(request: NextRequest, { params }: Params) {
-  const id = parseInt(params.id);
-
+// DELETE: Supprime une transaction
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await prisma.finance.delete({
-      where: { id_finance: id }
+      where: { id_finance: Number(params.id) }
     });
 
-    return NextResponse.json({ message: "Transaction supprimée" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Transaction supprimée" },
+      { status: 200 }
+    );
   } catch (e) {
-    console.error("Erreur DELETE transaction :", e);
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 });
+    console.error("Erreur DELETE /finance/[id]:", e);
+    return NextResponse.json(
+      { message: "Erreur lors de la suppression" },
+      { status: 500 }
+    );
   }
 }

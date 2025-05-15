@@ -1,23 +1,17 @@
 "use client";
-import React from "react";
 import ListeAnnexes from "@/components/list/ListeAnnexes";
-import { useState } from "react";
-import {
-  FaCog,
-  FaPalette,
-  FaUser,
-  FaShieldAlt,
-  FaBell,
-  FaBuilding,
-  FaUserShield,
-  FaCalendarAlt,
-  FaBook,
-  FaSitemap,
-} from "react-icons/fa";
-import ListeModules from "@/components/list/ListeModules";
 import ListeFilieres from "@/components/list/ListeFilieres";
+import ListeModules from "@/components/list/ListeModules";
 import ListeRoles from "@/components/list/ListeRoles";
 import ListeSession from "@/components/list/ListeSession";
+import { useState } from "react";
+import {
+  FaBook,
+  FaBuilding,
+  FaCalendarAlt,
+  FaCog,
+  FaSitemap,
+} from "react-icons/fa";
 
 const ParametrePage = () => {
   const [activeSection, setActiveSection] = useState("Système");
@@ -25,10 +19,10 @@ const ParametrePage = () => {
     null
   );
 
-  // Données pour les sections 
+  // Données pour les sections
   const sections = [
     {
-      pid: "Système",
+      id: "Système",
       icon: <FaCog />,
       description: "Gérer les paramètres système",
     },
@@ -114,7 +108,12 @@ const ParametrePage = () => {
                   {sections
                     .filter(
                       (section) =>
-                        section.id === activeSection && section.id !== "Annexes" && section.id !== "Roles" && section.id !== "Modules" && section.id !== "Filieres" && section.id !== "Sessions"
+                        section.id === activeSection &&
+                        section.id !== "Annexes" &&
+                        section.id !== "Roles" &&
+                        section.id !== "Modules" &&
+                        section.id !== "Filieres" &&
+                        section.id !== "Sessions"
                     ) // Exclure la section "Annexes"
                     .map((section) => (
                       <div

@@ -164,7 +164,6 @@ model Document {
   @@index([id_classe], map: "infos_classe")
   @@map("documents")
 }
-
 // Table pour gérer les filières
 model Filieres {
   id_filiere    Int             @id @default(autoincrement())
@@ -304,30 +303,6 @@ model Finance {
   @@index([id_utilisateur], name: "Finance_id_utilisateur_fkey")
 }
 
-model Document {
-  id            Int       @id @default(autoincrement())
-  titre         String
-  description   String?
-  chemin_fichier String
-  type_fichier  String?
-  taille_fichier Int?
-  date_upload   DateTime  @default(now())
-  est_actif     Boolean   @default(true)
-  id_uploader   Int
-  id_classe     Int
-  uploader        Utilisateurs  @relation("UploaderToDocuments", fields: [id_uploader], references: [id_utilisateur])
-  classe          Cours        @relation("FilieresToDocuments", fields: [id_classe], references: [id_cours])
-
-  // Index pour les performances (optionnel mais recommandé)
-  @@index([id_uploader], name: "Document_id_uploader_fkey")
-  @@index([id_classe], name: "Document_id_classe_fkey")
-
-  // Contrainte d'unicité : titre unique par classe
-  @@unique([titre, id_classe], name: "unique_titre_par_classe")
-  @@index([id_uploader], map: "infos_ser")
-  @@index([id_classe], map: "infos_classe")
-  @@map("documents")
-}
 
 
 enum FinanceEntiteType {

@@ -28,7 +28,7 @@ const ParametrePage = () => {
   // Données pour les sections 
   const sections = [
     {
-      id: "Système",
+      pid: "Système",
       icon: <FaCog />,
       description: "Gérer les paramètres système",
     },

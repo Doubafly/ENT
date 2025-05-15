@@ -1,20 +1,28 @@
-import React, { useEffect, useState, useContext } from "react";
-import { Bar, Doughnut } from "react-chartjs-2";
+import { UserContext } from "@/context/utilisateur";
 import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
   Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip,
+} from "chart.js";
+import { useContext, useEffect, useState } from "react";
+import { Bar, Doughnut } from "react-chartjs-2";
+import MiniSmallIconCard from "../card/MiniIconCard";
+import "./statistique.css";
+
+ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-} from "chart.js";
-import MiniSmallIconCard from "../card/MiniIconCard";
-import { UserContext } from "@/changerUtilisateur/utilisateur";
-import "./statistique.css";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+  ArcElement
+);
 
 const Statistique = ({ menuStat }) => {
   const [chartData, setChartData] = useState(null); // Données pour les graphiques
@@ -42,8 +50,12 @@ const Statistique = ({ menuStat }) => {
         // Transformation des données pour les graphiques
         const labels = filteredCours.map((cours) => `Cours ${cours.id_cours}`);
         const etudiantsData = filteredCours.map((cours) => cours.notes.length); // Nombre de notes par cours
-        const enseignantsData = filteredCours.map((cours) => cours.id_professeur); // ID des professeurs
-        const classesData = filteredCours.map((cours) => cours.id_filiere_module); // ID des filières/modules
+        const enseignantsData = filteredCours.map(
+          (cours) => cours.id_professeur
+        ); // ID des professeurs
+        const classesData = filteredCours.map(
+          (cours) => cours.id_filiere_module
+        ); // ID des filières/modules
 
         // Données pour le graphique en barres
         const barData = {
@@ -88,7 +100,10 @@ const Statistique = ({ menuStat }) => {
         setChartData(barData);
         setDoughnutData(doughnutData);
       } catch (error) {
-        console.error("Erreur lors de la récupération des données des cours :", error);
+        console.error(
+          "Erreur lors de la récupération des données des cours :",
+          error
+        );
       }
     }
 
@@ -96,7 +111,6 @@ const Statistique = ({ menuStat }) => {
   }, [user]); // Recharger les données si l'utilisateur change
 
   return (
-    
     <div className="statistique">
       <h2 className="statistique-title">Statistiques</h2>
       <div className="gridStat">
@@ -120,10 +134,7 @@ const Statistique = ({ menuStat }) => {
         </div>
       </div>
 
-{renderContent()}
-
-
-
+      {renderContent()}
     </div>
   );
 };

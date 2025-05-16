@@ -42,10 +42,12 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
   // Fonction pour compter le nombre total de réclamations dans une classe
   const countReclamations = (classe: Classe): number => {
     let count = 0;
+    
     classe.semestres.forEach(semestre => {
       semestre.modules.forEach(module => {
         module.students.forEach(student => {
-          if (student.notes[0].statut_reclamation=="EnAttente") count++;
+          
+          if (student?.notes[0]?.statut_reclamation=="EnAttente") count++;
         });
       });
     });
@@ -207,7 +209,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
                     </div>
                     <div className="divide-y">
                       {semestre.modules.map(module => {
-                        const moduleReclamations = module.students.filter(s => s.notes[0].statut_reclamation=="EnAttente").length;
+                        const moduleReclamations = module.students.filter(s => s?.notes[0]?.statut_reclamation=="EnAttente").length;
                         
                         return (
                           <div key={module.id} className="p-4">
@@ -226,7 +228,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
                                 </h4>
                                 <ul className="space-y-2">
                                   {module.students
-                                    .filter(student => student.notes[0].statut_reclamation=="EnAttente")
+                                    .filter(student => student?.notes[0]?.statut_reclamation=="EnAttente")
                                     .map(student => (
                                       <li key={student.id} className="flex justify-between items-center p-2 bg-white rounded">
                                         <span>

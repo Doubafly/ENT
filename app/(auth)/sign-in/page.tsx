@@ -17,7 +17,6 @@ export default function Page() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData);
-    localStorage.setItem('user', JSON.stringify(data.user));
 
 
     const payload = {
@@ -35,10 +34,15 @@ export default function Page() {
       });
 
       if (response.ok) {
+            const userData = await response.json();
+        // Stockez toutes les infos utilisateur dans localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
         setModal({ message: "Connexion réussie", status: "success" });
         setTimeout(() => {
           route.push("/");
         }, 3000);
+        // console.log(userData+"ok");
+        
       } else {
         setModal({ message: "Erreur de connexion", status: "error" });
       }

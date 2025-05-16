@@ -223,19 +223,6 @@ export default function ClasseList() {
     }
   };
 
-  // const handleAddStudent = () => {
-  //   if (!newStudent.trim() || !selectedClassId) return;
-
-  //   const trimmedStudent = newStudent.trim();
-  //   setClasses((prev) =>
-  //     prev.map((c) =>
-  //       c.id_filiere === selectedClassId
-  //         ? { ...c, effectif: (c.effectif || 0) + 1 }
-  //         : c
-  //     )
-  //   );
-  //   setNewStudent("");
-  // };
 
   // Utilitaires
   const resetForm = () => {

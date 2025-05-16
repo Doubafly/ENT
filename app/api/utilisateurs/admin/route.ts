@@ -61,11 +61,13 @@ export async function POST(request: NextRequest) {
       prenom,
       email,
       sexe,
-      mot_de_passe,
+      password,
       telephone,
       adresse,
-      permissions, // Ex: [1, 2, 3]
+      permissions,
     } = await request.json();
+    console.log(permissions);
+    
 
     // Validation des données
     if (
@@ -73,10 +75,9 @@ export async function POST(request: NextRequest) {
       !prenom?.trim() ||
       !email?.trim() ||
       !sexe?.trim() ||
-      !mot_de_passe ||
+      !password ||
       !telephone?.trim() ||
-      !adresse?.trim() ||
-      permissions.length === 0
+      !adresse?.trim() 
     ) {
       return NextResponse.json(
         { message: "Veuillez remplir tous les champs correctement" },
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash du mot de passe
-    const hashPass = await bcrypt.hash(mot_de_passe, 10);
+    const hashPass = await bcrypt.hash(password, 10);
 
     // Création de l'utilisateur
     const utilisateur = await prisma.utilisateurs.create({
@@ -105,15 +106,15 @@ export async function POST(request: NextRequest) {
     const permission = await prisma.permission.create({
       data: {
         id_utilisateur: utilisateur.id_utilisateur,
-        enseignants: permissions[0],
-        etudiants: permissions[1],
-        admin: permissions[2],
-        classes: permissions[3],
-        paiement: permissions[4],
-        note: permissions[5],
-        emplois_du_temps: permissions[6],
-        parametres: permissions[7],
-        annonces: permissions[8],
+        enseignants: permissions.enseignants,
+        etudiants: permissions.etudiants,
+        admin: permissions.admin,
+        classes: permissions.classes,
+        emplois_du_temps: permissions.emplois_du_temps,
+        parametres: permissions.parametres,
+        annonces: permissions.annonces,
+        note: permissions.note,
+        paiement: permissions.paiement,
       },
     });
     // Création de l'admin et des permissions en une seule requête

@@ -328,7 +328,7 @@ export default function Configuration({
       setError("Veuillez sélectionner une session et un enseignant");
       return;
     }
-
+    
     try {
       const method = editingCours ? "PUT" : "POST";
       const url = editingCours

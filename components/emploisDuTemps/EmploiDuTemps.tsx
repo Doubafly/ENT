@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from 'react';
 import Modal from '../modal/Modal';
 
@@ -12,19 +13,43 @@ interface Emploi {
     semestre: string;
     filiere_module: {
       filiere: {
+        id_filiere: number;
         nom: string;
         niveau: string;
       };
       module: {
+        id_module: number;
         nom: string;
       };
     };
     enseignant: {
+      id_enseignant: number;
       utilisateur: {
+        id_utilisateur: number;
         nom: string;
         prenom: string;
       };
     };
+  };
+}
+
+interface Classe {
+  id_filiere: number;
+  niveau: string;
+  nom: string;
+}
+
+interface Module {
+  id_module: number;
+  nom: string;
+}
+
+interface Enseignant {
+  id_enseignant: number;
+  utilisateur: {
+    id_utilisateur: number;
+    nom: string;
+    prenom: string;
   };
 }
 
@@ -60,9 +85,11 @@ const EmploiDuTemps = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emplois, setEmplois] = useState<Emploi[]>([]);
-  const [classes, setClasses] = useState<string[]>([]);
-  const [coursOptions, setCoursOptions] = useState<{ id: number; label: string }[]>([]);
+  const [classes, setClasses] = useState<Classe[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
   const [mode, setMode] = useState<'create' | 'edit' | null>(null);
+  const [coursOptions, setCoursOptions] = useState<{id: number, label: string}[]>([]);
 
   // Charger les données initiales
   useEffect(() => {
@@ -71,28 +98,42 @@ const EmploiDuTemps = () => {
         setLoading(true);
         setError('');
 
+        // Charger tous les emplois du temps
         const emploisResponse = await fetch('/api/emploisDuTemps');
         if (!emploisResponse.ok) throw new Error('Erreur de chargement des emplois');
         const emploisData = await emploisResponse.json();
-        setEmplois(emploisData.emploisDuTemps);
+        setEmplois(emploisData.emploisDuTemps || []);
 
-        const filieres = new Set<string>();
-        emploisData.emploisDuTemps.forEach((e: Emploi) => {
-          const f = e.cours?.filiere_module?.filiere;
-          if (f) filieres.add(`${f.niveau} ${f.nom}`);
-        });
-        setClasses(Array.from(filieres));
+        // Charger toutes les classes (filieres) disponibles
+        const classesResponse = await fetch('/api/filieres');
+        if (!classesResponse.ok) throw new Error('Erreur de chargement des classes');
+        const classesData = await classesResponse.json();
+        setClasses(classesData.filieres || []);
 
+        // Charger tous les modules
+        const modulesResponse = await fetch('/api/modules');
+        if (!modulesResponse.ok) throw new Error('Erreur de chargement des modules');
+        const modulesData = await modulesResponse.json();
+        setModules(modulesData.data || []);
+
+        // Charger tous les enseignants
+        const enseignantsResponse = await fetch('/api/utilisateurs/enseignants');
+        if (!enseignantsResponse.ok) throw new Error('Erreur de chargement des enseignants');
+        const enseignantsData = await enseignantsResponse.json();
+        console.log(enseignantsData.enseignants," enseignant data");
+        
+        setEnseignants(enseignantsData.enseignants || []);
+
+        // Charger les options de cours
         const coursResponse = await fetch('/api/cours');
         if (coursResponse.ok) {
           const coursData = await coursResponse.json();
-          if (Array.isArray(coursData?.cours)) {
-            setCoursOptions(coursData.cours.map((c: any) => ({
-              id: c.id_cours,
-              label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
-            })));
-          }
+          setCoursOptions((coursData.cours || []).map((c: any) => ({
+            id: c.id_cours,
+            label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+          })));
         }
+
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erreur inconnue');
       } finally {
@@ -221,12 +262,19 @@ const EmploiDuTemps = () => {
       setLoading(true);
       setError('');
 
-      if (!formData.jour || !formData.heure || !formData.matiere) {
+      if (!formData.jour || !formData.heure || !formData.matiere || !formData.enseignant || !classe) {
         throw new Error('Tous les champs obligatoires doivent être remplis');
       }
 
       const [heureDebut, heureFin] = formData.heure.split('-');
-      const coursSelectionne = coursOptions.find(c => c.label.includes(formData.matiere));
+      const [niveau, nomFiliere] = classe.split(' ');
+
+      // Trouver le cours correspondant
+      const coursSelectionne = coursOptions.find(c => 
+        c.label.includes(formData.matiere) && 
+        c.label.includes(formData.enseignant)
+      );
+      
       if (!coursSelectionne) throw new Error('Cours non trouvé');
 
       const emploiData = {
@@ -238,26 +286,42 @@ const EmploiDuTemps = () => {
       };
 
       // Mise à jour optimiste de l'état local
+      const selectedClasseObj = classes.find(
+        (c) => c.niveau === niveau && c.nom === nomFiliere
+      );
+      const id_filiere = selectedClasseObj?.id_filiere ?? 0;
+
       const newEmploi = {
-        id_emploi: formData.id_emploi || Math.floor(Math.random() * 10000), // ID temporaire si création
+        id_emploi: formData.id_emploi || Math.floor(Math.random() * 10000),
         jour: formData.jour,
         heure_debut: emploiData.heure_debut,
         heure_fin: emploiData.heure_fin,
         salle: formData.salle,
         cours: {
           id_cours: coursSelectionne.id,
-          semestre: '', // Ajoutez la valeur appropriée ici si disponible
+          semestre: '',
           filiere_module: {
             filiere: {
-              niveau: classe.split(' ')[0],
-              nom: classe.split(' ')[1]
+              id_filiere,
+              niveau,
+              nom: nomFiliere
             },
             module: {
+              id_module: modules.find((m) => m.nom === formData.matiere)?.id_module ?? 0,
               nom: formData.matiere
             }
           },
           enseignant: {
+            id_enseignant: enseignants.find(
+              (e) =>
+                `${e.utilisateur.prenom} ${e.utilisateur.nom}` === formData.enseignant
+            )?.id_enseignant ?? 0,
             utilisateur: {
+              id_utilisateur:
+                enseignants.find(
+                  (e) =>
+                    `${e.utilisateur.prenom} ${e.utilisateur.nom}` === formData.enseignant
+                )?.utilisateur.id_utilisateur ?? 0,
               nom: formData.enseignant.split(' ')[1] || '',
               prenom: formData.enseignant.split(' ')[0] || ''
             }
@@ -290,16 +354,15 @@ const EmploiDuTemps = () => {
 
       if (!response.ok) throw new Error('Erreur lors de la requête');
 
-      // Recharger les données fraîches après la requête
+      // Recharger les données
       const emploisResponse = await fetch('/api/emploisDuTemps');
       const freshData = await emploisResponse.json();
-      setEmplois(freshData.emploisDuTemps);
+      setEmplois(freshData.emploisDuTemps || []);
 
       setShowForm(false);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
-      // En cas d'erreur, recharger les données pour revenir à l'état précédent
       const emploisResponse = await fetch('/api/emploisDuTemps');
       setEmplois(await emploisResponse.json());
     } finally {
@@ -317,7 +380,6 @@ const EmploiDuTemps = () => {
       setLoading(true);
       setError('');
 
-      // Mise à jour optimiste
       setEmplois(prev => prev.filter(e => e.id_emploi !== formData.id_emploi));
 
       const response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
@@ -343,7 +405,6 @@ const EmploiDuTemps = () => {
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
-      // En cas d'erreur, recharger les données
       const emploisResponse = await fetch('/api/emploisDuTemps');
       setEmplois(await emploisResponse.json());
     } finally {
@@ -378,7 +439,9 @@ const EmploiDuTemps = () => {
         >
           <option value="">Sélectionner une classe</option>
           {classes.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={`${c.niveau}-${c.nom}`} value={`${c.niveau} ${c.nom}`}>
+              {c.niveau} {c.nom}
+            </option>
           ))}
         </select>
 
@@ -441,6 +504,25 @@ const EmploiDuTemps = () => {
             </h2>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
+                <label className="block text-sm font-medium mb-1">Classe *</label>
+                <select
+                  name="classe"
+                  value={classe}
+                  onChange={(e) => setClasse(e.target.value)}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                  disabled={mode === 'edit'}
+                >
+                  <option value="">Sélectionner une classe</option>
+                  {classes.map((c) => (
+                    <option key={`${c.niveau}-${c.nom}`} value={`${c.niveau} ${c.nom}`}>
+                      {c.niveau} {c.nom}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium mb-1">Jour *</label>
                 <select 
                   name="jour"
@@ -448,6 +530,7 @@ const EmploiDuTemps = () => {
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
                   required
+                  disabled={mode === 'edit'}
                 >
                   <option value="">Sélectionner un jour</option>
                   {jours.map(j => (
@@ -464,6 +547,7 @@ const EmploiDuTemps = () => {
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
                   required
+                  disabled={mode === 'edit'}
                 >
                   <option value="">Sélectionner une heure</option>
                   {heures.map(h => (
@@ -474,27 +558,41 @@ const EmploiDuTemps = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Matière *</label>
-                <input
-                  type="text"
+                <select 
                   name="matiere"
                   value={formData.matiere}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
-                  placeholder="Ex: Maths"
                   required
-                />
+                >
+                  <option value="">Sélectionner une matière</option>
+                  {modules.map((m) => (
+                    <option key={m.id_module} value={m.nom}>
+                      {m.nom}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Enseignant</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium mb-1">Enseignant *</label>
+                <select 
                   name="enseignant"
                   value={formData.enseignant}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
-                  placeholder="Ex: M. Dupont"
-                />
+                  required
+                >
+                  <option value="">Sélectionner un enseignant</option>
+                  {enseignants?.map((e) => (
+                    <option 
+                      key={e.id_enseignant} 
+                      value={`${e.utilisateur.prenom} ${e.utilisateur.nom}`}
+                    >
+                      {e.utilisateur.prenom} {e.utilisateur.nom}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>

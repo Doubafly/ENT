@@ -7,29 +7,28 @@ interface DocumentFormProps {
   document?: DocumentFormData;
   filieres: Filiere[];
   modules: Module[];
-  uploaders: User[];
   onSubmit: (formData: DocumentFormData) => Promise<void>;
   onCancel: () => void;
+  currentUser?: any;
 }
 
 const DocumentForm: React.FC<DocumentFormProps> = ({
   document,
   filieres,
   modules,
-  uploaders,
   onSubmit,
   onCancel,
+  currentUser
 }) => {
   const [formData, setFormData] = useState<DocumentFormData>({
     titre: document?.titre || "",
     description: document?.description || "",
-    id_uploader: document?.id_uploader || 0,
+    id_uploader: currentUser?.id || document?.id_uploader || 0,
     id_filiere: document?.id_filiere || undefined,
     id_module: document?.id_module || undefined,
     id_classe: document?.id_classe || undefined,
     file: undefined,
   });
-  // Fonction pour trouver l'ID de la filière par son nom
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -41,14 +40,12 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     document?.chemin_fichier?.split("/").pop() || null
   );
 
-  // Effet pour charger les donnFées initiales lors de la modification
+  // Effet pour charger les données initiales lors de la modification
   useEffect(() => {
     if (document) {
-      // Trouver la filière et le module correspondants au document
       const findInitialData = () => {
         if (!document.id_classe) return;
 
-        // Trouver la filière_module correspondante
         const filiereModule = filieres
           .flatMap((f) => f.filiere_module)
           .find((fm) => fm.id_filiere_module === document.id_classe);
@@ -80,7 +77,6 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
 
       setFilteredModules(filtered);
 
-      // Si un seul module est disponible, le sélectionner automatiquement
       if (filtered.length === 1) {
         setFormData((prev) => ({ ...prev, id_module: filtered[0].id_module }));
       }
@@ -142,7 +138,6 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
     setIsUploading(true);
 
     try {
-      // Valider les champs requis
       if (!formData.titre || !formData.id_uploader || !filiereModuleId) {
         throw new Error("Veuillez remplir tous les champs obligatoires");
       }
@@ -151,7 +146,6 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
         throw new Error("Veuillez sélectionner un fichier");
       }
 
-      // Préparer les données à envoyer
       const submissionData: DocumentFormData = {
         ...formData,
         id_classe: filiereModuleId,
@@ -242,28 +236,31 @@ const DocumentForm: React.FC<DocumentFormProps> = ({
           </select>
         </div>
 
-        {/* Uploader */}
-        <div>
+        {/* Uploader - caché mais obligatoire */}
+        {currentUser && (
+          <div className="hidden">
+            <input 
+              type="hidden" 
+              name="id_uploader" 
+              value={currentUser.id} 
+            />
+          </div>
+        )}
+
+        {/* Affichage de l'uploader */}
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-gray-700">
-            Uploader <span className="text-red-500">*</span>
+            Uploader
           </label>
-          <select
-            name="id_uploader"
-            value={formData.id_uploader || ""}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          >
-            <option value="">Sélectionnez un uploader</option>
-            {uploaders.map((uploader) => (
-              <option
-                key={uploader.id}
-                value={uploader.utilisateur.id_utilisateur}
-              >
-                {`${uploader.utilisateur.prenom} ${uploader.utilisateur.nom}`}
-              </option>
-            ))}
-          </select>
+          <div className="mt-1 p-2 bg-gray-100 rounded-md">
+            {currentUser ? (
+              <p className="text-sm text-gray-900">
+                {currentUser.prenom} {currentUser.nom} (vous)
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">Non connecté</p>
+            )}
+          </div>
         </div>
 
         {/* Fichier */}

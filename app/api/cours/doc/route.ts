@@ -55,6 +55,7 @@ export async function GET() {
               }
             : null,
           filiere: fm.filiere?.nom || null,
+          id_filiere: fm.filiere.id_filiere,
           module: fm.module?.nom || null,
           session: relatedCourse?.sessions?.annee_academique || null,
           annexe: fm.filiere?.annexe?.nom || null,

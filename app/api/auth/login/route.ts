@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
           matricule: user.etudiant.matricule,
           date_naissance: user.etudiant.date_naissance,
           date_inscription: user.etudiant.date_inscription,
-          id_filiere: user.etudiant.id_filiere
+          id_filiere: user.etudiant.id_filiere,
         }
       }),
       ...(user.type === 'Enseignant' && user.enseignant && {

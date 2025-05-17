@@ -129,6 +129,7 @@ export interface ApiDocument {
     email: string;
     telephone?: string;
   };
+  id_filiere: number,
   filiere: string;
   module: string;
   session?: string;

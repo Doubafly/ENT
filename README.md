@@ -87,26 +87,3 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations
 ---
 
 ✨ _Ce projet est activement développé, restez à l'affût des mises à jour !_
-
-- [ ] Finalisation du système d'authentification
-- [ ] Ajout de la gestion avancée des cours
-- [ ] Intégration d'un tableau de bord administrateur
-- [ ] Amélioration de l'UX/UI
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues !
-
-1. Forker le repo
-2. Créer une branche (`git checkout -b feature-xyz`)
-3. Commiter vos modifications (`git commit -m "Ajout d'une nouvelle fonctionnalité"`)
-4. Pousser la branche (`git push origin feature-xyz`)
-5. Ouvrir une Pull Request
-
-## 📜 Licence
-
-Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus d'informations.
-
----
-
-✨ _Ce projet est activement développé, restez à l'affût des mises à jour !_

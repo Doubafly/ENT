@@ -1,7 +1,24 @@
 "use client";
-import { Box, MenuItem, Select, TextField, CircularProgress, Alert, Button } from "@mui/material";
+import { 
+  Box, 
+  MenuItem, 
+  Select, 
+  TextField, 
+  CircularProgress, 
+  Alert, 
+  Button,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { Decimal } from "@prisma/client/runtime/library";
+import { Receipt as ReceiptIcon } from "@mui/icons-material";
 
 interface Etudiant {
   id: number;
@@ -9,6 +26,11 @@ interface Etudiant {
   utilisateur: {
     nom: string;
     prenom: string;
+  };
+  filiere?: {
+    id_filiere: number;
+    nom: string;
+    niveau: string;
   };
 }
 
@@ -33,17 +55,22 @@ interface Paiement {
       nom: string;
       prenom: string;
     };
+    filiere?: {
+      nom: string;
+      niveau: string;
+    };
   };
 }
 
 type FinanceTypeTransaction = 'Inscription' | 'Scolarite' | 'Remboursement' | 'Autre';
-type FinanceModePaiement = 'Espèces' | 'Chèque' | 'Virement' | 'Carte Bancaire';
+type FinanceModePaiement = 'Espèces' | 'Chèque'| 'Virement';
 
 const paymentTypes: FinanceTypeTransaction[] = ['Inscription', 'Scolarite', 'Remboursement', 'Autre'];
-const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque', 'Virement', 'Carte Bancaire'];
+const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque','Virement'];
 const SESSION_API_URL = "/api/auth/session";
 
-export default function Etudiant() {
+export default function PaiementEtudiant() {
+  // États pour les données
   const [etudiants, setEtudiants] = useState<Etudiant[]>([]);
   const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [selectedFiliere, setSelectedFiliere] = useState<string>("");
@@ -51,19 +78,21 @@ export default function Etudiant() {
   const [selectedEtudiant, setSelectedEtudiant] = useState<string>("");
   const [paymentAmount, setPaymentAmount] = useState<string>("");
   const [paymentType, setPaymentType] = useState<FinanceTypeTransaction>("Scolarite");
-  const [paymentMode, setPaymentMode] = useState<FinanceModePaiement>("Virement");
+  const [paymentMode, setPaymentMode] = useState<FinanceModePaiement>("Espèces");
   const [paymentDescription, setPaymentDescription] = useState<string>("");
   const [paymentHistory, setPaymentHistory] = useState<Paiement[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState({
     initial: true,
     envoi: false,
-    session: true
+    session: true,
+    recu: false
   });
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [selectedReceipt, setSelectedReceipt] = useState<number | null>(null);
 
-  // Vérification de la session et récupération de l'ID utilisateur
+  // Vérification de la session
   useEffect(() => {
     const checkUserSession = async () => {
       try {
@@ -89,12 +118,11 @@ export default function Etudiant() {
 
   // Récupérer les données initiales
   useEffect(() => {
-    if (loading.session) return; // Attendre que la session soit vérifiée
+    if (loading.session) return;
 
     const fetchInitialData = async () => {
       setError(null);
       try {
-        // Charger les filières et paiements en parallèle
         const [filieresResponse, paiementsResponse] = await Promise.all([
           fetch('/api/filieres'),
           fetch('/api/finance?type_entite=Etudiant')
@@ -121,53 +149,46 @@ export default function Etudiant() {
     fetchInitialData();
   }, [loading.session]);
 
-  // Récupérer les étudiants filtrés
- useEffect(() => {
-  const fetchEtudiants = async () => {
-    setLoading(prev => ({ ...prev, initial: true }));
-    setError(null);
-    try {
-      const response = await fetch('/api/utilisateurs/etudiants');
-      if (!response.ok) throw new Error("Erreur de chargement des étudiants");
-      const data = await response.json();
-      setEtudiants(data.etudiants || []);
-    } catch (err) {
-      console.error("Erreur étudiants:", err);
-      setError("Impossible de charger les étudiants");
-    } finally {
-      setLoading(prev => ({ ...prev, initial: false }));
-    }
-  };
+  // Récupérer les étudiants
+  useEffect(() => {
+    const fetchEtudiants = async () => {
+      setLoading(prev => ({...prev, initial: true}));
+      setError(null);
+      try {
+        const response = await fetch('/api/utilisateurs/etudiants');
+        if (!response.ok) throw new Error("Erreur de chargement des étudiants");
+        
+        const data = await response.json();
+        setEtudiants(data.etudiants || []);
+      } catch (err) {
+        console.error("Erreur étudiants:", err);
+        setError(err instanceof Error ? err.message : "Erreur de chargement");
+      } finally {
+        setLoading(prev => ({...prev, initial: false}));
+      }
+    };
 
-  fetchEtudiants();
-}, []); 
- 
+    fetchEtudiants();
+  }, []);
 
-  // Filtrer les étudiants par recherche
- const filteredEtudiants = etudiants.filter((etudiant) => {
-  const matchNom = `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase());
-
-  // Find the filiere for this etudiant (assuming etudiant.matricule or etudiant.id matches with filiere)
-  // You may need to adjust the matching logic based on your actual data model
-  const filiere = filieres.find(f =>
+  // Filtrer les étudiants
+  const filteredEtudiants = etudiants.filter(etudiant => {
+    const matchesSearch = searchTerm 
+      ? `${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom} ${etudiant.matricule}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
+      : true;
     
-    // @ts-ignore
-    etudiant.id_filiere && f.id_filiere === etudiant.id_filiere
-  );
-
-  const matchFiliere = selectedFiliere
-    ? filiere && filiere.id_filiere === parseInt(selectedFiliere)
-    : true;
-
-  const matchNiveau = selectedNiveau
-    ? filiere && filiere.niveau === selectedNiveau
-    : true;
-
-  return matchNom && matchFiliere && matchNiveau;
-});
-
+    const matchesFiliere = selectedFiliere
+      ? etudiant.filiere?.id_filiere === parseInt(selectedFiliere)
+      : true;
+    
+    const matchesNiveau = selectedNiveau
+      ? etudiant.filiere?.niveau === selectedNiveau
+      : true;
+    
+    return matchesSearch && matchesFiliere && matchesNiveau;
+  });
 
   // Niveaux disponibles pour la filière sélectionnée
   const niveauxDisponibles = Array.from(
@@ -178,11 +199,12 @@ export default function Etudiant() {
     )
   );
 
-  // Filtrer l'historique pour l'étudiant sélectionné
+  // Filtrer l'historique des paiements
   const filteredPaymentHistory = selectedEtudiant
     ? paymentHistory.filter(p => p.id_etudiant === parseInt(selectedEtudiant))
-    : paymentHistory.filter(p => p.id_etudiant); // Seulement les paiements avec id_etudiant
+    : paymentHistory.filter(p => p.id_etudiant);
 
+  // Enregistrer un paiement
   const handlePayment = async () => {
     if (!selectedEtudiant || !paymentAmount) {
       setError("Sélectionnez un étudiant et entrez un montant");
@@ -214,7 +236,7 @@ export default function Etudiant() {
           montant: montant,
           description: description,
           mode_paiement: paymentMode,
-          id_utilisateur: currentUserId, // Utilisation de l'ID utilisateur connecté
+          id_utilisateur: currentUserId,
           id_etudiant: etudiant.id
         })
       });
@@ -236,9 +258,93 @@ export default function Etudiant() {
     }
   };
 
+  // Générer un reçu
+  const generateReceipt = async (paiementId: number) => {
+    setLoading(prev => ({...prev, recu: true}));
+    setSelectedReceipt(paiementId);
+    setError(null);
+    
+    try {
+      const paiement = paymentHistory.find(p => p.id_finance === paiementId);
+      if (!paiement) throw new Error("Paiement introuvable");
+
+      const etudiant = etudiants.find(e => e.id === paiement.id_etudiant) || paiement.etudiant;
+      if (!etudiant) throw new Error("Étudiant introuvable");
+
+      // Créer le contenu du reçu
+      const receiptContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Reçu de paiement</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .title { font-size: 24px; font-weight: bold; }
+            .receipt-info { margin: 20px 0; }
+            .details { margin: 15px 0; }
+            .signature { margin-top: 50px; }
+            .border { border-top: 1px dashed #000; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">REÇU DE PAIEMENT</div>
+            <div>École Supérieure</div>
+            <div>Date: ${new Date().toLocaleDateString()}</div>
+          </div>
+          
+          <div class="border"></div>
+          
+          <div class="receipt-info">
+            <div><strong>Étudiant:</strong> ${etudiant.utilisateur.nom} ${etudiant.utilisateur.prenom}</div>
+            <div><strong>Matricule:</strong> ${etudiant.matricule}</div>
+            ${etudiant.filiere ? `<div><strong>Filière:</strong> ${etudiant.filiere.nom} (${etudiant.filiere.niveau})</div>` : ''}
+          </div>
+          
+          <div class="details">
+            <div><strong>Type:</strong> ${paiement.type_transaction}</div>
+            <div><strong>Montant:</strong> ${Number(paiement.montant).toLocaleString()} FCFA</div>
+            <div><strong>Mode de paiement:</strong> ${paiement.mode_paiement}</div>
+            <div><strong>Date:</strong> ${new Date(paiement.date_transaction).toLocaleDateString()}</div>
+            <div><strong>Description:</strong> ${paiement.description}</div>
+          </div>
+          
+          <div class="border"></div>
+          
+          <div class="signature">
+            <div>Signature</div>
+            <div style="margin-top: 50px;">_________________________</div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Ouvrir une nouvelle fenêtre avec le reçu
+      const receiptWindow = window.open('', '_blank');
+      if (receiptWindow) {
+        receiptWindow.document.write(receiptContent);
+        receiptWindow.document.close();
+        
+        // Attendre que le contenu soit chargé avant d'imprimer
+        receiptWindow.onload = () => {
+          receiptWindow.print();
+        };
+      } else {
+        throw new Error("Impossible d'ouvrir la fenêtre d'impression");
+      }
+    } catch (err) {
+      console.error("Erreur génération reçu:", err);
+      setError(err instanceof Error ? err.message : "Erreur lors de la génération du reçu");
+    } finally {
+      setLoading(prev => ({...prev, recu: false}));
+      setSelectedReceipt(null);
+    }
+  };
+
   if (loading.initial || loading.session) {
     return (
-      <div className="container mx-auto p-4 flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64">
         <CircularProgress />
       </div>
     );
@@ -246,7 +352,9 @@ export default function Etudiant() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Paiements Étudiants</h1>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Paiements Étudiants
+      </Typography>
 
       {error && (
         <Alert severity="error" className="mb-4" onClose={() => setError(null)}>
@@ -255,159 +363,175 @@ export default function Etudiant() {
       )}
 
       <Box display="flex" flexDirection="column" gap={3}>
-        {/* Filtres Filière → Niveau → Étudiant */}
-        <Box display="flex" gap={2}>
-          <Select
-            value={selectedFiliere}
-            onChange={(e) => {
-              setSelectedFiliere(e.target.value);
-              setSelectedNiveau("");
-              setSelectedEtudiant("");
-            }}
-            displayEmpty
-            fullWidth
-          >
-            <MenuItem value="">Toutes les filières</MenuItem>
-            {filieres.map((filiere) => (
-              <MenuItem key={filiere.id_filiere} value={filiere.id_filiere.toString()}>
-                {filiere.nom}
-              </MenuItem>
-            ))}
-          </Select>
+        {/* Filtres */}
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Box display="flex" gap={2} mb={2}>
+            <Select
+              value={selectedFiliere}
+              onChange={(e) => {
+                setSelectedFiliere(e.target.value);
+                setSelectedNiveau("");
+                setSelectedEtudiant("");
+              }}
+              displayEmpty
+              fullWidth
+              size="small"
+            >
+              <MenuItem value="">Toutes les filières</MenuItem>
+              {filieres.map((filiere) => (
+                <MenuItem key={filiere.id_filiere} value={filiere.id_filiere.toString()}>
+                  {filiere.nom}
+                </MenuItem>
+              ))}
+            </Select>
 
-          <Select
-            value={selectedNiveau}
-            onChange={(e) => {
-              setSelectedNiveau(e.target.value);
-              setSelectedEtudiant("");
-            }}
-            displayEmpty
-            fullWidth
-            disabled={!selectedFiliere}
-          >
-            <MenuItem value="">Tous les niveaux</MenuItem>
-            {niveauxDisponibles.map((niveau, index) => (
-              <MenuItem key={index} value={niveau}>
-                {niveau}
-              </MenuItem>
-            ))}
-          </Select>
-        </Box>
+            <Select
+              value={selectedNiveau}
+              onChange={(e) => {
+                setSelectedNiveau(e.target.value);
+                setSelectedEtudiant("");
+              }}
+              displayEmpty
+              fullWidth
+              size="small"
+              disabled={!selectedFiliere}
+            >
+              <MenuItem value="">Tous les niveaux</MenuItem>
+              {niveauxDisponibles.map((niveau, index) => (
+                <MenuItem key={index} value={niveau}>
+                  {niveau}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
 
-        {/* Recherche étudiant */}
-        <Box display="flex" gap={2}>
-          <TextField
-            label="Rechercher un étudiant"
-            variant="outlined"
-            fullWidth
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <Box display="flex" gap={2}>
+            <TextField
+              label="Rechercher un étudiant"
+              variant="outlined"
+              fullWidth
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
 
-          <Select
-            value={selectedEtudiant}
-            onChange={(e) => setSelectedEtudiant(e.target.value)}
-            displayEmpty
-            fullWidth
-            disabled={loading.initial}
-          >
-            <MenuItem value="" disabled>
-              {loading.initial ? "Chargement..." : "Sélectionner un étudiant"}
-            </MenuItem>
-            {filteredEtudiants.map((etudiant) => (
-              <MenuItem key={etudiant.id} value={etudiant.id.toString()}>
-                {etudiant.utilisateur.nom} {etudiant.utilisateur.prenom} - {etudiant.matricule}
+            <Select
+              value={selectedEtudiant}
+              onChange={(e) => setSelectedEtudiant(e.target.value)}
+              displayEmpty
+              fullWidth
+              size="small"
+              disabled={loading.initial}
+            >
+              <MenuItem value="" disabled>
+                {loading.initial ? "Chargement..." : "Sélectionner un étudiant"}
               </MenuItem>
-            ))}
-          </Select>
-        </Box>
+              {filteredEtudiants.map((etudiant) => (
+                <MenuItem key={etudiant.id} value={etudiant.id.toString()}>
+                  {etudiant.utilisateur.nom} {etudiant.utilisateur.prenom} - {etudiant.matricule}
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+        </Paper>
 
         {/* Formulaire de paiement */}
         {currentUserId && (
-          <Box display="flex" flexDirection="column" gap={2}>
-            <Box display="flex" gap={2}>
-              <Select
-                value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
-                fullWidth
-              >
-                {paymentTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type}
-                  </MenuItem>
-                ))}
-              </Select>
+          <Paper elevation={3} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Nouveau Paiement
+            </Typography>
+            
+            <Box display="flex" flexDirection="column" gap={2}>
+              <Box display="flex" gap={2}>
+                <Select
+                  value={paymentType}
+                  onChange={(e) => setPaymentType(e.target.value as FinanceTypeTransaction)}
+                  fullWidth
+                  size="small"
+                >
+                  {paymentTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </Select>
 
-              <Select
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
-                fullWidth
-              >
-                {paymentModes.map((mode) => (
-                  <MenuItem key={mode} value={mode}>
-                    {mode}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Box>
+                <Select
+                  value={paymentMode}
+                  onChange={(e) => setPaymentMode(e.target.value as FinanceModePaiement)}
+                  fullWidth
+                  size="small"
+                >
+                  {paymentModes.map((mode) => (
+                    <MenuItem key={mode} value={mode}>
+                      {mode}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
 
-            <Box display="flex" gap={2} alignItems="center">
+              <Box display="flex" gap={2} alignItems="center">
+                <TextField
+                  type="number"
+                  label="Montant (FCFA)"
+                  variant="outlined"
+                  fullWidth
+                  size="small"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  disabled={!selectedEtudiant}
+                />
+
+                <Button
+                  variant="contained"
+                  onClick={handlePayment}
+                  disabled={!selectedEtudiant || !paymentAmount || loading.envoi}
+                  sx={{ height: '40px' }}
+                >
+                  {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer"}
+                </Button>
+              </Box>
+
               <TextField
-                type="number"
-                label="Montant (FCFA)"
+                label="Description"
                 variant="outlined"
                 fullWidth
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                disabled={!selectedEtudiant}
+                multiline
+                rows={2}
+                size="small"
+                value={paymentDescription}
+                onChange={(e) => setPaymentDescription(e.target.value)}
+                placeholder="Détails du paiement..."
               />
-
-              <Button
-                variant="contained"
-                onClick={handlePayment}
-                disabled={!selectedEtudiant || !paymentAmount || loading.envoi}
-                className="bg-blue-500 hover:bg-blue-600"
-              >
-                {loading.envoi ? <CircularProgress size={24} color="inherit" /> : "Enregistrer le paiement"}
-              </Button>
             </Box>
-
-            <TextField
-              label="Description"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={2}
-              value={paymentDescription}
-              onChange={(e) => setPaymentDescription(e.target.value)}
-              placeholder="Détails du paiement..."
-            />
-          </Box>
+          </Paper>
         )}
 
         {/* Historique des paiements */}
-        <Box mt={4}>
-          <h2 className="text-xl font-semibold mb-3">
+        <Paper elevation={3} sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom>
             Historique des paiements
             {selectedEtudiant && ` pour l'étudiant sélectionné`}
-          </h2>
+          </Typography>
           
-          {paymentHistory.length === 0 ? (
-            <p>Aucun paiement enregistré</p>
+          {filteredPaymentHistory.length === 0 ? (
+            <Alert severity="info">Aucun paiement enregistré</Alert>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border p-2 text-left">Étudiant</th>
-                    <th className="border p-2 text-left">Date</th>
-                    <th className="border p-2 text-left">Type</th>
-                    <th className="border p-2 text-left">Montant</th>
-                    <th className="border p-2 text-left">Mode</th>
-                    <th className="border p-2 text-left">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <Box sx={{ overflowX: 'auto' }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                    <TableCell>Étudiant</TableCell>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Montant</TableCell>
+                    <TableCell>Mode</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {filteredPaymentHistory.map((paiement) => {
                     const etudiant = etudiants.find(e => e.id === paiement.id_etudiant) || 
                                    paiement.etudiant;
@@ -416,23 +540,36 @@ export default function Etudiant() {
                       : `ID: ${paiement.id_etudiant}`;
 
                     return (
-                      <tr key={paiement.id_finance}>
-                        <td className="border p-2">{nomEtudiant}</td>
-                        <td className="border p-2">
-                          {new Date(paiement.date_transaction).toLocaleDateString()}
-                        </td>
-                        <td className="border p-2">{paiement.type_transaction}</td>
-                        <td className="border p-2">{Number(paiement.montant)} FCFA</td>
-                        <td className="border p-2">{paiement.mode_paiement}</td>
-                        <td className="border p-2">{paiement.description}</td>
-                      </tr>
+                      <TableRow key={paiement.id_finance}>
+                        <TableCell>{nomEtudiant}</TableCell>
+                        <TableCell>
+                          {new Date(paiement.date_transaction).toLocaleDateString('fr-FR')}
+                        </TableCell>
+                        <TableCell>{paiement.type_transaction}</TableCell>
+                        <TableCell>{Number(paiement.montant).toLocaleString()} FCFA</TableCell>
+                        <TableCell>{paiement.mode_paiement}</TableCell>
+                        <TableCell>{paiement.description}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() => generateReceipt(paiement.id_finance)}
+                            disabled={loading.recu && selectedReceipt === paiement.id_finance}
+                          >
+                            {loading.recu && selectedReceipt === paiement.id_finance ? (
+                              <CircularProgress size={20} />
+                            ) : (
+                              <ReceiptIcon fontSize="small" />
+                            )}
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </Box>
           )}
-        </Box>
+        </Paper>
       </Box>
     </div>
   );

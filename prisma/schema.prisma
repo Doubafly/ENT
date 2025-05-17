@@ -314,6 +314,7 @@ enum FinanceTypeTransaction {
   Inscription
   Scolarite
   Salaire
+  Remboursement
   Depense
   Autre
 }
@@ -321,6 +322,7 @@ enum FinanceTypeTransaction {
 enum FinanceModePaiement {
   Espèces
   Chèque
+  Virement
 }
 
 enum FinanceStatut {

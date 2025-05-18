@@ -31,10 +31,12 @@ interface Classe {
 
 interface NoteEntryProps {
   classes: Classe[];
+  onrecharge: () => void;
 }
-const StudentTable: React.FC<{ students: Student[]; moduleKey: number | null }> = ({
+const StudentTable: React.FC<{ students: Student[]; moduleKey: number | null ;onrecharge: () => void}> = ({
   students,
   moduleKey,
+  onrecharge,
 }) => {
 
 // Initialise notes avec students, et met à jour quand students change
@@ -87,7 +89,6 @@ const handleInputChange = (
 };
 const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
   event.preventDefault();
-
   try {
     const updatePromises = notes.map(async (note) => {
       const student = students.find((s) => s.id === note.id);
@@ -139,12 +140,12 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
         const error = await res.json();
         throw new Error(`Erreur création pour ${student.name} : ${error.message}`);
       }
-
+      onrecharge() ;
       return res.json();
     });
     const results = await Promise.all(updatePromises);
     setModal({ message: "Traitement success !", status: "success" });
-
+    onrecharge() ;
   } catch (error: any) {
     setModal({ message: "Erreur pendant l'enregistrement des notes : " + error.message, status: "error" });
     
@@ -171,10 +172,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
               <tr key={id} 
                 className={`border-b hover:bg-gray-50 transition duration-150 cursor-pointer  ${
                 notes?.[0]?.statut_reclamation === "EnAttente" ? "bg-amber-100" : ""  
-              }`} onClick={()=>{ 
-                alert(notes?.[0]?.commentaire_etudiant);
-                
-              }}>
+              }`} >
                 <td className="p-2 border">{name}</td>
                 <td className="p-2 border">
                   <input
@@ -237,7 +235,7 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
   );
 };
 
-const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
+const Saisi: React.FC<NoteEntryProps> = ({ classes,onrecharge }) => {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<number | null>(null);
@@ -336,6 +334,7 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes }) => {
               []
             }
             moduleKey={selectedModule}
+            onrecharge={onrecharge}
           />
         </div>
       )}

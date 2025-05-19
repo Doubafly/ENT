@@ -92,55 +92,84 @@ const EmploiDuTemps = () => {
   const [coursOptions, setCoursOptions] = useState<{id: number, label: string}[]>([]);
 
   // Charger les données initiales
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        setLoading(true);
-        setError('');
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      setError('');
 
-        // Charger tous les emplois du temps
-        const emploisResponse = await fetch('/api/emploisDuTemps');
-        if (!emploisResponse.ok) throw new Error('Erreur de chargement des emplois');
-        const emploisData = await emploisResponse.json();
-        setEmplois(emploisData.emploisDuTemps || []);
+      // Charger tous les emplois du temps
+      const emploisResponse = await fetch('/api/emploisDuTemps');
+      if (!emploisResponse.ok) throw new Error('Erreur de chargement des emplois');
+      const emploisData = await emploisResponse.json();
+      setEmplois(emploisData.emploisDuTemps || []);
 
-        // Charger toutes les classes (filieres) disponibles
-        const classesResponse = await fetch('/api/filieres');
-        if (!classesResponse.ok) throw new Error('Erreur de chargement des classes');
-        const classesData = await classesResponse.json();
-        setClasses(classesData.filieres || []);
-
-        // Charger tous les modules
-        const modulesResponse = await fetch('/api/modules');
-        if (!modulesResponse.ok) throw new Error('Erreur de chargement des modules');
-        const modulesData = await modulesResponse.json();
-        setModules(modulesData.data || []);
-
-        // Charger tous les enseignants
-        const enseignantsResponse = await fetch('/api/utilisateurs/enseignants');
-        if (!enseignantsResponse.ok) throw new Error('Erreur de chargement des enseignants');
-        const enseignantsData = await enseignantsResponse.json();
-        console.log(enseignantsData.enseignants," enseignant data");
+      // Charger les options de cours
+      const coursResponse = await fetch('/api/cours');
+      if (coursResponse.ok) {
+        const coursData = await coursResponse.json();
+        (coursData.cours || []).map((c: any) => ({
+          id: c.id_cours,
+          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+        }))
         
-        setEnseignants(enseignantsData.enseignants || []);
+        setCoursOptions((coursData.cours || []).map((c: any) => ({
+          id: c.id_cours,
+          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+        })));
 
-        // Charger les options de cours
-        const coursResponse = await fetch('/api/cours');
-        if (coursResponse.ok) {
-          const coursData = await coursResponse.json();
-          setCoursOptions((coursData.cours || []).map((c: any) => ({
-            id: c.id_cours,
-            label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
-          })));
-        }
+        // Extraction unique des classes
+        const uniqueClasses: { [key: number]: Classe } = {};
+        const uniqueModules: { [key: number]: Module } = {};
+        const uniqueEnseignants: { [key: number]: Enseignant } = {};
 
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erreur inconnue');
-      } finally {
-        setLoading(false);
+        coursData.cours.forEach((c: any) => {
+          // Classe
+          const filiere = c.filiere_module?.filiere;
+          if (filiere && !uniqueClasses[filiere.id_filiere]) {
+            uniqueClasses[filiere.id_filiere] = {
+              id_filiere: filiere.id_filiere,
+              niveau: filiere.niveau,
+              nom: filiere.nom,
+            };
+          }
+
+          // Module
+          const module = c.filiere_module?.module;
+          if (module && !uniqueModules[module.id_module]) {
+            uniqueModules[module.id_module] = {
+              id_module: module.id_module,
+              nom: module.nom,
+            };
+          }
+
+          // Enseignant
+          const enseignant = c.enseignant;
+          if (enseignant && !uniqueEnseignants[enseignant.id]) {
+            uniqueEnseignants[enseignant.id] = {
+              id_enseignant: enseignant.id,
+              utilisateur: {
+                id_utilisateur: enseignant.utilisateur?.id_utilisateur,
+                nom: enseignant.utilisateur?.nom,
+                prenom: enseignant.utilisateur?.prenom,
+              }
+            };
+          }
+        });
+
+        setClasses(Object.values(uniqueClasses));
+        setModules(Object.values(uniqueModules));
+        setEnseignants(Object.values(uniqueEnseignants));
+        
       }
-    };
 
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchInitialData();
   }, []);
 
@@ -411,7 +440,6 @@ const EmploiDuTemps = () => {
       setLoading(false);
     }
   };
-
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Emploi du Temps</h1>

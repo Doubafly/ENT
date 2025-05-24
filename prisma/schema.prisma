@@ -18,7 +18,6 @@ model Annexes {
 
   @@map("annexes")
 }
-
 // Table pour gérer les sessions académiques
 model Sessions {
   id_sessions      Int             @id @default(autoincrement())

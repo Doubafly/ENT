@@ -20,6 +20,7 @@ type User = {
 
 export default function AdminList() {
   const [admins, setAdmins] = useState<User[]>([]);
+  const [selectedAdmin, setSelectedAdmin] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -27,7 +28,6 @@ export default function AdminList() {
   const [adminToDelete, setAdminToDelete] = useState<User | null>( null );
   const [newAdmins, setNewAdmins] = useState<User | null>(null);
   const adminsPerPage = 6;
-
   const fetchAdmins = async () => {
     try {
       const response = await fetch("/api/utilisateurs/admin");
@@ -42,7 +42,7 @@ export default function AdminList() {
           sexe: admin.utilisateur.sexe,
           tel: admin.utilisateur.telephone,
           adresse: admin.utilisateur.adresse,
-          image: admin.utilisateur.profil,
+          image: admin.utilisateur.profil || "/profils/default.jpg",
           permissions: admin.utilisateur.Permission[0],
         }));
         setAdmins(formattedAdmins);
@@ -106,14 +106,7 @@ export default function AdminList() {
     fetchAdmins();
   }, []);
 
-  const filteredAdmins = admins.filter((admin) =>
-    `${admin.nom} ${admin.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredAdmins.length / adminsPerPage);
-  const startIndex = (currentPage - 1) * adminsPerPage;
-  const currentAdmins = filteredAdmins.slice(startIndex, startIndex + adminsPerPage);
-
+ 
   function confirmDeleteAdmin(admin: any) {
     setAdminToDelete(admin);
     setIsDeleteModalOpen(true);
@@ -145,15 +138,11 @@ export default function AdminList() {
       }
     };
 
-  function handleSelectEnseignant(enseignant: any) {
-    throw new Error("Function not implemented.");
-  }
 
   function handleUpdateEnseignant(enseignant: any) {
     console.log("Update enseignant:", enseignant);
     // Add your update logic here
   }
-
   async function handleSubmit() {
     console.log("Enregistrer admin:", newAdmins);
     const response = await fetch(
@@ -165,12 +154,20 @@ export default function AdminList() {
       }
     );
     if(response.ok){
-      setAdmins((prev)=>{
-        return { ...prev, newAdmins };
-      })
+      fetchAdmins()
+      setShowForm(false)
     }
-
   }
+  console.log(admins);
+  
+    const filteredAdmins = admins?.filter((admin) =>
+      `${admin.nom} ${admin.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+ 
+
+  const totalPages = Math.ceil(filteredAdmins.length / adminsPerPage);
+  const startIndex = (currentPage - 1) * adminsPerPage;
+  const currentAdmins = filteredAdmins.slice(startIndex, startIndex + adminsPerPage);
 
   return (
     <div className="p-4 space-y-4">
@@ -195,14 +192,14 @@ export default function AdminList() {
       </div>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
         {currentAdmins.map((admin) => (
                <ListCard
                key={admin.id_utilisateur}
                item={admin}
                onrecharge={fetchAdmins}
                onDelete={() => confirmDeleteAdmin(admin)}
-               onSelect={() => handleSelectEnseignant(admin)}
+               onSelect={() => setSelectedAdmin(admin)}
                onEdit={handleUpdateEnseignant}
                type={"admin"}
              />
@@ -253,6 +250,7 @@ export default function AdminList() {
             <input
               type="text"
               name="nom"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
             />
@@ -262,6 +260,7 @@ export default function AdminList() {
             <input
               type="text"
               name="prenom"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
             />
@@ -274,6 +273,7 @@ export default function AdminList() {
             <input
               type="email"
               name="email"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
             />
@@ -283,6 +283,7 @@ export default function AdminList() {
             <input
               type="text"
               name="telephone"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
             />
@@ -295,6 +296,7 @@ export default function AdminList() {
             <input
               type="text"
               name="adresse"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
             />
@@ -304,6 +306,7 @@ export default function AdminList() {
             <input
               type="password"
               name="password"
+              required
               onChange={handleChange}
               className="border border-gray-300 rounded-md p-2 w-full"
               placeholder="password"
@@ -438,6 +441,71 @@ export default function AdminList() {
     </div>
         </Modal>
       )}
+        {selectedAdmin && (
+        <Modal onClose={() => setSelectedAdmin(null)}>
+          <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
+            {/* Bouton Fermer */}
+            <button
+              onClick={() => setSelectedAdmin(null)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+            >
+              x
+            </button>
+
+            {/* Image de profil et Nom */}
+            <div className="flex flex-col items-center mb-4">
+              <img
+                title="imgEstudiant"
+                src={selectedAdmin.image}
+                className="object-cover w-[220px] h-[220px] rounded-full border"
+              />
+              {/* <h2 className="text-lg font-bold mt-2">{selectedAdmin.nom} {selectedAdmin.prenom}</h2>
+        <p className="text-gray-500 text-sm">{selectedAdmin.email}</p> */}
+            </div>
+
+            {/* Informations détaillées en colonnes */}
+            <div className="grid grid-cols-2 gap-4 text-lg border-t pt-4">
+              <p>
+                <strong>Nom :</strong> {selectedAdmin.nom}
+              </p>
+              <p>
+                <strong>Prénom :</strong> {selectedAdmin.prenom}
+              </p>
+              <p>
+                <strong>Email :</strong> {selectedAdmin.email}
+              </p>
+              <p>
+                <strong>Sexe :</strong> {selectedAdmin.sexe}
+              </p>
+              <p>
+                <strong>Téléphone :</strong>{" "}
+                {selectedAdmin.tel || "Non renseigné"}
+              </p>
+              <p>
+                <strong>Adresse :</strong>{" "}
+                {selectedAdmin.adresse || "Non renseignée"}
+              </p>
+                 {/* Affichage des permissions sans possibilité de modification */}
+        <div className="mb-4">
+          <label className="block text-gray-700 font-semibold">Permissions :</label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {Object.keys(selectedAdmin.permissions).map((perm) => (
+              <div key={perm} className="flex items-center gap-2 text-sm text-gray-700 capitalize">
+                <input
+                  type="checkbox"
+                  name={`permissions.${perm}`}
+                  checked={selectedAdmin.permissions[perm]}
+                />
+                {perm.replace(/_/g, " ")}
+              </div>
+            ))}
+          </div>
+        </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+    
     </div>
   );
 }

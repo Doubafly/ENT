@@ -140,11 +140,10 @@ model Etudiants {
   filiere        Filieres     @relation(fields: [id_filiere], references: [id_filiere])
   utilisateur    Utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
   notes          Notes[]
-  paiements      Paiements[]
-
+  Finance        Finance[]
   @@index([id_filiere], map: "Etudiants_id_filiere_fkey")
   @@unique([id_utilisateur, id_filiere], map: "Unique_Student_Filiere") // Un étudiant ne peut être inscrit deux fois à la même filière
-  Finance Finance[]
+ 
 }
 
 // Table pour gérer les filières et modules
@@ -215,19 +214,6 @@ model Modules {
 
 // Table pour gérer les notes
 
-
-// Table pour gérer les paiements
-model Paiements {
-  id_paiement        Int                     @id @default(autoincrement())
-  id_etudiant        Int
-  montant            Decimal                   @db.Decimal(10, 2)
-  date_paiement      DateTime
-  type_paiement      PaiementsTypePaiement
-  reference_paiement String                  @unique(map: "Paiements_reference_paiement_key")
-  etudiant           Etudiants               @relation(fields: [id_etudiant], references: [id])
-
-  @@index([id_etudiant], map: "Paiements_id_etudiant_fkey")
-}
 
 
 

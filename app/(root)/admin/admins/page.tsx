@@ -1,8 +1,7 @@
 import AdminList from "@/components/list/AdminList";
 
 const AdminPage = () => {
-  return <div>
-    liste et gestion des admins
+  return <div className="mt-6">
     <AdminList />
   </div>;
 };

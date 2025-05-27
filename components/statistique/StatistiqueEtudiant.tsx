@@ -10,6 +10,8 @@ import {
   Legend,
   Title
 } from "chart.js";
+import "./statistique.css";
+import EmploiDuTempsEtudiant from "../emploisDuTemps/EmploisEtudiant";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, Title);
 
@@ -54,10 +56,10 @@ const StatistiqueEtudiant: React.FC<StatistiqueEtudiantProps> = ({ stats }) => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
+    <div className="stat-admin">
       <h2 className="text-2xl font-semibold mb-6 text-center">Statistiques Étudiant</h2>
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="gridStat">
         {stats.map((stat, index) => (
           <MiniSmallIconCard
             key={index}
@@ -69,7 +71,7 @@ const StatistiqueEtudiant: React.FC<StatistiqueEtudiantProps> = ({ stats }) => {
       </div>
 
       <div className="bg-gray-50 p-4 rounded-lg">
-        <Bar data={chartData} options={chartOptions} />
+        <EmploiDuTempsEtudiant classeEtudiant={""}/>
       </div>
     </div>
   );

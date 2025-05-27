@@ -26,6 +26,7 @@ import {
   );  
 import MiniSmallIconCard from "../card/MiniIconCard";
 import "./statistique.css";
+import EmploiDuTempsEnseignant from "../emploisDuTemps/EmploiProf";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
@@ -137,8 +138,6 @@ const StatistiqueEnseignant = () => {
   
   return (
     <div className="stat-admin">
-      <h2 className="statistique-title">Statistiques Enseignant</h2>
-
       <div className="gridStat">
         {menuStat.map((stat, index) => (
           <MiniSmallIconCard
@@ -150,16 +149,11 @@ const StatistiqueEnseignant = () => {
         ))}
       </div>
 
-      <div className="charts-container">
-        <div className="chart bar-chart">
-          <h3>Cours par Filière</h3>
-          {barData && <Bar data={barData} />}
-        </div>
+      <div className="bg-gray-50 p-4 rounded-lg">
+      
 
-        <div className="chart doughnut-chart">
-          <h3>Répartition Étudiants</h3>
-          {doughnutData && <Doughnut data={doughnutData} />}
-        </div>
+    {/* Remplacez la valeur 0 par l'ID réel de l'enseignant si disponible */}
+    <EmploiDuTempsEnseignant enseignantId={0} />
       </div>
     </div>
   );

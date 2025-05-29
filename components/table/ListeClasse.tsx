@@ -1,7 +1,7 @@
 "use client";
 import ListCard, { User } from "@/components/card/ListCard";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Configuration from "../note/configuration";
 
 interface Classe {
@@ -26,8 +26,6 @@ interface Classe {
 export default function ClasseList() {
   // États pour les données
   const [classes, setClasses] = useState<Classe[]>([]);
-
-  // États pour l'UI
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -43,85 +41,100 @@ export default function ClasseList() {
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
   // États pour les formulaires
-  const [alldata, setalldata] = useState(null);
-
-  const [newStudent, setNewStudent] = useState("");
+  const [alldata, setAllData] = useState<any>(null);
   const [newClassAbbr, setNewClassAbbr] = useState("");
   const [newClassName, setNewClassName] = useState("");
   const [newClassTeachers, setNewClassTeachers] = useState<string[]>([]);
-  const [tempTeacher, setTempTeacher] = useState("");
 
-  // Chargement initial des données
+  // Mémoization des données filtrées et paginées
+  const filteredClasses = useMemo(() => {
+    const searchTerm = search.toLowerCase();
+    return classes.filter(
+      (c) =>
+        c.nom.toLowerCase().includes(searchTerm) ||
+        c.niveau.toLowerCase().includes(searchTerm)
+    );
+  }, [classes, search]);
+
+  const paginatedClasses = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredClasses.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClasses, currentPage]);
+
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredClasses.length / itemsPerPage)
+  );
+  const selectedClass = useMemo(
+    () => classes.find((c) => c.id_filiere === selectedClassId),
+    [classes, selectedClassId]
+  );
+
+  // Chargement initial des données avec optimisation
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const filieresRes = await fetch("/api/filieres");
-        const alldataRes = await  fetch(`/api/filieres/modules`);
-        const alldata = await alldataRes.json();
-        setalldata(alldata)
+        setLoading(true);
+        const [alldataRes] = await Promise.all([
+          fetch("/api/filieres/modules").then((res) => res.json()),
+        ]);
 
+        setAllData(alldataRes);
 
-        // if (!filieresRes.ok)
-        //   throw new Error("Erreur de chargement des filières");
+        const processFiliereData = (filiere: any) => {
+          const enseignantsMap = new Map();
 
-        const filieresData = alldata.data.filiere;
-        
+          filiere.filiere_module?.forEach((Fmodule: any) => {
+            Fmodule.cours?.forEach((cour: any) => {
+              if (cour.enseignant) {
+                const enseignant = cour.enseignant;
+                enseignantsMap.set(enseignant.id, {
+                  id: enseignant.id,
+                  specialite: enseignant.specialite,
+                  matricule: enseignant.matricule,
+                  nom: enseignant.utilisateur.nom,
+                  prenom: enseignant.utilisateur.prenom,
+                  email: enseignant.utilisateur.email,
+                  tel: enseignant.utilisateur.telephone,
+                  adresse: enseignant.utilisateur.adresse,
+                  profil: enseignant.utilisateur.profil,
+                  sexe: enseignant.utilisateur.sexe,
+                });
+              }
+            });
+          });
 
-        setClasses(
-          filieresData.map((filiere: any) => ({
+          return {
             ...filiere,
-            enseignants: Array.from(
-              new Map(
-                filiere.filiere_module.flatMap((Fmodule: any) =>
-                  Fmodule.cours.flatMap((cour: any) =>
-                    cour.enseignant
-                      ? [
-                          [
-                            cour.enseignant.id,
-                            {
-                              id: cour.enseignant.id,
-                              specialite: cour.enseignant.specialite,
-                              matricule: cour.enseignant.matricule,
-                              nom: cour.enseignant.utilisateur.nom,
-                              prenom: cour.enseignant.utilisateur.prenom,
-                              email: cour.enseignant.utilisateur.email,
-                              tel: cour.enseignant.utilisateur.telephone,
-                              adresse: cour.enseignant.utilisateur.adresse,
-                              profil: cour.enseignant.utilisateur.profil,
-                              sexe: cour.enseignant.utilisateur.sexe,
-                            },
-                          ],
-                        ]
-                      : []
-                  )
-                )
-              ).values()
-            ),
-            filtreEtudiant: filiere.etudiants.map((etudiant: any) => ({
-              notes: etudiant.notes.map((note: any) => ({
-                note_class: note.note_class,
-                note_exam: note.note_exam,
-              })),
-              id_utilisateur: etudiant.utilisateur.id_utilisateur,
-              id: etudiant.id,
-              image: etudiant.utilisateur.profil,
-              nom: etudiant.utilisateur.nom,
-              prenom: etudiant.utilisateur.prenom,
-              email: etudiant.utilisateur.email,
-              adresse: etudiant.utilisateur.adresse,
-              date_naissance: etudiant.date_naissance,
-              date_inscription: etudiant.date_inscription,
-              tel: etudiant.utilisateur.telephone,
-              filiere: {
-                id_filiere: filiere.id_filiere,
-                nom: filiere.nom,
-              },
-              matricule: etudiant.matricule,
-              sexe: etudiant.utilisateur.sexe,
-            })),
+            enseignants: Array.from(enseignantsMap.values()),
+            filtreEtudiant:
+              filiere.etudiants?.map((etudiant: any) => ({
+                notes: etudiant.notes?.map((note: any) => ({
+                  note_class: note.note_class,
+                  note_exam: note.note_exam,
+                })),
+                id_utilisateur: etudiant.utilisateur.id_utilisateur,
+                id: etudiant.id,
+                image: etudiant.utilisateur.profil,
+                nom: etudiant.utilisateur.nom,
+                prenom: etudiant.utilisateur.prenom,
+                email: etudiant.utilisateur.email,
+                adresse: etudiant.utilisateur.adresse,
+                date_naissance: etudiant.date_naissance,
+                date_inscription: etudiant.date_inscription,
+                tel: etudiant.utilisateur.telephone,
+                filiere: {
+                  id_filiere: filiere.id_filiere,
+                  nom: filiere.nom,
+                },
+                matricule: etudiant.matricule,
+                sexe: etudiant.utilisateur.sexe,
+              })) || [],
             effectif: filiere.etudiants?.length || 0,
-          }))
-        );
+          };
+        };
+
+        setClasses(alldataRes.data.filiere.map(processFiliereData));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
@@ -132,41 +145,38 @@ export default function ClasseList() {
     fetchData();
   }, []);
 
-  // Fonctions API
-  const createFiliere = async (data: any) => {
-    const res = await fetch("/api/filieres", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nom: data.nom,
-        description: data.description,
-        niveau: data.niveau,
-        montant_annuel: data.montant_annuel,
-        id_annexe: data.id_annexe,
-      }),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  };
+  // API calls memoization
+  const apiCall = useCallback(
+    async (url: string, method: string, data?: any) => {
+      const options: RequestInit = {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: data ? JSON.stringify(data) : undefined,
+      };
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    []
+  );
 
-  const updateFiliere = async (id: number, data: any) => {
-    const res = await fetch(`/api/filieres/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  };
+  const createFiliere = useCallback(
+    (data: any) => apiCall("/api/filieres", "POST", data),
+    [apiCall]
+  );
 
-  const deleteFiliere = async (id: number) => {
-    const res = await fetch(`/api/filieres/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  };
+  const updateFiliere = useCallback(
+    (id: number, data: any) => apiCall(`/api/filieres/${id}`, "PUT", data),
+    [apiCall]
+  );
 
-  // Gestion des classes
-  const handleAddClass = async () => {
+  const deleteFiliere = useCallback(
+    (id: number) => apiCall(`/api/filieres/${id}`, "DELETE"),
+    [apiCall]
+  );
+
+  // Gestion des classes avec useCallback
+  const handleAddClass = useCallback(async () => {
     try {
       const newClass = {
         nom: newClassName,
@@ -184,6 +194,7 @@ export default function ClasseList() {
           ...created.data,
           enseignants: newClassTeachers,
           effectif: 0,
+          filtreEtudiant: [],
         },
       ]);
       setShowAddModal(false);
@@ -191,74 +202,84 @@ export default function ClasseList() {
     } catch (err) {
       alert(err instanceof Error ? err.message : "Erreur inconnue");
     }
-  };
+  }, [newClassName, newClassAbbr, newClassTeachers, createFiliere]);
 
-  const handleUpdateClass = async (updatedClass: Classe) => {
-    try {
-      const { id_filiere, ...updateData } = updatedClass;
-      const data = await updateFiliere(id_filiere, updateData);
-      setClasses((prev) =>
-        prev.map((c) =>
-          c.id_filiere === id_filiere
-            ? { ...data.data, enseignants: c.enseignants }
-            : c
-        )
-      );
-      setShowModal(false);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur inconnue");
-    }
-  };
+  const handleUpdateClass = useCallback(
+    async (updatedClass: Classe) => {
+      if (!updatedClass) return;
 
-  const handleDeleteClass = async (id: number) => {
-    try {
-      await deleteFiliere(id);
-      setClasses((prev) => prev.filter((c) => c.id_filiere !== id));
-      if (id === selectedClassId) {
+      try {
+        const { id_filiere, ...updateData } = updatedClass;
+        const data = await updateFiliere(id_filiere, updateData);
+        setClasses((prev) =>
+          prev.map((c) =>
+            c.id_filiere === id_filiere
+              ? { ...data.data, enseignants: c.enseignants }
+              : c
+          )
+        );
         setShowModal(false);
-        setSelectedClassId(null);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Erreur inconnue");
       }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Erreur inconnue");
-    }
-  };
+    },
+    [updateFiliere]
+  );
 
+  const handleDeleteClass = useCallback(
+    async (id: number) => {
+      try {
+        await deleteFiliere(id);
+        setClasses((prev) => prev.filter((c) => c.id_filiere !== id));
+        if (id === selectedClassId) {
+          setShowModal(false);
+          setSelectedClassId(null);
+        }
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Erreur inconnue");
+      }
+    },
+    [deleteFiliere, selectedClassId]
+  );
 
-  // Utilitaires
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNewClassAbbr("");
     setNewClassName("");
     setNewClassTeachers([]);
-    setTempTeacher("");
-  };
+  }, []);
 
-  // const addTeacherToNewClass = () => {
-  //   if (tempTeacher.trim() && !newClassTeachers.includes(tempTeacher.trim())) {
-  //     setNewClassTeachers((prev) => [...prev, tempTeacher.trim()]);
-  //     setTempTeacher("");
-  //   }
-  // };
+  if (loading) {
+    return (
+      <div className="p-10 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
-
-  // Filtrage et pagination
-  const filteredClasses = classes.filter(
-    (c) =>
-      c.nom.toLowerCase().includes(search.toLowerCase()) ||
-      c.niveau.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const paginatedClasses = filteredClasses.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
-
-const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
-
-  if (loading) return <div className="p-10">Chargement en cours...</div>;
-  if (error) return <div className="p-10 text-red-500">Erreur: {error}</div>;
-  
+  if (error) {
+    return (
+      <div className="p-10 bg-red-50 border-l-4 border-red-500">
+        <div className="flex items-center">
+          <div className="flex-shrink-0">
+            <svg
+              className="h-5 w-5 text-red-500"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-10 mt-4 bg-gray-50 min-h-screen">
@@ -315,6 +336,7 @@ const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
                     alt="Détails"
                     width={20}
                     height={20}
+                    priority
                   />
                 </button>
                 <button
@@ -327,6 +349,7 @@ const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
                     alt="Supprimer"
                     width={20}
                     height={20}
+                    priority
                   />
                 </button>
               </td>
@@ -501,7 +524,11 @@ const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
 
                 {showSubjects && (
                   <div className="mt-4">
-                    <Configuration filiereId={selectedClassId} donne={selectedClass} alldata={alldata} />
+                    <Configuration
+                      filiereId={selectedClassId}
+                      donne={selectedClass}
+                      alldata={alldata}
+                    />
                   </div>
                 )}
               </div>
@@ -584,6 +611,7 @@ const selectedClass = classes.find((c) => c.id_filiere === selectedClassId);
                           alt="Supprimer"
                           width={16}
                           height={16}
+                          priority
                         />
                       </button>
                     </div>

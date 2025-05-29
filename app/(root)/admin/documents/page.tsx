@@ -3,8 +3,7 @@ import DocumentForm from "@/components/forms/DocumentForm";
 import Modal from "@/components/modal/SuperModal";
 import Pagination from "@/components/ui/Pagination";
 import { DocumentFormData, Filiere, Module, User } from "@/type/documentTypes";
-import { debounce } from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   FiCalendar,
   FiDownload,
@@ -19,7 +18,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
-export interface ApiDocument {
+interface ApiDocument {
   id: number;
   titre: string;
   description: string;
@@ -42,23 +41,34 @@ export interface ApiDocument {
   enseignant: string | null;
 }
 
+interface Session {
+  id_sessions: number;
+  annee_academique: string;
+}
+
+interface Annexe {
+  id: number;
+  nom: string;
+}
+
 const DocumentsPage = () => {
+  // État principal
   const [documents, setDocuments] = useState<ApiDocument[]>([]);
-  const [filteredDocuments, setFilteredDocuments] = useState<ApiDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const itemsPerPage = 10;
 
   // Filtres
   const [searchTerm, setSearchTerm] = useState("");
-  const [filiereFilter, setFiliereFilter] = useState<string>("");
-  const [moduleFilter, setModuleFilter] = useState<string>("");
-  const [uploaderFilter, setUploaderFilter] = useState<string>("");
-  const [sessionFilter, setSessionFilter] = useState<string>("");
-  const [annexeFilter, setAnnexeFilter] = useState<string>("");
-  const [enseignantFilter, setEnseignantFilter] = useState<string>("");
+  const [filiereFilter, setFiliereFilter] = useState("");
+  const [moduleFilter, setModuleFilter] = useState("");
+  const [uploaderFilter, setUploaderFilter] = useState("");
+  const [sessionFilter, setSessionFilter] = useState("");
+  const [annexeFilter, setAnnexeFilter] = useState("");
+  const [enseignantFilter, setEnseignantFilter] = useState("");
 
   // Modals
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -71,90 +81,95 @@ const DocumentsPage = () => {
   const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [uploaders, setUploaders] = useState<User[]>([]);
-  const [sessions, setSessions] = useState<
-    { id_sessions: number; annee_academique: string }[]
-  >([]);
-  const [annexes, setAnnexes] = useState<{ id: number; nom: string }[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [annexes, setAnnexes] = useState<Annexe[]>([]);
   const [enseignants, setEnseignants] = useState<User[]>([]);
 
-  // Modules filtrés en fonction de la filière sélectionnée
+  // Modules filtrés
   const [filteredModules, setFilteredModules] = useState<Module[]>([]);
-  const findFiliereId = (filiereName: string | null): number | undefined => {
-    if (!filiereName) return undefined;
-    const filiere = filieres.find((f) => f.nom === filiereName);
-    return filiere?.id_filiere;
-  };
 
-  // Fonction pour trouver l'ID du module par son nom
-  const findModuleId = (moduleName: string | null): number | undefined => {
-    if (!moduleName) return undefined;
-    const module = modules.find((m) => m.nom === moduleName);
-    return module?.id_module;
-  };
-  const handleUpdateDocument = async (formData: DocumentFormData) => {
-    try {
-      if (!selectedDocument) return;
+  // Mémoization des données filtrées
+  const filteredDocuments = useMemo(() => {
+    return documents.filter((doc) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        doc.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doc.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const formDataToSend = new FormData();
-      formDataToSend.append("titre", formData.titre);
-      if (formData.description)
-        formDataToSend.append("description", formData.description);
-      formDataToSend.append("id_uploader", formData.id_uploader.toString());
-      if (formData.id_classe !== undefined) {
-        formDataToSend.append("id_classe", formData.id_classe.toString());
-      }
-      if (formData.file) formDataToSend.append("file", formData.file);
+      const matchesFiliere =
+        filiereFilter === "" ||
+        doc.filiere?.toLowerCase() === filiereFilter.toLowerCase();
 
-      const response = await fetch(`/api/documents/${selectedDocument.id}`, {
-        method: "PUT",
-        body: formDataToSend,
-      });
+      const matchesModule =
+        moduleFilter === "" ||
+        doc.module?.toLowerCase() === moduleFilter.toLowerCase();
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la mise à jour du document");
-      }
+      const matchesUploader =
+        uploaderFilter === "" ||
+        `${doc.utilisateur?.prenom} ${doc.utilisateur?.nom}`
+          .toLowerCase()
+          .includes(uploaderFilter.toLowerCase());
 
-      // Recharger les documents après mise à jour
-      const documentsRes = await fetch("/api/cours/doc");
-      const documentsData = await documentsRes.json();
-      setDocuments(documentsData.documents || []);
-      setFilteredDocuments(documentsData.documents || []);
+      const matchesSession =
+        sessionFilter === "" ||
+        doc.session?.toLowerCase() === sessionFilter.toLowerCase();
 
-      setIsFormOpen(false);
-      setSelectedDocument(null);
-    } catch (err) {
-      console.error("Erreur:", err);
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-    }
-  };
+      const matchesAnnexe =
+        annexeFilter === "" ||
+        doc.annexe?.toLowerCase() === annexeFilter.toLowerCase();
+
+      const matchesEnseignant =
+        enseignantFilter === "" ||
+        doc.enseignant?.toLowerCase().includes(enseignantFilter.toLowerCase());
+
+      return (
+        matchesSearch &&
+        matchesFiliere &&
+        matchesModule &&
+        matchesUploader &&
+        matchesSession &&
+        matchesAnnexe &&
+        matchesEnseignant
+      );
+    });
+  }, [
+    documents,
+    searchTerm,
+    filiereFilter,
+    moduleFilter,
+    uploaderFilter,
+    sessionFilter,
+    annexeFilter,
+    enseignantFilter,
+  ]);
+
+  // Pagination calculs
+  const currentItems = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredDocuments.slice(indexOfFirstItem, indexOfLastItem);
+  }, [currentPage, filteredDocuments]);
+
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+
+  // Chargement initial des données
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setIsLoading(true);
 
-        const [
-          documentsRes,
-          filieresRes,
-          uploadersRes,
-          sessionsRes,
-          annexesRes,
-        ] = await Promise.all([
-          fetch("/api/cours/doc"),
-          fetch("/api/filieres"),
-          fetch("/api/utilisateurs/enseignants"),
-          fetch("/api/sessions"),
-          fetch("/api/annexes"),
-        ]);
+        const endpoints = [
+          "/api/cours/doc",
+          "/api/filieres",
+          "/api/utilisateurs/enseignants",
+          "/api/sessions",
+          "/api/annexes",
+        ];
 
-        if (
-          !documentsRes.ok ||
-          !filieresRes.ok ||
-          !uploadersRes.ok ||
-          !sessionsRes.ok ||
-          !annexesRes.ok
-        ) {
-          throw new Error("Erreur lors du chargement des données");
-        }
+        const responses = await Promise.all(endpoints.map((url) => fetch(url)));
+
+        const hasError = responses.some((response) => !response.ok);
+        if (hasError) throw new Error("Erreur lors du chargement des données");
 
         const [
           documentsData,
@@ -162,44 +177,29 @@ const DocumentsPage = () => {
           uploadersData,
           sessionsData,
           annexesData,
-        ] = await Promise.all([
-          documentsRes.json(),
-          filieresRes.json(),
-          uploadersRes.json(),
-          sessionsRes.json(),
-          annexesRes.json(),
-        ]);
+        ] = await Promise.all(responses.map((res) => res.json()));
 
-        // Les documents sont déjà formatés par l'API
+        // Formatage des données
         const formattedDocuments: ApiDocument[] = documentsData.documents || [];
+        const allModules: Module[] = filieresData.filieres.flatMap(
+          (filiere: Filiere) =>
+            filiere.filiere_module
+              ?.map((fm) => fm.module)
+              .filter((m): m is Module => m !== undefined) || []
+        );
 
-        // Extraire tous les modules des filières
-        const allModules: Module[] = [];
-        filieresData.filieres.forEach((filiere: Filiere) => {
-          filiere.filiere_module?.forEach((fm) => {
-            const mod = fm.module;
-            if (mod) {
-              allModules.push({
-                id_module: mod.id_module,
-                nom: mod.nom,
-                description: mod.description,
-              });
-            }
-          });
-        });
+        const formattedEnseignants = (uploadersData.utilisateurs || []).map(
+          (enseignant: any) => ({
+            ...enseignant,
+            nomComplet: `${enseignant.utilisateur.prenom} ${enseignant.utilisateur.nom}`,
+          })
+        );
 
-        // Extraire les enseignants
-        const enseignantsData = uploadersData.utilisateurs || [];
-        const formattedEnseignants = enseignantsData.map((enseignant: any) => ({
-          ...enseignant,
-          nomComplet: `${enseignant.utilisateur.prenom} ${enseignant.utilisateur.nom}`,
-        }));
-
+        // Mise à jour de l'état
         setDocuments(formattedDocuments);
-        setFilteredDocuments(formattedDocuments);
         setFilieres(filieresData.filieres || []);
         setModules(allModules);
-        setFilteredModules(allModules); // Initialiser les modules filtrés
+        setFilteredModules(allModules);
         setUploaders(uploadersData.utilisateurs || []);
         setSessions(
           sessionsData.data?.map((s: any) => ({
@@ -224,7 +224,7 @@ const DocumentsPage = () => {
     fetchInitialData();
   }, []);
 
-  // Filtrer les modules en fonction de la filière sélectionnée
+  // Filtrage des modules en fonction de la filière
   useEffect(() => {
     if (filiereFilter) {
       const selectedFiliere = filieres.find((f) => f.nom === filiereFilter);
@@ -233,9 +233,8 @@ const DocumentsPage = () => {
           selectedFiliere.filiere_module
             ?.map((fm) => fm.module)
             .filter((m): m is Module => m !== undefined) || [];
-        setFilteredModules(modulesForFiliere);
 
-        // Réinitialiser le filtre de module si le module sélectionné n'appartient pas à la filière
+        setFilteredModules(modulesForFiliere);
         if (
           moduleFilter &&
           !modulesForFiliere.some((m) => m.nom === moduleFilter)
@@ -248,157 +247,90 @@ const DocumentsPage = () => {
     }
   }, [filiereFilter, filieres, modules, moduleFilter]);
 
-  const filterDocuments = useCallback(
-    debounce(
-      (
-        search: string,
-        filiere: string,
-        module: string,
-        uploader: string,
-        session: string,
-        annexe: string,
-        enseignant: string
-      ) => {
-        const filtered = documents.filter((doc: ApiDocument) => {
-          const matchesSearch =
-            search === "" ||
-            doc.titre.toLowerCase().includes(search.toLowerCase()) ||
-            (doc.description &&
-              doc.description.toLowerCase().includes(search.toLowerCase()));
-
-          const matchesFiliere =
-            filiere === "" ||
-            (doc.filiere &&
-              doc.filiere.toLowerCase() === filiere.toLowerCase());
-
-          const matchesModule =
-            module === "" ||
-            (doc.module && doc.module.toLowerCase() === module.toLowerCase());
-
-          const matchesUploader =
-            uploader === "" ||
-            (doc.utilisateur &&
-              `${doc.utilisateur.prenom} ${doc.utilisateur.nom}`
-                .toLowerCase()
-                .includes(uploader.toLowerCase()));
-
-          const matchesSession =
-            session === "" ||
-            (doc.session &&
-              doc.session.toLowerCase() === session.toLowerCase());
-
-          const matchesAnnexe =
-            annexe === "" ||
-            (doc.annexe && doc.annexe.toLowerCase() === annexe.toLowerCase());
-
-          const matchesEnseignant =
-            enseignant === "" ||
-            (doc.enseignant &&
-              doc.enseignant.toLowerCase().includes(enseignant.toLowerCase()));
-
-          return (
-            matchesSearch &&
-            matchesFiliere &&
-            matchesModule &&
-            matchesUploader &&
-            matchesSession &&
-            matchesAnnexe &&
-            matchesEnseignant
-          );
-        });
-
-        setFilteredDocuments(filtered);
-        setCurrentPage(1);
-      },
-      300
-    ),
-    [documents]
-  );
-
-  useEffect(() => {
-    filterDocuments(
-      searchTerm,
-      filiereFilter,
-      moduleFilter,
-      uploaderFilter,
-      sessionFilter,
-      annexeFilter,
-      enseignantFilter
-    );
-  }, [
-    searchTerm,
-    filiereFilter,
-    moduleFilter,
-    uploaderFilter,
-    sessionFilter,
-    annexeFilter,
-    enseignantFilter,
-    filterDocuments,
-  ]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredDocuments.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-
-  const handleCreateDocument = async (formData: DocumentFormData) => {
+  // Gestion des documents
+  const handleDocumentAction = async (
+    method: "POST" | "PUT" | "DELETE",
+    formData?: DocumentFormData,
+    id?: number
+  ) => {
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("titre", formData.titre);
-      if (formData.description)
-        formDataToSend.append("description", formData.description);
-      formDataToSend.append("id_uploader", formData.id_uploader.toString());
-      if (formData.id_classe !== undefined) {
-        formDataToSend.append("id_classe", formData.id_classe.toString());
+      let url = "/api/documents";
+      if (method === "PUT" || method === "DELETE") url += `/${id}`;
+
+      const options: RequestInit = { method };
+
+      if (method !== "DELETE" && formData) {
+        const formDataToSend = new FormData();
+        formDataToSend.append("titre", formData.titre);
+        if (formData.description)
+          formDataToSend.append("description", formData.description);
+        formDataToSend.append("id_uploader", formData.id_uploader.toString());
+        if (formData.id_classe !== undefined) {
+          formDataToSend.append("id_classe", formData.id_classe.toString());
+        }
+        if (formData.file) formDataToSend.append("file", formData.file);
+        options.body = formDataToSend;
       }
-      if (formData.file) formDataToSend.append("file", formData.file);
 
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        body: formDataToSend,
-      });
+      const response = await fetch(url, options);
+      if (!response.ok)
+        throw new Error(
+          `Erreur ${
+            method === "POST"
+              ? "création"
+              : method === "PUT"
+              ? "mise à jour"
+              : "suppression"
+          }`
+        );
 
-      if (!response.ok) {
-        throw new Error("Erreur lors de la création du document");
-      }
-
-      // Recharger les documents après création
+      // Rafraîchir les documents
       const documentsRes = await fetch("/api/cours/doc");
       const documentsData = await documentsRes.json();
       setDocuments(documentsData.documents || []);
-      setFilteredDocuments(documentsData.documents || []);
 
-      setIsFormOpen(false);
+      return true;
     } catch (err) {
       console.error("Erreur:", err);
       setError(err instanceof Error ? err.message : "Erreur inconnue");
+      return false;
     }
   };
 
-  const handleDeleteDocument = async () => {
-    if (!selectedDocument) return;
+  const handleCreateDocument = (formData: DocumentFormData) =>
+    handleDocumentAction("POST", formData).then((success) => {
+      if (success) setIsFormOpen(false);
+    });
 
-    try {
-      const response = await fetch(`/api/documents/${selectedDocument.id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la suppression");
+  const handleUpdateDocument = (formData: DocumentFormData) =>
+    handleDocumentAction("PUT", formData, selectedDocument?.id).then(
+      (success) => {
+        if (success) {
+          setIsFormOpen(false);
+          setSelectedDocument(null);
+        }
       }
+    );
 
-      setDocuments((prev) =>
-        prev.filter((doc) => doc.id !== selectedDocument.id)
-      );
-      setIsDeleteModalOpen(false);
-      setSelectedDocument(null);
-    } catch (err) {
-      console.error("Erreur:", err);
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-    }
+  const handleDeleteDocument = () =>
+    handleDocumentAction("DELETE", undefined, selectedDocument?.id).then(
+      (success) => {
+        if (success) {
+          setIsDeleteModalOpen(false);
+          setSelectedDocument(null);
+        }
+      }
+    );
+
+  // Utilitaires
+  const findFiliereId = (filiereName: string | null): number | undefined => {
+    if (!filiereName) return undefined;
+    return filieres.find((f) => f.nom === filiereName)?.id_filiere;
+  };
+
+  const findModuleId = (moduleName: string | null): number | undefined => {
+    if (!moduleName) return undefined;
+    return modules.find((m) => m.nom === moduleName)?.id_module;
   };
 
   const resetFilters = () => {
@@ -409,8 +341,10 @@ const DocumentsPage = () => {
     setSessionFilter("");
     setAnnexeFilter("");
     setEnseignantFilter("");
+    setCurrentPage(1);
   };
 
+  // Affichage des états de chargement et d'erreur
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -446,6 +380,7 @@ const DocumentsPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* En-tête */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <h1 className="text-2xl font-bold text-gray-800">
           Gestion des Documents
@@ -458,10 +393,9 @@ const DocumentsPage = () => {
         </button>
       </div>
 
-      {/* Barre de filtres améliorée */}
+      {/* Filtres */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Recherche par texte */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiSearch className="text-gray-400" />
@@ -475,7 +409,6 @@ const DocumentsPage = () => {
             />
           </div>
 
-          {/* Filtre par filière */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiFilter className="text-gray-400" />
@@ -494,7 +427,6 @@ const DocumentsPage = () => {
             </select>
           </div>
 
-          {/* Filtre par module */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiFilter className="text-gray-400" />
@@ -502,9 +434,9 @@ const DocumentsPage = () => {
             <select
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value)}
-              disabled={filiereFilter === ""}
+              disabled={!filiereFilter}
               className={`pl-10 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                filiereFilter === "" ? "bg-gray-100" : ""
+                !filiereFilter ? "bg-gray-100" : ""
               }`}
             >
               <option value="">Tous les modules</option>
@@ -516,7 +448,6 @@ const DocumentsPage = () => {
             </select>
           </div>
 
-          {/* Filtre par uploader */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiUser className="text-gray-400" />
@@ -539,9 +470,7 @@ const DocumentsPage = () => {
           </div>
         </div>
 
-        {/* Deuxième ligne de filtres */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-          {/* Filtre par session */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiCalendar className="text-gray-400" />
@@ -563,7 +492,6 @@ const DocumentsPage = () => {
             </select>
           </div>
 
-          {/* Filtre par annexe */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiMapPin className="text-gray-400" />
@@ -582,7 +510,6 @@ const DocumentsPage = () => {
             </select>
           </div>
 
-          {/* Filtre par enseignant */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <FiUser className="text-gray-400" />
@@ -605,7 +532,6 @@ const DocumentsPage = () => {
           </div>
         </div>
 
-        {/* Bouton de réinitialisation */}
         {(searchTerm ||
           filiereFilter ||
           moduleFilter ||
@@ -622,7 +548,7 @@ const DocumentsPage = () => {
         )}
       </div>
 
-      {/* Tableau des documents amélioré */}
+      {/* Tableau */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -736,7 +662,7 @@ const DocumentsPage = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-6 py-4 text-center text-sm text-gray-500"
                   >
                     Aucun document trouvé
@@ -747,7 +673,6 @@ const DocumentsPage = () => {
           </table>
         </div>
 
-        {/* Pagination */}
         {filteredDocuments.length > itemsPerPage && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <Pagination
@@ -759,7 +684,7 @@ const DocumentsPage = () => {
         )}
       </div>
 
-      {/* Modal de création/édition */}
+      {/* Modals */}
       <Modal
         isOpen={isFormOpen}
         onClose={() => {
@@ -784,7 +709,6 @@ const DocumentsPage = () => {
                       description: selectedDocument.description || "",
                       id_uploader: selectedDocument.id_uploader,
                       id_classe: selectedDocument.id_classe,
-                      // On va ajouter une fonction pour trouver la filière et le module
                       id_filiere: findFiliereId(selectedDocument.filiere),
                       id_module: findModuleId(selectedDocument.module),
                     }
@@ -804,7 +728,6 @@ const DocumentsPage = () => {
         </div>
       </Modal>
 
-      {/* Modal de confirmation de suppression */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => {

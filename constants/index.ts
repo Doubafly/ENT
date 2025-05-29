@@ -1,6 +1,3 @@
-
-
-
 let AdminLinks: Array<{ image: string; path: string; title: string }> = [];
 
 const fetchUser = async () => {
@@ -11,82 +8,80 @@ const fetchUser = async () => {
 
     const data = await res.json();
     const user = data.user;
-const permissions = user.Permission[0];
+    if (user.isAdmin) {
+      const permissions = user.Permission[0];
 
-        // Générer dynamiquement les liens AdminLinks en fonction des permissions
-        AdminLinks = [
-          {
-            image: "/icons/home.png",
-            path: "/admin",
-            title: "Acceuil",
-          },
-          permissions.classes && {
-            image: "/icons/presentation.png",
-            path: "/admin/classes",
-            title: "Classes",
-          },
-          permissions.admin && {
-            image: "/icons/user.png",
-            path: "/admin/admins",
-            title: "Admin",
-          },
-          permissions.enseignants && {
-            image: "/icons/friends.png",
-            path: "/admin/enseignants",
-            title: "Enseignants",
-          },
-          permissions.etudiants && {
-            image: "/icons/graduation-cap.png",
-            path: "/admin/etudiants",
-            title: "Etudiant",
-          },
-          permissions.emplois_du_temps && {
-            image: "/icons/ordre-du-jour.png",
-            path: "/admin/emploisDuTemps",
-            title: "Emplois Du Temps",
-          },
-    
-          permissions.annonces && {
-            image: "/icons/promotion.png",
-            path: "/admin/annonces",
-            title: "Annonces",
-          },
-          permissions.note && {
-            image: "/icons/grades.png",
-            path: "/admin/note",
-            title: "Note",
-          },
-          permissions.paiement && {
-            image: "/icons/finance.svg",
-            path: "/admin/paiement",
-            title: "Finance",
-          },
-          {
-            image: "/icons/documentation.png",
-            path: "/admin/documents",
-            title: "Documents",
-          },
-          {
-            image: "/icons/user.png",
-            path: "/admin/profil",
-            title: "Profil",
-          }, // Profil toujours affiché
-          permissions.parametres && {
-            image: "/icons/settings.png",
-            path: "/admin/parametre",
-            title: "parametre",
-          },
-          {
-            image: "/icons/out.png",
-            path: "/deconnexion",
-            title: "Déconnexion",
-          }, // Déconnexion toujours affiché
-        ].filter(Boolean); 
-            
-    
+      // Générer dynamiquement les liens AdminLinks en fonction des permissions
+      AdminLinks = [
+        {
+          image: "/icons/home.png",
+          path: "/admin",
+          title: "Acceuil",
+        },
+        permissions.classes && {
+          image: "/icons/presentation.png",
+          path: "/admin/classes",
+          title: "Classes",
+        },
+        permissions.admin && {
+          image: "/icons/user.png",
+          path: "/admin/admins",
+          title: "Admin",
+        },
+        permissions.enseignants && {
+          image: "/icons/friends.png",
+          path: "/admin/enseignants",
+          title: "Enseignants",
+        },
+        permissions.etudiants && {
+          image: "/icons/graduation-cap.png",
+          path: "/admin/etudiants",
+          title: "Etudiant",
+        },
+        permissions.emplois_du_temps && {
+          image: "/icons/ordre-du-jour.png",
+          path: "/admin/emploisDuTemps",
+          title: "Emplois Du Temps",
+        },
 
-  } 
-  catch (error) {
+        permissions.annonces && {
+          image: "/icons/promotion.png",
+          path: "/admin/annonces",
+          title: "Annonces",
+        },
+        permissions.note && {
+          image: "/icons/grades.png",
+          path: "/admin/note",
+          title: "Note",
+        },
+        permissions.paiement && {
+          image: "/icons/finance.svg",
+          path: "/admin/paiement",
+          title: "Finance",
+        },
+        {
+          image: "/icons/documentation.png",
+          path: "/admin/documents",
+          title: "Documents",
+        },
+        {
+          image: "/icons/user.png",
+          path: "/admin/profil",
+          title: "Profil",
+        }, // Profil toujours affiché
+        permissions.parametres && {
+          image: "/icons/settings.png",
+          path: "/admin/parametre",
+          title: "parametre",
+        },
+        {
+          image: "/icons/out.png",
+          path: "/deconnexion",
+          title: "Déconnexion",
+        }, // Déconnexion toujours affiché
+      ].filter(Boolean);
+    }
+  } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
   }
 };
@@ -94,11 +89,7 @@ const permissions = user.Permission[0];
 fetchUser();
 export { AdminLinks };
 
-
-
-
 export const EtudiantLinks = [
-
   {
     image: "/icons/home.png",
     path: "/etudiant",
@@ -189,20 +180,19 @@ export const ProfesseurLinks = [
     title: "Documents",
   },
 
-
-{
-image: "/icons/user.png",
-path: "/professeur/profil",
-title: "Profil",
-},
-{
-image: "/icons/settings.png",
-path: "/professeur/parametre",
-title: "parametre",
-},
-{
-image: "/icons/out.png",
-path: "/deconnexion",
-title: "Déconnexion",
-},
+  {
+    image: "/icons/user.png",
+    path: "/professeur/profil",
+    title: "Profil",
+  },
+  {
+    image: "/icons/settings.png",
+    path: "/professeur/parametre",
+    title: "parametre",
+  },
+  {
+    image: "/icons/out.png",
+    path: "/deconnexion",
+    title: "Déconnexion",
+  },
 ];

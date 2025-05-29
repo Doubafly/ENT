@@ -29,9 +29,10 @@ interface Classe {
 
 interface NoteEntryProps {
   classes: Classe[];
+  onrecharge: () => void;
 }
 
-const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
+const Reclamation: React.FC<NoteEntryProps> = ({ classes ,onrecharge}) => {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -91,7 +92,6 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
             note_exam: selectedStudent.notes[0].note_exam,
             commentaire_enseignant: teacherComment,
           };
-          console.log(payload);
           if (selectedStudent.notes[0].id_note) {
             const res = await fetch(`/api/reclamation/correction/${selectedStudent.notes[0].id_note}`, {
               method: "PUT",
@@ -112,7 +112,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         setTimeout(() => {
           setIsSubmitting(false);
           setSelectedStudent(null);
-          // Vous pourriez vouloir rafraîchir les données ici
+          onrecharge();
         }, 1000);
       };
 

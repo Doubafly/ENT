@@ -173,6 +173,7 @@ export async function GET() {
                     },
                     utilisateur: {
                       select: {
+                        id_utilisateur: true,
                         nom: true,
                         prenom: true,
                         email: true,
@@ -196,6 +197,7 @@ export async function GET() {
             specialite: true,
             utilisateur: {
               select: { 
+                id_utilisateur: true,
                 nom: true,
                 prenom: true,
                 email: true,

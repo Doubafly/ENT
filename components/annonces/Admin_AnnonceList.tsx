@@ -228,7 +228,7 @@ const AnnonceList: React.FC = () => {
         </div>
       )}
 
-      <h1 className="text-3xl font-bold text-center mb-6">📢 Annonces</h1>
+      <h1 className="text-3xl font-bold text-center mb-6"> Annonces</h1>
 
       {!currentAdminId && (
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 flex items-center gap-3">

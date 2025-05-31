@@ -18,7 +18,6 @@ import { Decimal } from "@prisma/client/runtime/library";
 import { Delete, FilterList, Clear } from "@mui/icons-material";
 
 import { ConfirmDialog } from "../ConfirmDialog";
-import { fr } from 'date-fns/locale/fr';
 
 interface Transaction {
   id_finance: number;
@@ -41,14 +40,14 @@ interface Transaction {
   };
 }
 
-type FinanceModePaiement = 'Espèces' | 'Chèque' ;
-type TransactionType = 'Depense' | 'Scolarite' | 'Inscription' | 'Salaire' | 'Remboursement'| 'Autre' ;
+
+type FinanceModePaiement = 'Espèces' | 'Chèque';
+type TransactionType = 'Depense' | 'Scolarite' | 'Inscription' | 'Salaire' | 'Remboursement' | 'Autre';
 
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque'];
-const transactionTypes: TransactionType[] = ['Depense', 'Scolarite', 'Inscription', 'Salaire', 'Remboursement' ,'Autre', ];
+const transactionTypes: TransactionType[] = ['Depense', 'Scolarite', 'Inscription', 'Salaire', 'Remboursement', 'Autre'];
 
 const ITEMS_PER_PAGE = 10;
-
 const SESSION_API_URL = "/api/auth/session";
 
 export default function GestionTransactions() {
@@ -63,8 +62,8 @@ export default function GestionTransactions() {
   // États pour les filtres
   const [filterMode, setFilterMode] = useState<FinanceModePaiement | "Tous">("Tous");
   const [filterType, setFilterType] = useState<TransactionType | "Tous">("Tous");
-  const [dateDebut, setDateDebut] = useState<Date | null>(null);
-  const [dateFin, setDateFin] = useState<Date | null>(null);
+  const [dateDebut, setDateDebut] = useState<string>("");
+  const [dateFin, setDateFin] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   
   // États pour la pagination et UI
@@ -78,7 +77,8 @@ export default function GestionTransactions() {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
+  const [showDeleteOptions, setShowDeleteOptions] = useState(false);
+  const [deleteOption, setDeleteOption] = useState<"all" | "filtered" | "date">("all");
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   // Vérification de la session
@@ -134,35 +134,28 @@ export default function GestionTransactions() {
   useEffect(() => {
     let filtered = [...transactions];
     
-    // Filtre par mode de paiement
     if (filterMode !== "Tous") {
       filtered = filtered.filter(t => t.mode_paiement === filterMode);
     }
     
-    // Filtre par type de transaction
     if (filterType !== "Tous") {
       filtered = filtered.filter(t => t.type_transaction === filterType);
     }
     
-    // Filtre par date
     if (dateDebut) {
       filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date_transaction);
+        const transactionDate = new Date(t.date_transaction).toISOString().split('T')[0];
         return transactionDate >= dateDebut;
       });
     }
     
     if (dateFin) {
       filtered = filtered.filter(t => {
-        const transactionDate = new Date(t.date_transaction);
-        // Ajouter un jour à dateFin pour inclure toute la journée
-        const endOfDay = new Date(dateFin);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-        return transactionDate < endOfDay;
+        const transactionDate = new Date(t.date_transaction).toISOString().split('T')[0];
+        return transactionDate <= dateFin;
       });
     }
     
-    // Filtre par recherche
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(t => 
@@ -178,7 +171,7 @@ export default function GestionTransactions() {
     }
     
     setFilteredTransactions(filtered);
-    setCurrentPage(1); // Reset à la première page quand les filtres changent
+    setCurrentPage(1);
   }, [filterMode, filterType, dateDebut, dateFin, searchTerm, transactions]);
 
   // Calcul des données paginées
@@ -236,60 +229,75 @@ export default function GestionTransactions() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = async () => {
-    if (!itemToDelete) return;
-    
-    setLoading(prev => ({...prev, suppression: true}));
-    setError(null);
-    
-    try {
-      const response = await fetch(`/api/finance/${itemToDelete}`, {
-        method: 'DELETE'
-      });
+const confirmDelete = async () => {
+  if (!itemToDelete) return;
+  
+  setLoading(prev => ({...prev, suppression: true}));
+  setError(null);
+  
+  try {
+    const response = await fetch(`/api/finance/${itemToDelete}`, {
+      method: 'DELETE'
+    });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur serveur");
-      }
-
-      setTransactions(prev => prev.filter(t => t.id_finance !== itemToDelete));
-    } catch (err) {
-      console.error("Erreur suppression:", err);
-      setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
-    } finally {
-      setLoading(prev => ({...prev, suppression: false}));
-      setShowDeleteConfirm(false);
-      setItemToDelete(null);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Erreur serveur");
     }
-  };
 
-  const handleClearAll = async () => {
-    setShowClearAllConfirm(true);
-  };
+    setTransactions(prev => prev.filter(t => t.id_finance !== itemToDelete));
+  } catch (err) {
+    console.error("Erreur suppression:", err);
+    setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
+  } finally {
+    setLoading(prev => ({...prev, suppression: false}));
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+  }
+};
 
-  const confirmClearAll = async () => {
-    setLoading(prev => ({...prev, suppression: true}));
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/finance/clear-all', {
-        method: 'DELETE'
-      });
+  const confirmDeleteSelection = async () => {
+  setLoading(prev => ({...prev, suppression: true}));
+  setError(null);
+  
+  try {
+    const params = new URLSearchParams();
+    params.append('option', deleteOption);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erreur serveur");
-      }
-
-      setTransactions([]);
-    } catch (err) {
-      console.error("Erreur suppression totale:", err);
-      setError(err instanceof Error ? err.message : "Erreur lors de la suppression totale");
-    } finally {
-      setLoading(prev => ({...prev, suppression: false}));
-      setShowClearAllConfirm(false);
+    if (deleteOption === "filtered") {
+      if (filterMode !== "Tous") params.append('filterMode', filterMode);
+      if (filterType !== "Tous") params.append('filterType', filterType);
+      if (dateDebut) params.append('dateDebut', dateDebut);
+      if (dateFin) params.append('dateFin', dateFin);
+    } else if (deleteOption === "date") {
+      if (!dateDebut || !dateFin) throw new Error("Les dates sont requises");
+      params.append('dateDebut', dateDebut);
+      params.append('dateFin', dateFin);
     }
-  };
+
+    const response = await fetch(`/api/finance?${params.toString()}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Erreur serveur");
+    }
+
+    // Recharger les données
+    const fetchResponse = await fetch('/api/finance');
+    if (!fetchResponse.ok) throw new Error("Erreur de chargement");
+    
+    const data = await fetchResponse.json();
+    setTransactions(data.finances || []);
+  } catch (err) {
+    console.error("Erreur suppression:", err);
+    setError(err instanceof Error ? err.message : "Erreur lors de la suppression");
+  } finally {
+    setLoading(prev => ({...prev, suppression: false}));
+    setShowDeleteOptions(false);
+  }
+};
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
     setCurrentPage(page);
@@ -298,10 +306,26 @@ export default function GestionTransactions() {
   const resetFilters = () => {
     setFilterMode("Tous");
     setFilterType("Tous");
-    setDateDebut(null);
-    setDateFin(null);
+    setDateDebut("");
+    setDateFin("");
     setSearchTerm("");
   };
+
+  // Calcul des totaux
+  const totalTransactions = filteredTransactions.reduce(
+    (sum, transaction) => sum + Number(transaction.montant), 0
+  );
+
+  // Statistiques par type
+  const statsByType = transactionTypes.map(type => {
+    const transactionsOfType = filteredTransactions.filter(t => t.type_transaction === type);
+    const total = transactionsOfType.reduce((sum, t) => sum + Number(t.montant), 0);
+    return {
+      type,
+      count: transactionsOfType.length,
+      total
+    };
+  }).filter(stat => stat.count > 0);
 
   if (loading.session || (loading.initial && !error)) {
     return (
@@ -321,22 +345,6 @@ export default function GestionTransactions() {
     );
   }
 
-  // Calcul des totaux
-  const totalTransactions = filteredTransactions.reduce(
-    (sum, transaction) => sum + Number(transaction.montant), 0
-  );
-
-  // Statistiques par type
-  const statsByType = transactionTypes.map(type => {
-    const transactionsOfType = filteredTransactions.filter(t => t.type_transaction === type);
-    const total = transactionsOfType.reduce((sum, t) => sum + Number(t.montant), 0);
-    return {
-      type,
-      count: transactionsOfType.length,
-      total
-    };
-  }).filter(stat => stat.count > 0);
-
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Gestion des Transactions Financières</h1>
@@ -347,7 +355,6 @@ export default function GestionTransactions() {
         </Alert>
       )}
 
-    
       {/* Filtres */}
       <Paper elevation={3} className="p-4 mb-6">
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
@@ -396,25 +403,33 @@ export default function GestionTransactions() {
           </FormControl>
         </Box>
         
-       {/*
-
         <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={3} mb={3}>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={fr}>
-            <DatePicker
-              label="Date de début"
+          <div className="w-full">
+            <label htmlFor="dateDebut" className="block text-sm font-medium text-gray-700 mb-1">
+              Date de début
+            </label>
+            <input
+              type="date"
+              id="dateDebut"
               value={dateDebut}
-              onChange={(newValue: SetStateAction<Date | null>) => setDateDebut(newValue)}
-              slotProps={{ textField: { fullWidth: true } }}
+              onChange={(e) => setDateDebut(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-            
-            <DatePicker
-              label="Date de fin"
+          </div>
+          
+          <div className="w-full">
+            <label htmlFor="dateFin" className="block text-sm font-medium text-gray-700 mb-1">
+              Date de fin
+            </label>
+            <input
+              type="date"
+              id="dateFin"
               value={dateFin}
-              onChange={(newValue: SetStateAction<Date | null>) => setDateFin(newValue)}
-              slotProps={{ textField: { fullWidth: true } }}
-              minDate={dateDebut}
+              onChange={(e) => setDateFin(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              min={dateDebut}
             />
-          </LocalizationProvider> 
+          </div>
           
           <TextField
             label="Rechercher"
@@ -427,7 +442,7 @@ export default function GestionTransactions() {
             }}
           />
         </Box>
-    */}  </Paper> 
+      </Paper>
 
       {/* Statistiques */}
       <Paper elevation={3} className="p-4 mb-6">
@@ -445,11 +460,11 @@ export default function GestionTransactions() {
           <Button
             variant="outlined"
             color="error"
-            onClick={handleClearAll}
+            onClick={() => setShowDeleteOptions(true)}
             disabled={transactions.length === 0 || loading.suppression}
             startIcon={<Delete />}
           >
-            Tout supprimer
+            Options de suppression
           </Button>
         </Box>
         
@@ -503,11 +518,7 @@ export default function GestionTransactions() {
                   {paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id_finance}>
                       <td className="border p-2">
-                        {new Date(transaction.date_transaction).toLocaleDateString('fr-FR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })}
+                        {new Date(transaction.date_transaction).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="border p-2">{transaction.type_transaction}</td>
                       <td className="border p-2 font-medium">
@@ -578,13 +589,56 @@ export default function GestionTransactions() {
       />
 
       <ConfirmDialog
-        isOpen={showClearAllConfirm}
-        title="Confirmer la suppression totale"
-        message="Êtes-vous sûr de vouloir supprimer TOUTES les transactions ? Cette action est irréversible et supprimera toutes les données financières."
-        onConfirm={confirmClearAll}
-        onCancel={() => setShowClearAllConfirm(false)}
-        confirmText={loading.suppression ? "Suppression..." : "Tout supprimer"}
+        isOpen={showDeleteOptions}
+        title="Options de suppression"
+        message={
+          <div className="space-y-4">
+            <div>Sélectionnez ce que vous voulez supprimer :</div>
+            <div className="flex flex-col space-y-2">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio"
+                  name="deleteOption"
+                  value="all"
+                  checked={deleteOption === "all"}
+                  onChange={() => setDeleteOption("all")}
+                />
+                <span className="ml-2">Toutes les transactions ({transactions.length})</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio"
+                  name="deleteOption"
+                  value="filtered"
+                  checked={deleteOption === "filtered"}
+                  onChange={() => setDeleteOption("filtered")}
+                />
+                <span className="ml-2">Les transactions filtrées ({filteredTransactions.length})</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio"
+                  name="deleteOption"
+                  value="date"
+                  checked={deleteOption === "date"}
+                  onChange={() => setDeleteOption("date")}
+                  disabled={!dateDebut || !dateFin}
+                />
+                <span className="ml-2">
+                  Transactions entre {dateDebut || '...'} et {dateFin || '...'}
+                </span>
+              </label>
+            </div>
+          </div>
+        }
+        onConfirm={confirmDeleteSelection}
+        onCancel={() => setShowDeleteOptions(false)}
+        confirmText={loading.suppression ? "Suppression..." : "Confirmer"}
         cancelText="Annuler"
+        fullWidth
       />
     </div>
   );

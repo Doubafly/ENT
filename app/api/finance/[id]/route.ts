@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// GET: Récupère une transaction par ID
+// GET: Récupère une transaction spécifique
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const transaction = await prisma.finance.findUnique({
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// PUT: Met à jour une transaction
+// PUT: Met à jour une transaction spécifique
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json();
@@ -70,7 +70,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// DELETE: Supprime une transaction
+// DELETE: Supprime une transaction spécifique
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await prisma.finance.delete({
@@ -78,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     });
 
     return NextResponse.json(
-      { message: "Transaction supprimée" },
+      { message: "Transaction supprimée avec succès" },
       { status: 200 }
     );
   } catch (e) {

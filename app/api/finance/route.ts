@@ -154,3 +154,62 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+// DELETE: Supprime des transactions selon différents critères
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const option = searchParams.get('option');
+    
+    let where = {};
+    
+    if (option === 'filtered') {
+      const filterMode = searchParams.get('filterMode');
+      const filterType = searchParams.get('filterType');
+      const dateDebut = searchParams.get('dateDebut');
+      const dateFin = searchParams.get('dateFin');
+
+      where = {
+        ...(filterMode && filterMode !== 'Tous' && { mode_paiement: filterMode }),
+        ...(filterType && filterType !== 'Tous' && { type_transaction: filterType }),
+        ...(dateDebut && dateFin && {
+          date_transaction: {
+            gte: new Date(dateDebut),
+            lte: new Date(dateFin)
+          }
+        })
+      };
+    } else if (option === 'date') {
+      const dateDebut = searchParams.get('dateDebut');
+      const dateFin = searchParams.get('dateFin');
+
+      if (!dateDebut || !dateFin) {
+        return NextResponse.json(
+          { message: 'Les dates sont requises' },
+          { status: 400 }
+        );
+      }
+
+      where = {
+        date_transaction: {
+          gte: new Date(dateDebut),
+          lte: new Date(dateFin)
+        }
+      };
+    }
+
+    const { count } = await prisma.finance.deleteMany({
+      where
+    });
+
+    return NextResponse.json(
+      { message: `${count} transactions supprimées`, count },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Erreur suppression:', error);
+    return NextResponse.json(
+      { message: 'Erreur lors de la suppression' },
+      { status: 500 }
+    );
+  }
+}

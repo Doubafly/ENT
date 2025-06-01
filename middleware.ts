@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // URLs publiques qu'on ne veut pas protéger
-  const publicPaths = ["/sign-in", "/api/auth/session"];
+  const publicPaths = ["/sign-in","/forgotPassword", "/api/auth/session"];
   if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }

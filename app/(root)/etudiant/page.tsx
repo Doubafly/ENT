@@ -4,7 +4,6 @@ import RightSidebar from "@/components/RightSidebar";
 import EmploieStudent from "@/components/EmploiDuTemps";
 import StatistiqueEtudiant from "@/components/statistique/StatistiqueEtudiant";
 
-
 export default function Home() {
   const [user, setUser] = useState(null);
   const [statData, setStatData] = useState([
@@ -35,7 +34,10 @@ export default function Home() {
           console.error("L'utilisateur connecté n'est pas un étudiant.");
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        console.error(
+          "Erreur lors de la récupération de l'utilisateur :",
+          error
+        );
       }
     }
 
@@ -45,34 +47,70 @@ export default function Home() {
         const coursData = await coursd.json();
         const cours = coursData?.cours || [];
 
-        const coursFiltres = cours.filter((c: { filiere_module: { filiere: { etudiants: any } } }) =>
-          (c.filiere_module?.filiere?.etudiants || []).some(
-            (e: { matricule: any }) => e.matricule === matricule
-          )
+        const coursFiltres = cours.filter(
+          (c: { filiere_module: { filiere: { etudiants: any } } }) =>
+            (c.filiere_module?.filiere?.etudiants || []).some(
+              (e: { matricule: any }) => e.matricule === matricule
+            )
         );
+        console.log(coursFiltres);
+        
+        // const notesEtudiant = coursFiltres
+        //   .map(
+        //     (c: { filiere_module: { filiere: { etudiants: any[] } } }) =>
+        //       c.filiere_module?.filiere?.etudiants?.find(
+        //         (e) => e.matricule === matricule
+        //       )?.notes || []
+        //   )
+        //   .flat();
 
+        
         const notesEtudiant = coursFiltres
-          .map((c: { filiere_module: { filiere: { etudiants: any[] } } }) =>
-            c.filiere_module?.filiere?.etudiants?.find((e) => e.matricule === matricule)?.notes || []
-          )
-          .flat();
+        .map(
+          (c: { notes: { etudiant: { matricule: any; }; }[] }) =>
+            c.notes?.find((n: { etudiant: { matricule: any; }; })=> n.etudiant.matricule === matricule)
+        )
+        .flat();
+        console.log(notesEtudiant);
+        
+
 
         const nombreModules = coursFiltres.length;
+        
         const nombreModulesValides = notesEtudiant.filter(
-          (note: { commentaire_enseignant: string }) => note.commentaire_enseignant === "valide"
+          (note: { note_class: number | null; note_exam: number | null; }) =>
+            ((note?.note_class || 0) + (note?.note_exam || 0)) / 2 >= 10
         ).length;
         const nombreModulesNonValides = notesEtudiant.filter(
-          (note: { commentaire_enseignant: string }) => note.commentaire_enseignant !== "valide"
+          (note: {
+            note_exam: any;
+            note_class: any;  }) =>
+            ((note?.note_class || 0) + (note?.note_exam || 0)) / 2 < 10
         ).length;
 
         setStatData([
-          { link: "/icons/teach.png", value: nombreModules, nom: "Nombre Module" },
+          {
+            link: "/icons/teach.png",
+            value: nombreModules,
+            nom: "Nombre Module",
+          },
           { link: "/icons/friends.png", value: "0", nom: "Nombre Abscence" },
-          { link: "/icons/teach.png", value: nombreModulesValides, nom: "Nbre Module Valider" },
-          { link: "/icons/Training.png", value: nombreModulesNonValides, nom: "Nbre Module Non Valider" },
+          {
+            link: "/icons/teach.png",
+            value: nombreModulesValides,
+            nom: "Nbre Module Valider",
+          },
+          {
+            link: "/icons/Training.png",
+            value: nombreModulesNonValides,
+            nom: "Nbre Module Non Valider",
+          },
         ]);
       } catch (error) {
-        console.error("Erreur lors de la récupération des statistiques :", error);
+        console.error(
+          "Erreur lors de la récupération des statistiques :",
+          error
+        );
       }
     }
 

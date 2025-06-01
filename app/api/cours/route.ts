@@ -166,8 +166,10 @@ export async function GET() {
                     matricule: true,
                     notes: {
                       select: {
+                        id_note: true,
                         note_exam: true,
                         note_class: true,
+                        id_etudiant:true,
                         commentaire_enseignant: true,
                       },
                     },

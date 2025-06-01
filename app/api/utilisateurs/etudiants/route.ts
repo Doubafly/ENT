@@ -59,7 +59,7 @@ export async function GET() {
             },
           },
         }, // Notes avec détails du cours et du module
-        paiements: true, // Paiements de l'étudiant
+        Finance: true, // Paiements de l'étudiant
       },
     });
 

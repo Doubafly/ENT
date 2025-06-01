@@ -121,30 +121,30 @@ console.log("User data:", user);
 
           {/* Statistiques */}
         {user.type === "Etudiant" && (
-  <div className="mt-6">
-   
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="mt-6">
+        
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-      <div className="bg-white shadow rounded-lg p-4 text-center">
-        <i className="fas fa-file-alt text-2xl text-green-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Modules suivis</p>
-        <p className="text-xl font-bold">5</p>
+            <div className="bg-white shadow rounded-lg p-4 text-center">
+              <i className="fas fa-file-alt text-2xl text-green-500 mb-2"></i>
+              <p className="text-gray-500 text-sm">Modules suivis</p>
+              <p className="text-xl font-bold">5</p>
+            </div>
+
+            <div className="bg-white shadow rounded-lg p-4 text-center">
+              <i className="fas fa-user-clock text-2xl text-red-500 mb-2"></i>
+              <p className="text-gray-500 text-sm">Jours d'absence</p>
+              <p className="text-xl font-bold">0</p>
+            </div>
+
+          <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-calendar-alt text-2xl text-purple-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Session académique</p>
+        <p className="text-xl font-bold">2024-2025</p>
       </div>
 
-      <div className="bg-white shadow rounded-lg p-4 text-center">
-        <i className="fas fa-user-clock text-2xl text-red-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Jours d'absence</p>
-        <p className="text-xl font-bold">0</p>
-      </div>
-
-     <div className="bg-white shadow rounded-lg p-4 text-center">
-  <i className="fas fa-calendar-alt text-2xl text-purple-500 mb-2"></i>
-  <p className="text-gray-500 text-sm">Session académique</p>
-  <p className="text-xl font-bold">2024-2025</p>
-</div>
-
-    </div>
-  </div>
+          </div>
+        </div>
 )}
 
 {user.type === "Enseignant" && (

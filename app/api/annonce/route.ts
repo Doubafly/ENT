@@ -1,12 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../prisma";
+import prisma from "@/app/api/prisma";
 
-// Récupération de toutes les annonces et création d'une annonce
-
-// GET /api/annonces
-export async function GET() {
+// GET: Récupère toutes les annonces
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    
+    // Ajout des paramètres de filtre
+    const dateDebut = searchParams.get('dateDebut');
+    const dateFin = searchParams.get('dateFin');
+    const anciennete = searchParams.get('anciennete');
+
+    let where: any = {};
+
+    // Filtre par date
+    if (dateDebut && dateFin) {
+      where.date_creation = {
+        gte: new Date(dateDebut),
+        lte: new Date(dateFin)
+      };
+    }
+
+    // Filtre par ancienneté
+    if (anciennete) {
+      const now = new Date();
+      const cutoffDate = new Date();
+      
+      switch(anciennete) {
+        case "1mois":
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+        case "3mois":
+          cutoffDate.setMonth(now.getMonth() - 3);
+          break;
+        case "6mois":
+          cutoffDate.setMonth(now.getMonth() - 6);
+          break;
+        case "1an":
+          cutoffDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+
+      where.date_creation = {
+        lt: cutoffDate
+      };
+    }
+
     const annonces = await prisma.annonce.findMany({
+      where,
       select: {
         id_annonce: true,
         titre: true,
@@ -25,6 +66,9 @@ export async function GET() {
           }
         }
       },
+      orderBy: {
+        date_creation: 'desc'
+      }
     });
  
     return NextResponse.json(
@@ -39,7 +83,7 @@ export async function GET() {
   }
 }
 
-// POST /api/annonces
+// POST: Crée une nouvelle annonce
 export async function POST(request: NextRequest) {
   try {
     const { titre, contenu, id_admin } = await request.json();
@@ -74,6 +118,38 @@ export async function POST(request: NextRequest) {
         message: "Erreur serveur",
         error: e.message,
       },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Suppression multiple
+// DELETE: Suppression multiple
+export async function DELETE(request: NextRequest) {
+  try {
+    const { ids } = await request.json();
+
+    if (!ids || !Array.isArray(ids)) {
+      return NextResponse.json(
+        { message: "Format de données invalide" },
+        { status: 400 }
+      );
+    }
+
+    const { count } = await prisma.annonce.deleteMany({
+      where: {
+        id_annonce: { in: ids.map(id => Number(id)) }
+      }
+    });
+
+    return NextResponse.json(
+      { message: `${count} annonce(s) supprimée(s)`, count },
+      { status: 200 }
+    );
+  } catch (e: any) {
+    console.error("Erreur suppression multiple:", e);
+    return NextResponse.json(
+      { message: "Erreur lors de la suppression", error: e.message },
       { status: 500 }
     );
   }

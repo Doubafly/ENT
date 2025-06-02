@@ -1,12 +1,11 @@
-import prisma from "@/app/api/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/app/api/prisma";
 
-// Récupération par Id : GET /api/annonces/[id]
-export async function GET(request: NextRequest) {
-  const id = request.nextUrl.pathname.split("/").pop();
+// GET: Récupère une annonce spécifique
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const annonce = await prisma.annonce.findUnique({
-      where: { id_annonce: id ? parseInt(id) : 0 },
+      where: { id_annonce: Number(params.id) },
       include: {
         admin: {
           select: {
@@ -42,17 +41,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Mise à jour par id : PUT /api/annonces/[id]
-export async function PUT(request: NextRequest) {
-  const { titre, contenu } = await request.json();
-  const id = request.nextUrl.pathname.split("/").pop();
+// PUT: Met à jour une annonce
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
+    const { titre, contenu } = await request.json();
+    
     const annonce = await prisma.annonce.update({
-      where: { id_annonce: id ? parseInt(id) : 0 },
-      data: {
-        titre,
-        contenu,
-      },
+      where: { id_annonce: Number(params.id) },
+      data: { titre, contenu },
     });
 
     return NextResponse.json(
@@ -67,15 +63,17 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// Suppression par id: DELETE /api/annonces/[id]
-export async function DELETE(request: NextRequest) {
-  const id = request.nextUrl.pathname.split("/").pop();
+// DELETE: Supprime une annonce
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await prisma.annonce.delete({
-      where: { id_annonce: id ? parseInt(id) : 0 },
+      where: { id_annonce: Number(params.id) },
     });
 
-    return NextResponse.json({ message: "Annonce supprimée" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Annonce supprimée avec succès" },
+      { status: 200 }
+    );
   } catch (e) {
     return NextResponse.json(
       { message: "Une erreur est survenue" },

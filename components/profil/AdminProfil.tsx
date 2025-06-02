@@ -67,17 +67,7 @@ export default function AdminProfil({ user, onClose, onUserUpdate }: any) {
 
   const handleSubmit = async () => {
     try {
-      const permissionsArray = [
-        formData.permissions.enseignants,
-        formData.permissions.etudiants,
-        formData.permissions.admin,
-        formData.permissions.classes,
-        formData.permissions.paiement,
-        formData.permissions.note,
-        formData.permissions.emplois_du_temps,
-        formData.permissions.parametres,
-        formData.permissions.annonces,
-      ];
+      const permissionsArray = formData.permissions
 
       // Vérifier si un mot de passe est saisi
       const mot_de_passe_final = formData.mot_de_passe.trim() !== "" ? formData.mot_de_passe : formData.passwordHash;

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RightSidebar from "@/components/RightSidebar";
-import Statistique from "@/components/statistique/statistique";
+import Statistique from "@/components/statistique/StatistiqueAdmin";
 
 export default function Home() {
 

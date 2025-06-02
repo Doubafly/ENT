@@ -4,10 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import UpdateEtudiantModal from "../formulaires/UpdateEtudiantModal";
 import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Import du modal pour les enseignants
+import UpdateAdminModal from "../formulaires/updateAdminModal";
 
 // Définition de l'interface User pour typer les données utilisateur
 export interface User {
-  notes: any;
+  mot_de_passe: string;
+  permissions?: string | { [key: string]: boolean };
+  notes?: any;
   specialite?: string;
   id_utilisateur: number;
   id: number;
@@ -16,22 +19,22 @@ export interface User {
   prenom: string;
   email: string;
   adresse: string;
-  date_naissance: string;
-  date_inscription: string;
+  date_naissance?: string;
+  date_inscription?: string;
   tel: string;
-  filiere: {
+  filiere?: {
     filiere_module: any;
     id_filiere: number;
     nom: string;
   };
-  matricule: string;
+  matricule?: string;
   sexe: string;
 }
 
 // Définition de l'interface des props pour le composant UserCard
 interface UserCardProps {
   item: User;
-  type: "etudiant" | "enseignant"; // Ajout d'un type pour différencier
+  type: "etudiant" | "enseignant"|"admin"; // Ajout d'un type pour différencier
   onrecharge: () => void;
   onEdit: (id_utilisateur: number, updatedData: any) => void;
   onDelete: (user: User) => void;
@@ -155,7 +158,7 @@ const UserCard = ({
       {/* Modal de mise à jour des informations utilisateur */}
       {isUpdateModalOpen && (
         <>
-          {type === "etudiant" ? (
+          {type === "etudiant" &&(
             <UpdateEtudiantModal
               etudiant={{
                 id: item.id,
@@ -169,18 +172,20 @@ const UserCard = ({
                   profil: item.image,
                   sexe: item.sexe,
                 },
-                matricule: item.matricule, // Added matricule property
+                matricule: item.matricule || "", // Ensure matricule is always a string
                 filieres: {
-                  id_filiere: item.filiere.id_filiere,
-                  nom: item.filiere.nom,
+                  id_filiere: item.filiere?.id_filiere || 0,
+                  nom: item.filiere?.nom || "",
                 },
-                date_naissance: formatDate(item.date_naissance), // Formatez ici
-                date_inscription: formatDate(item.date_inscription), // Formatez ici
+                date_naissance: formatDate(item.date_naissance || ""), // Formatez ici
+                date_inscription: formatDate(item.date_inscription || ""), // Formatez ici
               }}
               onClose={handleCloseModal} // Ferme le modal de mise à jour
               onUpdate={handleUpdate} // Appelle la fonction de mise à jour des données
             />
-          ) : (
+          ) }
+          
+          {type === "enseignant" &&(
             <UpdateEnseignantModal
               enseignant={{
                 id: item.id,
@@ -196,13 +201,54 @@ const UserCard = ({
                 },
                 matricule: item.matricule || "",
                 specialite: item.specialite || "",
-                date_naissance: formatDate(item.date_naissance),
-                date_inscription: formatDate(item.date_inscription),
+                date_naissance: formatDate(item.date_naissance || ""),
+                date_inscription: formatDate(item.date_inscription || ""),
               }}
               onClose={handleCloseModal}
               onUpdate={handleUpdate}
             />
-          )}
+          )
+          }
+          {type === "admin" &&(
+          
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"> 
+
+            <div 
+        className="bg-white rounded-lg p-6 shadow-lg w-full max-w-2xl"
+        onClick={(e) => e.stopPropagation()}>
+              
+            <UpdateAdminModal user={{
+                id_utilisateur:item.id_utilisateur,
+                nom: item.nom || "",
+                prenom: item.prenom || "",
+                email: item.email || "",
+                sexe: item.sexe || "",
+                mot_de_passe: "",  // Champ vide pour modifier le mot de passe si nécessaire
+                telephone: item.tel || "",
+                adresse: item.adresse || "",
+                profil: item.image || "",
+                permissions: item.permissions || {
+                  admin: false,
+                  annonces: false,
+                  classes: false,
+                  emplois_du_temps: false,
+                  enseignants: false,
+                  etudiants: false,
+                  note: false,
+                  paiement: false,
+                  parametres: false,
+                },
+                passwordHash: item.mot_de_passe || "", 
+            }} 
+            
+              onClose={handleCloseModal}
+              onUserUpdate={handleUpdate}
+            />
+            </div>
+            
+            </div>
+          )
+          }
         </>
       )}
     </div>

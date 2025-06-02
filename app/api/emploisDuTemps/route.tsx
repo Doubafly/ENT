@@ -5,6 +5,7 @@ export async function GET() {
   try {
     const emploisDuTemps = await prisma.emploisDuTemps.findMany({
       select: {
+        id_emploi:true,
         jour: true,
         heure_debut: true,
         heure_fin: true,

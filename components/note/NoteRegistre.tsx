@@ -7,9 +7,10 @@ import Reclamation from "./Reclamation";
 
 interface NoteRegistreProps {
   classes: any;
+  onrecharge: () => void;
 }
 
-export default function NoteRegistre({ classes }: NoteRegistreProps) {
+export default function NoteRegistre({ classes ,onrecharge}: NoteRegistreProps) {
   const [tabIndex, setTabIndex] = useState(0);
 
   const [selectedSession, setSelectedSession] = useState("");
@@ -77,9 +78,9 @@ export default function NoteRegistre({ classes }: NoteRegistreProps) {
         
 
         {/* Contenu selon l'onglet actif */}
-        {tabIndex === 0 && <Saisi classes={filteredClasses} />}
+        {tabIndex === 0 && <Saisi classes={filteredClasses} onrecharge={onrecharge}  />}
         {tabIndex === 1 && <Resultat classes={filteredClasses} />}
-        {tabIndex === 2 && <Reclamation classes={filteredClasses} />}
+        {tabIndex === 2 && <Reclamation classes={filteredClasses} onrecharge={onrecharge} />}
       </Box>
     </div>
   );

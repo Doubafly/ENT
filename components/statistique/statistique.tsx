@@ -1,22 +1,18 @@
-import React, { useContext } from "react";
-import "./statistique.css";
-import { Bar } from "react-chartjs-2";
-import { Doughnut } from "react-chartjs-2";
-import { ArcElement } from "chart.js";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { UserContext } from "@/context/utilisateur";
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
+  ArcElement,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
   Title,
   Tooltip,
-  Legend,
 } from "chart.js";
+import { useContext, useEffect, useState } from "react";
+import { Bar, Doughnut } from "react-chartjs-2";
 import MiniSmallIconCard from "../card/MiniIconCard";
-import { UserContext } from "@/changerUtilisateur/utilisateur";
-import EmploieStudent from "../EmploiDuTemps";
+import "./statistique.css";
 
 ChartJS.register(
   CategoryScale,
@@ -24,66 +20,100 @@ ChartJS.register(
   BarElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ArcElement
 );
 
-const data = {
-  labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
-  datasets: [
-    {
-      label: "Étudiants",
-      data: [400, 300, 200, 278, 189, 239, 349],
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      borderColor: "rgba(75, 192, 192, 1)",
-      borderWidth: 1,
-    },
-    {
-      label: "Enseignants",
-      data: [240, 139, 980, 390, 480, 380, 430],
-      backgroundColor: "rgba(153, 102, 255, 0.2)",
-      borderColor: "rgba(153, 102, 255, 1)",
-      borderWidth: 1,
-    },
-    {
-      label: "Classes",
-      data: [240, 221, 229, 200, 218, 250, 300],
-      backgroundColor: "rgba(255, 159, 64, 0.2)",
-      borderColor: "rgba(255, 159, 64, 1)",
-      borderWidth: 1,
-    },
-  ],
-};
-
-const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top" as const,
-    },
-    title: {
-      display: true,
-      text: "Statistiques de l'école",
-    },
-  },
-};
-
 const Statistique = ({ menuStat }) => {
-  const user = useContext(UserContext);
+  const [chartData, setChartData] = useState(null); // Données pour les graphiques
+  const [doughnutData, setDoughnutData] = useState(null); // Données pour le graphique circulaire
+  const user = useContext(UserContext); // Récupérer les informations de l'utilisateur connecté
 
-  const data2 = {
-    labels: ["Hommes", "Femmes"],
-    datasets: [
-      {
-        data: [60, 40], // Remplacez par vos données dynamiques
-        backgroundColor: ["#A4D8F0", "#F7DD72"],
-        hoverBackgroundColor: ["#82C4E6", "#F5C144"],
-      },
-    ],
-  };
+  useEffect(() => {
+    async function fetchCoursData() {
+      try {
+        const response = await fetch("/api/cours");
+        const coursData = await response.json();
+
+        // Filtrer les cours en fonction du rôle de l'utilisateur
+        const filteredCours = coursData.cours.filter((cours) => {
+          if (user.userRole === "etudiant") {
+            return cours.filiere_module.filiere.etudiants.some(
+              (etudiant) => etudiant.id === user.id
+            );
+          } else if (user.userRole === "enseignant") {
+            return cours.id_professeur === user.id;
+          }
+          return true; // Administrateur voit tout
+        });
+
+        // Transformation des données pour les graphiques
+        const labels = filteredCours.map((cours) => `Cours ${cours.id_cours}`);
+        const etudiantsData = filteredCours.map((cours) => cours.notes.length); // Nombre de notes par cours
+        const enseignantsData = filteredCours.map(
+          (cours) => cours.id_professeur
+        ); // ID des professeurs
+        const classesData = filteredCours.map(
+          (cours) => cours.id_filiere_module
+        ); // ID des filières/modules
+
+        // Données pour le graphique en barres
+        const barData = {
+          labels,
+          datasets: [
+            {
+              label: "Étudiants",
+              data: etudiantsData,
+              backgroundColor: "rgba(75, 192, 192, 0.2)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 1,
+            },
+            {
+              label: "Enseignants",
+              data: enseignantsData,
+              backgroundColor: "rgba(153, 102, 255, 0.2)",
+              borderColor: "rgba(153, 102, 255, 1)",
+              borderWidth: 1,
+            },
+            {
+              label: "Classes",
+              data: classesData,
+              backgroundColor: "rgba(255, 159, 64, 0.2)",
+              borderColor: "rgba(255, 159, 64, 1)",
+              borderWidth: 1,
+            },
+          ],
+        };
+
+        // Données pour le graphique circulaire
+        const doughnutData = {
+          labels: ["Hommes", "Femmes"],
+          datasets: [
+            {
+              data: [60, 40], // Exemple : répartition hommes/femmes
+              backgroundColor: ["#36A2EB", "#FF6384"],
+              hoverBackgroundColor: ["#36A2EB", "#FF6384"],
+            },
+          ],
+        };
+
+        setChartData(barData);
+        setDoughnutData(doughnutData);
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération des données des cours :",
+          error
+        );
+      }
+    }
+
+    fetchCoursData();
+  }, [user]); // Recharger les données si l'utilisateur change
+
   return (
     <div className="statistique">
-      <h2>Statistiques</h2>
-      <div className="gridStat" key={"statistique"}>
+      <h2 className="statistique-title">Statistiques</h2>
+      <div className="gridStat">
         {menuStat.map((stat, index) => (
           <MiniSmallIconCard
             key={index}
@@ -93,19 +123,18 @@ const Statistique = ({ menuStat }) => {
           />
         ))}
       </div>
-      {user.userRole === "etudiant" ? (
-        <EmploieStudent />
-      ) : (
-        <div className="flex md:flex-row flex-col">
-          <div className="bg-white rounded-2xl shadow-md p-4 md:w-1/4 flex flex-col items-center md:mr-2 md:mb-0 mb-2">
-            <h2 className="text-lg font-bold mb-2">Students</h2>
-            <Doughnut data={data} />
-          </div>
-          <div className="bg-white rounded-2xl shadow-md p-4 md:w-3/4 ml-2">
-            <Bar data={data} />
-          </div>
+      <div className="charts-container">
+        <div className="chart doughnut-chart">
+          <h3>Répartition Étudiants</h3>
+          {doughnutData && <Doughnut data={doughnutData} />}
         </div>
-      )}
+        <div className="chart bar-chart">
+          <h3>Statistiques des Cours</h3>
+          {chartData && <Bar data={chartData} />}
+        </div>
+      </div>
+
+      {renderContent()}
     </div>
   );
 };

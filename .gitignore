@@ -11,7 +11,8 @@
 !.yarn/versions
 prisma/migrations/
 
-
+# for files uploaded to the server
+/public/uploads
 # testing
 /coverage
 

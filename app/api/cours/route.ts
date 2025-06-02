@@ -7,13 +7,21 @@ export async function POST(request: NextRequest) {
       await request.json();
 
     // Validation des champs
-    if (!id_filiere_module || !id_professeur || !id_sessions || !semestre) {
+    const missingFields = [];
+    if (!id_filiere_module) missingFields.push("id_filiere_module");
+    if (!id_professeur) missingFields.push("id_professeur");
+    if (!id_sessions) missingFields.push("id_sessions");
+    if (!semestre) missingFields.push("semestre");
+    
+    if (missingFields.length > 0) {
       return NextResponse.json(
-        { message: "Tous les champs sont obligatoires" },
+        {
+          message: "Tous les champs sont obligatoires"+missingFields.join(", "),
+          
+        },
         { status: 400 }
       );
     }
-
     // Vérification des relations
     const [filiereModuleExists, professeurExists, sessionExists] =
       await Promise.all([
@@ -309,13 +317,16 @@ export async function GET() {
                     matricule: true,
                     notes: {
                       select: {
+                        id_note: true,
                         note_exam: true,
                         note_class: true,
+                        id_etudiant:true,
                         commentaire_enseignant: true,
                       },
                     },
                     utilisateur: {
                       select: {
+                        id_utilisateur: true,
                         nom: true,
                         prenom: true,
                         email: true,

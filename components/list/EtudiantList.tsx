@@ -44,7 +44,6 @@ export default function EtudiantList() {
     try {
       const response = await fetch("/api/utilisateurs/etudiants");
       const data = await response.json();
-      console.log(data);
 
       if (response.ok) {
         const formattedEtudiants = data.etudiants.map((etudiant: any) => ({
@@ -176,7 +175,6 @@ const filteredEtudiants = etudiants.filter((etudiant) => {
       : true)
   );
 });
-console.log(filteredEtudiants);
 
 
   // Pagination
@@ -188,7 +186,6 @@ console.log(filteredEtudiants);
  // Bref résumé de la liste des étudiants
   // console.log("Liste des étudiants affichée :", currentEtudiants);
 
-  console.log(etudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import Link from "next/link";
 
 export default function Page() {
   const route = useRouter();
@@ -17,6 +18,7 @@ export default function Page() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
     const data = Object.fromEntries(formData);
+
 
     const payload = {
       email: data.email,
@@ -33,10 +35,15 @@ export default function Page() {
       });
 
       if (response.ok) {
+            const userData = await response.json();
+        // Stockez toutes les infos utilisateur dans localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
         setModal({ message: "Connexion réussie", status: "success" });
         setTimeout(() => {
           route.push("/");
         }, 3000);
+        // console.log(userData+"ok");
+        
       } else {
         setModal({ message: "Erreur de connexion", status: "error" });
       }
@@ -88,9 +95,9 @@ export default function Page() {
             </div>
 
             {/* Lien Mot de passe oublié */}
-            <a href="#" className="text-blue-500 text-sm block text-right mb-2"> {/* Réduit la marge en bas (mb-3 à mb-2) */}
+            <Link href="/forgotPassword" className="text-blue-500 text-sm block text-right mb-2"> {/* Réduit la marge en bas (mb-3 à mb-2) */}
               Mot de passe oublié ?
-            </a>
+            </Link>
 
             {/* Bouton Connexion */}
             <button

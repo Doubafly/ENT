@@ -39,7 +39,7 @@
     return (
       <main className="flex h-screen w-full font-inter">
         <div className="fixed h-screen left-0 top-0 ">
-          <Sidebar />
+          <Sidebar user={user}/>
         </div>
         <div className="partiecentral">
           <div className="root-layout">

@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // URLs publiques qu'on ne veut pas protéger
-  const publicPaths = ["/sign-in", "/api/auth/session"];
+  const publicPaths = ["/sign-in","/forgotPassword", "/api/auth/session"];
   if (publicPaths.includes(pathname)) {
     return NextResponse.next();
   }
@@ -35,6 +35,16 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/etudiant", request.url));
       }
     }
+        //redirection
+        if (pathname.startsWith('/admin') && user.type !== "Admin") {
+          return NextResponse.redirect(new URL("/notfound", request.url));
+        }
+        if (pathname.startsWith('/professeur') && user.type !== "Enseignant") {
+          return NextResponse.redirect(new URL("/notfound", request.url));
+        }
+        if (pathname.startsWith('/etudiant') && user.type !== "Etudiant") {
+          return NextResponse.redirect(new URL("/notfound", request.url));
+        }
 
     return NextResponse.next();
   } catch (error) {
@@ -46,6 +56,6 @@ export async function middleware(request: NextRequest) {
 }
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)",
+    "/((?!api|_next/static|_next/image|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)",'/admin/:path*', '/etudiant/:path*','/professeur/:path*'
   ],
 };

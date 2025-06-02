@@ -11,9 +11,6 @@ const ibmPlexSerif = IBM_Plex_Serif({
   variable: "--font-ibm-plex-serif",
 });
 
-
-import { useEffect } from "react";
-
 export default function RootLayout({
   children,
 }: Readonly<{

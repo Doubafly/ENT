@@ -29,9 +29,10 @@ interface Classe {
 
 interface NoteEntryProps {
   classes: Classe[];
+  onrecharge: () => void;
 }
 
-const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
+const Reclamation: React.FC<NoteEntryProps> = ({ classes ,onrecharge}) => {
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -42,10 +43,12 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
   // Fonction pour compter le nombre total de réclamations dans une classe
   const countReclamations = (classe: Classe): number => {
     let count = 0;
+    
     classe.semestres.forEach(semestre => {
       semestre.modules.forEach(module => {
         module.students.forEach(student => {
-          if (student.notes[0].statut_reclamation=="EnAttente") count++;
+          
+          if (student?.notes[0]?.statut_reclamation=="EnAttente") count++;
         });
       });
     });
@@ -64,8 +67,6 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         });
         return count;
       };
-    
-
   // Fonction pour compter le nombre total d'étudiants dans une classe
   const countStudents = (classe: Classe): number => {
     return classe.semestres[0]?.modules[0]?.students.length || 0;
@@ -84,18 +85,15 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         setIsSubmitting(true);
         
         // Ici vous devrez implémenter l'appel API pour sauvegarder les changements
-       
-
           const payload = {
-            date_reclamation: Date(),
             statut_reclamation: status,
+            statut_note:"Valide",
             note_class: selectedStudent.notes[0].note_class,
             note_exam: selectedStudent.notes[0].note_exam,
             commentaire_enseignant: teacherComment,
           };
-          console.log(payload);
           if (selectedStudent.notes[0].id_note) {
-            const res = await fetch(`/api/reclamation/${selectedStudent.notes[0].id_note}`, {
+            const res = await fetch(`/api/reclamation/correction/${selectedStudent.notes[0].id_note}`, {
               method: "PUT",
               headers: {
                 "Content-Type": "application/json",
@@ -114,7 +112,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
         setTimeout(() => {
           setIsSubmitting(false);
           setSelectedStudent(null);
-          // Vous pourriez vouloir rafraîchir les données ici
+          onrecharge();
         }, 1000);
       };
 
@@ -211,7 +209,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
                     </div>
                     <div className="divide-y">
                       {semestre.modules.map(module => {
-                        const moduleReclamations = module.students.filter(s => s.notes[0].statut_reclamation=="EnAttente").length;
+                        const moduleReclamations = module.students.filter(s => s?.notes[0]?.statut_reclamation=="EnAttente").length;
                         
                         return (
                           <div key={module.id} className="p-4">
@@ -230,7 +228,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes }) => {
                                 </h4>
                                 <ul className="space-y-2">
                                   {module.students
-                                    .filter(student => student.notes[0].statut_reclamation=="EnAttente")
+                                    .filter(student => student?.notes[0]?.statut_reclamation=="EnAttente")
                                     .map(student => (
                                       <li key={student.id} className="flex justify-between items-center p-2 bg-white rounded">
                                         <span>

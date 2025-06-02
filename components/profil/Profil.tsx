@@ -18,6 +18,8 @@ interface User {
 const ProfilePage = ({ user }: { user: User }) => {
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // État pour la modal
+const [annonces, setAnnonces] = useState<any[]>([]);
+  const [cours, setCours] = useState<any[]>([]);
 
   useEffect(() => {
     // Fonction pour récupérer l'image de profil
@@ -36,12 +38,44 @@ const ProfilePage = ({ user }: { user: User }) => {
     fetchProfileImage();
   }, [user.id_utilisateur]);
 
+// Ajoute ce useEffect pour appeler l'API annonces
+useEffect(() => {
+  const fetchAnnonces = async () => {
+    try {
+      const res = await fetch("/api/annonce");
+      const data = await res.json();
+      setAnnonces(data.annonces || []);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des annonces :", error);
+    }
+  };
+
+  fetchAnnonces();
+}, []);
+// ...existing code...
+// Ajoute ce useEffect pour appeler l'API cours
+useEffect(() => {
+  const fetchCours = async () => {
+    try {
+      const res = await fetch("/api/cours");
+      const data = await res.json();
+      setCours(data.cours); // Correction ici
+      console.log("Données cours :", data.cours);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des cours :", error);
+    }
+  };
+
+  fetchCours();
+}, []);
+// ...existing code...
+
+
 
 console.log("User data:", user);
-  function reload(e:any) {
-    console.log(e);
-    
-  }
+
+
+
   return (
     <div className="flex bg-gray-100  xl:ml-5 mr-1 h-screen">
       <div className="flex-1 overflow-y-auto">
@@ -120,116 +154,278 @@ console.log("User data:", user);
           </div>
 
           {/* Statistiques */}
-        {user.type === "Etudiant" && (
-        <div className="mt-6">
-        
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* {user.type === "Etudiant" && (
 
-            <div className="bg-white shadow rounded-lg p-4 text-center">
-              <i className="fas fa-file-alt text-2xl text-green-500 mb-2"></i>
-              <p className="text-gray-500 text-sm">Modules suivis</p>
-              <p className="text-xl font-bold">5</p>
-            </div>
+)} */}
 
-            <div className="bg-white shadow rounded-lg p-4 text-center">
-              <i className="fas fa-user-clock text-2xl text-red-500 mb-2"></i>
-              <p className="text-gray-500 text-sm">Jours d'absence</p>
-              <p className="text-xl font-bold">0</p>
-            </div>
-
-          <div className="bg-white shadow rounded-lg p-4 text-center">
-        <i className="fas fa-calendar-alt text-2xl text-purple-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Session académique</p>
-        <p className="text-xl font-bold">2024-2025</p>
-      </div>
-
-          </div>
-        </div>
-)}
-
-{user.type === "Enseignant" && (
+{user.type === "Etudiant" && (
   <div className="mt-6">
-    
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Nombre de modules suivis */}
       <div className="bg-white shadow rounded-lg p-4 text-center">
         <i className="fas fa-book text-2xl text-indigo-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Filières enseignés</p>
-        <p className="text-xl font-bold">5</p>
+        <p className="text-gray-500 text-sm">Modules suivis</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de modules distincts suivis par l'étudiant
+            [...new Set(
+              cours
+                .filter(c =>
+                  c.filiere_module?.filiere?.etudiants?.some((e: any) => e.id === user.id_utilisateur)
+                )
+                .map(c => c.filiere_module?.module?.nom)
+            )].length
+          }
+        </p>
       </div>
 
+      {/* Nombre de documents disponibles */}
       <div className="bg-white shadow rounded-lg p-4 text-center">
-        <i className="fas fa-file-upload text-2xl text-green-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Documents uploadés</p>
-        <p className="text-xl font-bold">8</p>
+        <i className="fas fa-file-alt text-2xl text-green-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Documents disponibles</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre total de documents dans les cours de l'étudiant
+            cours
+              .filter(c =>
+                c.filiere_module?.filiere?.etudiants?.some((e: any) => e.id === user.id_utilisateur)
+              )
+              .flatMap(c => c.documents || [])
+              .length
+          }
+        </p>
       </div>
 
+      {/* Nombre d'absences */}
       <div className="bg-white shadow rounded-lg p-4 text-center">
         <i className="fas fa-user-times text-2xl text-red-500 mb-2"></i>
-        <p className="text-gray-500 text-sm">Absences enregistrées</p>
-        <p className="text-xl font-bold">6</p>
+        <p className="text-gray-500 text-sm">Absences</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre d'absences de l'étudiant dans tous ses cours
+            cours
+              .flatMap(c => c.absences || [])
+              .filter((a: any) => a.etudiant?.id === user.id_utilisateur)
+              .length
+          }
+        </p>
       </div>
 
-        <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-user-graduate text-2xl text-purple-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre d'étudiants</p>
-      <p className="text-xl font-bold">3</p>
-    </div>
+      {/* Nombre de professeurs */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-chalkboard-teacher text-2xl text-yellow-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Professeurs</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de professeurs distincts pour les cours de l'étudiant
+            [...new Set(
+              cours
+                .filter(c =>
+                  c.filiere_module?.filiere?.etudiants?.some((e: any) => e.id === user.id_utilisateur)
+                )
+                .map(c => c.enseignant?.id)
+            )].length
+          }
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-file-alt text-2xl text-yellow-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre de modules</p>
-      <p className="text-xl font-bold">3</p>
-     </div> 
+      {/* Nombre de filières */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-layer-group text-2xl text-purple-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Filières</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de filières distinctes de l'étudiant
+            [...new Set(
+              cours
+                .filter(c =>
+                  c.filiere_module?.filiere?.etudiants?.some((e: any) => e.id === user.id_utilisateur)
+                )
+                .map(c => c.filiere_module?.filiere?.nom)
+            )].length
+          }
+        </p>
+      </div>
     </div>
   </div>
 )}
 
-        {user.type === "Admin" && (
+{user.type === "Enseignant" && (
+  <div className="mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Filières enseignées */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-book text-2xl text-indigo-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Filières enseignées</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de filières distinctes où l'enseignant est l'utilisateur courant
+            [...new Set(
+              cours
+                .filter(c => c.enseignant?.id === user.id_utilisateur)
+                .map(c => c.filiere_module?.filiere?.nom)
+            )].length
+          }
+        </p>
+      </div>
+
+      {/* Documents uploadés */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-file-upload text-2xl text-green-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Documents uploadés</p>
+        <p className="text-xl font-bold">
+          {
+            // Exemple : nombre total de documents liés à ses cours (adapter selon ta structure)
+            cours
+              .filter(c => c.enseignant?.id === user.id_utilisateur)
+              .flatMap(c => c.documents || [])
+              .length
+          }
+        </p>
+      </div>
+
+      {/* Absences enregistrées */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-user-times text-2xl text-red-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Absences enregistrées</p>
+        <p className="text-xl font-bold">
+          {
+            // Exemple : nombre total d'absences enregistrées dans ses cours (adapter selon ta structure)
+            cours
+              .filter(c => c.enseignant?.id === user.id_utilisateur)
+              .flatMap(c => c.absences || [])
+              .length
+          }
+        </p>
+      </div>
+
+      {/* Nombre d'étudiants */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-user-graduate text-2xl text-purple-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre d'étudiants</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre d'étudiants distincts dans les filières de ses cours
+            [...new Set(
+              cours
+                .filter(c => c.enseignant?.id === user.id_utilisateur)
+                .flatMap(c => c.filiere_module?.filiere?.etudiants?.map((e: any) => e.id) || [])
+            )].length
+          }
+        </p>
+      </div>
+
+      {/* Nombre de modules */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-file-alt text-2xl text-yellow-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre de modules</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de modules distincts enseignés par l'utilisateur
+            [...new Set(
+              cours
+                .filter(c => c.enseignant?.id === user.id_utilisateur)
+                .map(c => c.filiere_module?.module?.nom)
+            )].length
+          }
+        </p>
+      </div>
+    </div>
+  </div>
+)}
+
+{user.type === "Admin" && (
   <div className="mt-5">
-    
-  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-users text-2xl text-blue-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombres d'admins</p>
-      <p className="text-xl font-bold">2</p>
-    </div>
+      {/* Nombre d'admins */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-users text-2xl text-blue-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombres d'admins</p>
+        <p className="text-xl font-bold">
+          {/* À remplacer par la vraie source si tu as la liste des admins */}
+          2
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-bullhorn text-2xl text-green-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre d'annonces</p>
-      <p className="text-xl font-bold">8</p>
-    </div>
+     {/* Nombre d'annonces */}
+<div className="bg-white shadow rounded-lg p-4 text-center">
+  <i className="fas fa-bullhorn text-2xl text-green-500 mb-2"></i>
+  <p className="text-gray-500 text-sm">Nombre d'annonces</p>
+  <p className="text-xl font-bold">
+    {annonces.length}
+  </p>
+</div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-user-graduate text-2xl text-purple-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre d'étudiants</p>
-      <p className="text-xl font-bold">3</p>
-    </div>
+      {/* Nombre d'étudiants */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-user-graduate text-2xl text-purple-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre d'étudiants</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre total d'étudiants distincts dans tous les cours
+            [...new Set(
+              cours.flatMap(c => c.filiere_module?.filiere?.etudiants?.map((e: any) => e.id) || [])
+            )].length
+          }
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-chalkboard-teacher text-2xl text-yellow-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre de professeurs</p>
-      <p className="text-xl font-bold">2</p>
-    </div>
+      {/* Nombre de professeurs */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-chalkboard-teacher text-2xl text-yellow-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre de professeurs</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre total d'enseignants distincts dans tous les cours
+            [...new Set(
+              cours.map(c => c.enseignant?.id)
+            )].length
+          }
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-layer-group text-2xl text-red-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre de filières</p>
-      <p className="text-xl font-bold">5</p>
-    </div>
+      {/* Nombre de filières */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-layer-group text-2xl text-red-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre de filières</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de filières distinctes
+            [...new Set(
+              cours.map(c => c.filiere_module?.filiere?.nom)
+            )].length
+          }
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-calendar-alt text-2xl text-indigo-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre de sessions</p>
-      <p className="text-xl font-bold">3</p>
-    </div>
+      {/* Nombre de sessions */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-calendar-alt text-2xl text-indigo-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre de sessions</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de sessions distinctes
+            [...new Set(
+              cours.map(c => c.sessions?.annee_academique)
+            )].length
+          }
+        </p>
+      </div>
 
-    <div className="bg-white shadow rounded-lg p-4 text-center">
-      <i className="fas fa-book text-2xl text-pink-500 mb-2"></i>
-      <p className="text-gray-500 text-sm">Nombre de modules</p>
-      <p className="text-xl font-bold">10</p>
-    </div>  
+      {/* Nombre de modules */}
+      <div className="bg-white shadow rounded-lg p-4 text-center">
+        <i className="fas fa-book text-2xl text-pink-500 mb-2"></i>
+        <p className="text-gray-500 text-sm">Nombre de modules</p>
+        <p className="text-xl font-bold">
+          {
+            // Nombre de modules distincts
+            [...new Set(
+              cours.map(c => c.filiere_module?.module?.nom)
+            )].length
+          }
+        </p>
+      </div>  
 
     </div>
   </div>
@@ -258,6 +454,7 @@ console.log("User data:", user);
                 window.location.reload(); // Recharger la page
             }
             }
+             onClose={() => setIsModalOpen(false)} // Ajoute cette ligne
             />
       )}
      {user.type === "Enseignant" && (
@@ -269,17 +466,20 @@ console.log("User data:", user);
                 window.location.reload(); // Recharger la page
               } 
             }
+             onClose={() => setIsModalOpen(false)} // Ajoute cette ligne
             />
       )}
      {user.type === "Admin" && (
             <AdminProfil 
             user={user}
+
             onUserUpdate={() => 
               {
                   setIsModalOpen(false); // Fermer la modal après la mise à jour
                   window.location.reload(); // Recharger la page
               }
             }
+             onClose={() => setIsModalOpen(false)} // Ajoute cette ligne
             />
       )}
     </div>

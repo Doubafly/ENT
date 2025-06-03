@@ -274,15 +274,12 @@ model Finance {
   mode_paiement     FinanceModePaiement
   reference         String?               @unique
   statut            FinanceStatut         @default(Valide)
-
   // Utilisateur qui enregistre
   id_utilisateur    Int
   utilisateur       Utilisateurs          @relation(fields: [id_utilisateur], references: [id_utilisateur])
-
   // Nouvelles relations claires
   id_etudiant       Int?                 
   etudiant          Etudiants?           @relation(fields: [id_etudiant], references: [id])
-
   id_enseignant     Int?                  
   enseignant        Enseignants?         @relation(fields: [id_enseignant], references: [id])
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import Modal from "../modal/Modal";
@@ -48,9 +48,23 @@ export default function AbsenceEtudiantList() {
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
+  useEffect(() => {
+    const fetchCours = async () => {
+      try {
+        const res = await fetch("/api/cours");
+        const data = await res.json();
+        console.log("donne :", data.cours);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des cours :", error);
+      }
+    };
+  
+    fetchCours();
+  }, []);
+
   const jours = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"] as const;
   const dayName = jours[new Date(selectedDate).getDay()];
-
+ 
   const paginationModel = { page: 0, pageSize: 5 };
 
   const classeHasCoursNow = (classe: string) => {

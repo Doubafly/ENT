@@ -113,6 +113,8 @@ model Utilisateurs {
   documents Document[]    @relation("UploaderToDocuments")
 
   Finance Finance[]
+
+  ForgotPassword ForgotPassword[]
 }
 // Table pour gérer les enseignants
 model Enseignants {
@@ -286,6 +288,15 @@ model Finance {
   @@index([id_utilisateur])
 }
 
+model ForgotPassword {
+  id                 Int           @id @default(autoincrement())
+  email              String
+  token              String        @unique
+  utilisateur        Utilisateurs? @relation(fields: [email], references: [email], onDelete: Cascade)
+  createdAt          DateTime      @default(now())
+  expiresAt          DateTime
+  used               Boolean       @default(false)
+}
 
 enum FinanceEntiteType {
   Etudiant

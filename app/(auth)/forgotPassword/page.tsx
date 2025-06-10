@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaAccusoft, FaEnvelope, FaLock } from "react-icons/fa";
 import Link from "next/link";
+import SendEmail from "@/app/envoieEmail/page";
 
 export default function Page() {
   const route = useRouter();
@@ -37,8 +38,10 @@ export default function Page() {
 
         if (response.ok) {
           const userData = await response.json();
+          const email = userData.user.email;
+          const id = userData.user.id;
+          SendEmail(email,"forgotPassword",id);
           setStep("ValiderEmail");
-          console.log(userData);
         } else {
           setModal({ message: "Erreur de connexion", status: "error" });
         }
@@ -73,19 +76,14 @@ export default function Page() {
       }
     }
     if (step === "ValiderEmail") {
-      const payload = {
-        valide: data.valide,
-      };
+    
+        const token= data.valide;
+    
       try {
-        // const response = await fetch("/api/auth/forgotPassword", {
-        //   method: "POST",
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //   },
-        //   body: JSON.stringify(payload),
-        // });
-
-        if (payload.valide == '1234') {
+        const response = await fetch(`/api/forgotPassword?token=${token}`, {
+          method: 'GET',
+        });
+        if (response.ok) {
           setStep("nouveauPassword");
         } else {
           setModal({ message: "Erreur de connexion", status: "error" });
@@ -134,6 +132,7 @@ export default function Page() {
               </div>
             )}
             {step === "ValiderEmail" && (
+              
               <div className="mb-2 relative">
                 {" "}
                 {/* Réduit la marge en bas (mb-3 à mb-2) */}
@@ -172,7 +171,12 @@ export default function Page() {
                 </div>
               </div>
             )}
-            <Link href="/sign-in" className="text-blue-500 text-sm block text-right mb-2"> {/* Réduit la marge en bas (mb-3 à mb-2) */}
+            <Link
+              href="/sign-in"
+              className="text-blue-500 text-sm block text-right mb-2"
+            >
+              {" "}
+              {/* Réduit la marge en bas (mb-3 à mb-2) */}
               Se connecte
             </Link>
 

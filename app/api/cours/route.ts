@@ -246,52 +246,6 @@ export async function POST(request: NextRequest) {
 //   }
 // }
 
-// export async function DELETE(request: NextRequest) {
-//   try {
-//     const url = new URL(request.url);
-//     const id = url.pathname.split("/").pop();
-//     const id_cours = parseInt(id || "");
-
-//     if (isNaN(id_cours)) {
-//       return NextResponse.json(
-//         { message: "ID de cours invalide" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Vérifier l'existence du cours
-//     const coursExists = await prisma.cours.findUnique({
-//       where: { id_cours },
-//     });
-
-//     if (!coursExists) {
-//       return NextResponse.json(
-//         { message: "Le cours spécifié n'existe pas" },
-//         { status: 404 }
-//       );
-//     }
-
-//     // Supprimer le cours
-//     await prisma.cours.delete({
-//       where: { id_cours },
-//     });
-
-//     return NextResponse.json(
-//       { message: "Cours supprimé avec succès" },
-//       { status: 200 }
-//     );
-//   } catch (error) {
-//     console.error("Erreur lors de la suppression du cours:", error);
-
-//     return NextResponse.json(
-//       {
-//         message: "Une erreur est survenue lors de la suppression du cours",
-//         error: error instanceof Error ? error.message : "Erreur inconnue",
-//       },
-//       { status: 500 }
-//     );
-//   }
-// }
 export async function GET() {
   try {
     const cours = await prisma.cours.findMany({
@@ -340,6 +294,26 @@ export async function GET() {
               select: {
                 id_module: true,
                 nom: true,
+              },
+            },
+            documents: {
+              select: {
+                id: true,
+                titre: true,
+                description: true,
+                chemin_fichier: true,
+                type_fichier: true,
+                taille_fichier: true,
+                date_upload: true,
+                est_actif: true,
+                id_uploader: true,
+                uploader: {
+                  select: {
+                    id_utilisateur: true,
+                    nom: true,
+                    prenom: true,
+                  },
+                },
               },
             },
           },
@@ -392,26 +366,7 @@ export async function GET() {
             },
           },
         },
-        documents: {
-          select: {
-            id: true,
-            titre: true,
-            description: true,
-            chemin_fichier: true,
-            type_fichier: true,
-            taille_fichier: true,
-            date_upload: true,
-            est_actif: true,
-            id_uploader: true,
-            uploader: {
-              select: {
-                id_utilisateur: true,
-                nom: true,
-                prenom: true,
-              },
-            },
-          },
-        },
+        emplois_du_temps: true,
       },
     });
 

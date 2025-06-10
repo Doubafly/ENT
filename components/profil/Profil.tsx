@@ -60,7 +60,6 @@ useEffect(() => {
       const res = await fetch("/api/cours");
       const data = await res.json();
       setCours(data.cours); // Correction ici
-      console.log("Données cours :", data.cours);
     } catch (error) {
       console.error("Erreur lors de la récupération des cours :", error);
     }

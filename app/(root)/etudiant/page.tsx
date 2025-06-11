@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import RightSidebar from "@/components/RightSidebar";
-import EmploieStudent from "@/components/EmploiDuTemps";
+import EmploieStudent from "@/components/emploisDuTemps/EmploisEtudiant";
 import StatistiqueEtudiant from "@/components/statistique/StatistiqueEtudiant";
 
 

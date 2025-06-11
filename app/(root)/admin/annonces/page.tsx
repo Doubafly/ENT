@@ -64,12 +64,34 @@
 import React from "react";
 import AnnonceList from "@/components/annonces/Admin_AnnonceList";
 
-const AnnoncesPage: React.FC = () => {
-  return (
-    <div>
-      <AnnonceList />
-    </div>
-  );
-};
+import { useState } from "react";
+import Box from "@mui/material/Box";
+import { Tab, Tabs } from "@mui/material";
+import Corbeille from "@/components/annonces/corbeuilleAnnoce";
+export default function AnnoncesPage() {
+  const [tabIndex, setTabIndex] = useState(0);
 
-export default AnnoncesPage;
+  return (
+    <Box sx={{ padding: 2 }}>
+      {/* Conteneur des onglets aligné à droite */}
+      <Box sx={{ display: "flex", marginLeft: "50px" }}>
+        <Tabs
+          value={tabIndex}
+          onChange={(_, newIndex) => setTabIndex(newIndex)}
+        >
+          <Tab label="Annonces " />
+          <Tab label="Corbeille" />
+        </Tabs>
+      </Box>
+
+      {/* Contenu selon l'onglet actif */}
+      {tabIndex === 0 &&  <AnnonceList />}
+       {tabIndex === 1 && <Corbeille />}
+      
+     
+    </Box>
+  );
+}
+
+
+  

@@ -147,7 +147,9 @@ setClasses(transformedClasses);
   return (
     <div>
       <div className="mt-8 ml-2 mb-4 flex flex-col">
-        <NoteRegistre classes={classes} />
+        <NoteRegistre classes={classes} onrecharge={function (): void {
+          throw new Error("Function not implemented.");
+        } } />
       </div>
     </div>
   );

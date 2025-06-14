@@ -1,17 +1,20 @@
-import * as React from 'react';
-import { useState } from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import Paper from '@mui/material/Paper';
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import Paper from "@mui/material/Paper";
 import Modal from "../modal/Modal";
 
 // Interfaces
 interface Student {
   id: number;
+  idCours: number;
   firstName: string;
   lastName: string;
   Heure: string;
+  module?: string;
   justifier?: string;
-  classe?: string;
+  classe_id?: string;
+  classe: string;
 }
 
 interface EmploiDuTemps {
@@ -23,91 +26,197 @@ interface EmploiDuTemps {
   cours_id: string;
 }
 
-// Données statiques
-const initialRows: Student[] = [
-  { id: 1, lastName: 'Diallo', firstName: 'Kadidia', Heure: '8H-10H', justifier: 'malade', classe: 'Licence' },
-  { id: 2, lastName: 'Cisse', firstName: 'Moussa', Heure: '10H-12H', justifier: '_', classe: 'Licence' },
-  { id: 3, lastName: 'Konaté', firstName: 'Souleymane', Heure: '10H-12H', justifier: '_', classe: 'Secondaire' },
-];
+type AbsenceRow = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  Heure: string;
+  module: string;
+  classe: string;
+};
 
-const emploiDuTemps: EmploiDuTemps[] = [
-  { id: '1', jour: 'lundi', heure_debut: '08:00', heure_fin: '10:00', classe_id: 'Licence', cours_id: 'math' },
-  { id: '2', jour: 'lundi', heure_debut: '10:00', heure_fin: '12:00', classe_id: 'Secondaire', cours_id: 'physique' },
-  { id: '3', jour: 'lundi', heure_debut: '14:00', heure_fin: '16:00', classe_id: 'Primaire', cours_id: 'lecture' },
-  { id: '4', jour: 'mardi', heure_debut: '08:00', heure_fin: '10:00', classe_id: 'Licence', cours_id: 'chimie' },
-  { id: '5', jour: 'samedi', heure_debut: '10:00', heure_fin: '12:00', classe_id: 'Secondaire', cours_id: 'histoire' },
-  { id: '6', jour: 'samedi', heure_debut: '21:00', heure_fin: '23:00', classe_id: 'Licence', cours_id: 'maths' },
-];
+const prepareAbsenceDataParJour = (data: any, jour: string): Student[] => {
+  const rows: Student[] = [];
+  data.cours.forEach((cours: any) => {
+    const moduleNom = cours.filiere_module?.module?.nom || "Inconnu";
+    const idCours = cours.id_cours || "Inconnu";
+    const classeNom = cours.filiere_module?.filiere?.nom || "Inconnue";
+    const etudiants = cours.filiere_module?.filiere?.etudiants || [];
+    const emplois = cours.emplois_du_temps || [];
 
-// Composant principal
+    emplois.forEach((emploi: any) => {
+      if (emploi.jour.toLowerCase() === jour.toLowerCase()) {
+        const heure_debut = new Date(emploi.heure_debut)
+          .toISOString()
+          .substr(11, 5);
+        const heure_fin = new Date(emploi.heure_fin)
+          .toISOString()
+          .substr(11, 5);
+        const heure = `${heure_debut}H-${heure_fin}H`;
+
+        etudiants.forEach((etudiant: any) => {
+          rows.push({
+            idCours: idCours,
+            id: etudiant.utilisateur.id_utilisateur,
+            firstName: etudiant.utilisateur.prenom,
+            lastName: etudiant.utilisateur.nom,
+            Heure: heure,
+            module: moduleNom,
+            classe: classeNom,
+          });
+        });
+      }
+    });
+  });
+
+  return rows;
+};
+
 export default function AbsenceEtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [classFilter, setClassFilter] = useState("");
-  const [rows] = useState<Student[]>(initialRows);
+  const [data, setData] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Student | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split("T")[0]);
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [allRows, setAllRows] = useState<Student[]>([]);
+  const [filteredClasse, setFilteredClasse] = useState("");
 
-  const jours = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"] as const;
+  const getCurrentHourRange = (): string => {
+    const now = new Date();
+    const hours = now.getHours();
+
+    if (hours < 10) return "08H-10H";
+    if (hours < 12) return "10H-12H";
+    if (hours < 14) return "12H-14H";
+    if (hours < 16) return "14H-16H";
+    return "16H-18H";
+  };
+
+  const [filteredHeure, setFilteredHeure] = useState(getCurrentHourRange());
+  useEffect(() => {
+    const fetchCours = async () => {
+      try {
+        const res = await fetch("/api/cours");
+        const data = await res.json();
+        console.log("Data fetched from API:", data);
+        setData(data);
+        // if (data.cours) {
+        //   const filieresMap = new Map();
+        //   data.cours.forEach((cours: any, index: number) => {
+        //     const emploie = cours.emplois_du_temps;
+        //     const filiere = cours.filiere_module.filiere;
+
+        //     console.log("filiere :", filiere);
+        //     console.log("emp :", emploie);
+        //   });
+
+        // }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des cours :", error);
+      }
+    };
+    fetchCours();
+  }, []);
+
+  const jours = [
+    "dimanche",
+    "lundi",
+    "mardi",
+    "mercredi",
+    "jeudi",
+    "vendredi",
+    "samedi",
+  ] as const;
   const dayName = jours[new Date(selectedDate).getDay()];
+
+  useEffect(() => {
+    if (!data) {
+      console.error("Aucune donnée de cours disponible");
+      return;
+    }
+    const rows = prepareAbsenceDataParJour(data, dayName);
+    setAllRows(rows);
+    console.log("All rows prepared:", allRows);
+  }, [data]);
+
+  const filteredRows = allRows.filter((row) => {
+    const matchClasse = filteredClasse ? row.classe === filteredClasse : true;
+    const matchHeure = filteredHeure ? row.Heure === filteredHeure : true;
+    return matchClasse && matchHeure;
+  });
 
   const paginationModel = { page: 0, pageSize: 5 };
 
-  const classeHasCoursNow = (classe: string) => {
-    const now = new Date();
-    const day = now.toLocaleDateString('fr-FR', { weekday: 'long' }).toLowerCase();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    const currentTime = hour * 60 + minute;
+  const classesDisponibles = Array.from(
+    new Set(allRows.map((row) => row.classe))
+  );
 
-    const classeCours = emploiDuTemps.filter(
-      (cours) => cours.classe_id === classe && cours.jour.toLowerCase() === day
-    );
-
-    for (const cours of classeCours) {
-      const [startHour, startMinute] = cours.heure_debut.split(':').map(Number);
-      const [endHour, endMinute] = cours.heure_fin.split(':').map(Number);
-
-      const startTime = startHour * 60 + startMinute;
-      const endTime = endHour * 60 + endMinute;
-
-      if (currentTime >= startTime && currentTime <= endTime) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  const filteredRows = rows.filter((row) => {
-    const matchesSearch = `${row.firstName} ${row.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = classFilter ? row.classe === classFilter : true;
-    const hasCoursNow = classeHasCoursNow(row.classe ?? "");
-    return matchesSearch && matchesClass && hasCoursNow;
-  });
-
-  const handleOpenModal = (student: Student) => {
+  const handleOpenModal = async (student: Student) => {
     setSelectedTeacher(student);
+    try {
+      const response = await fetch(`/api/absences/${student.id}`);
+      if (response.ok) {
+        const etudiantSelect = await response.json();
+        etudiantSelect.absence.map((abs: { date_absence: string | number | Date; })=>{
+        
+          const date = new Date(abs.date_absence) ;
+         
+          
+        })
+        
+      }
+    } catch (error) {
+      alert("pgf");
+    }
   };
 
-  const handleEnregistrer = () => {
-    const enseignantsSelectionnes = rows.filter((row) =>
+  const handleEnregistrer = async () => {
+    const enseignantsSelectionnes = allRows.filter((row) =>
       selectedRows.includes(row.id)
     );
-    console.log('Enseignants sélectionnés :', enseignantsSelectionnes);
-    alert(`${enseignantsSelectionnes.length} enseignant(s) enregistré(s).`);
+    const abs = filteredRows.filter(
+      (et) => !enseignantsSelectionnes.some((sel) => sel.id === et.id)
+    );
+    abs.map( async (a) => {
+      console.log(a.id);
+      const payload = {
+        id_etudiant:a.id, 
+        id_cours:a.idCours, 
+        date:new Date().getDay(), 
+        justification:"cvv"
+      };
+      try {
+        const response = await fetch("/api/absences/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          alert("ok")
+          console.log(response.json());
+          
+        }
+      } catch (error) {
+        alert("pgf");
+      }
+    });
   };
 
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 70 },
-    { field: 'firstName', headerName: 'Nom', width: 130 },
-    { field: 'lastName', headerName: 'Prenom', width: 130 },
-    { field: 'Heure', headerName: 'Heure', width: 130 },
-    { field: 'classe', headerName: 'Classe', width: 130 },
-    { field: 'justifier', headerName: 'Justification', width: 130 },
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "firstName", headerName: "Nom", width: 130 },
+    { field: "lastName", headerName: "Prenom", width: 130 },
+    { field: "Heure", headerName: "Heure", width: 130 },
+    { field: "classe", headerName: "Classe", width: 130 },
+    { field: "module", headerName: "module", width: 130 },
     {
-      field: 'action',
-      headerName: 'Action',
+      field: "action",
+      headerName: "Action",
       width: 150,
       renderCell: (params) => (
         <button
@@ -123,6 +232,10 @@ export default function AbsenceEtudiantList() {
     },
   ];
 
+  const heuresDisponibles = Array.from(
+    new Set(allRows.map((row) => row.Heure))
+  );
+
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Filtres */}
@@ -134,15 +247,29 @@ export default function AbsenceEtudiantList() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         />
+
         <select
-          value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)}
+          value={filteredClasse}
+          onChange={(e) => setFilteredClasse(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         >
           <option value="">Filtrer par Classe</option>
-          {[...new Set(rows.map((e) => e.classe))].map((classe) => (
+          {classesDisponibles.map((classe) => (
             <option key={classe} value={classe}>
               {classe}
+            </option>
+          ))}
+        </select>
+
+        <select
+          onChange={(e) => setFilteredHeure(e.target.value)}
+          value={filteredHeure}
+          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
+        >
+          <option value="">Filtrer par heures</option>
+          {heuresDisponibles.map((heure) => (
+            <option key={heure} value={heure}>
+              {heure}
             </option>
           ))}
         </select>
@@ -164,7 +291,7 @@ export default function AbsenceEtudiantList() {
       </div>
 
       {/* Tableau */}
-      <Paper sx={{ height: 500, width: '100%' }}>
+      <Paper sx={{ height: 500, width: "100%" }}>
         <DataGrid
           rows={filteredRows}
           columns={columns}
@@ -172,7 +299,9 @@ export default function AbsenceEtudiantList() {
           pageSizeOptions={[5, 10]}
           checkboxSelection
           onRowSelectionModelChange={(newSelection) => {
-            setSelectedRows(newSelection as unknown as number[]);
+            // Extraire les IDs de l'objet `newSelection` et les convertir en tableau
+            const selectedIds = Array.from((newSelection as any).ids || []);
+            setSelectedRows(selectedIds as number[]);
           }}
           disableRowSelectionOnClick
           sx={{ border: 0 }}
@@ -185,18 +314,24 @@ export default function AbsenceEtudiantList() {
           <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
             <div className="flex flex-col items-center mb-4">
               <img
-                src="img/man2.jpg"
+                src="/img/man2.jpg"
                 alt="Profile"
                 className="object-cover w-[120px] h-[120px] rounded-full border"
               />
               <h2 className="text-lg font-bold mt-2">
                 {selectedTeacher.firstName} {selectedTeacher.lastName}
               </h2>
-              <p className="text-gray-500 text-sm">Classe: {selectedTeacher.classe}</p>
-              <p className="text-green-500 text-sm font-bold">Justification: {selectedTeacher.justifier}</p>
+              <p className="text-gray-500 text-sm">
+                Classe: {selectedTeacher.classe_id}
+              </p>
+              <p className="text-green-500 text-sm font-bold">
+                Justification: {selectedTeacher.justifier}
+              </p>
             </div>
             <div className="mt-4 text-center">
-              <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
+              <h3 className="text-md font-semibold mb-4">
+                Liste des Absences :
+              </h3>
               <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
                 <li>Absence le 20/04/2025</li>
                 <li>Absence le 05/05/2025</li>

@@ -109,12 +109,12 @@ const EmploiDuTemps = () => {
         const coursData = await coursResponse.json();
         (coursData.cours || []).map((c: any) => ({
           id: c.id_cours,
-          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''} - ${c.filiere_module?.filiere?.niveau|| ''} ${c.filiere_module?.filiere?.nom|| ''}`
         }))
         
         setCoursOptions((coursData.cours || []).map((c: any) => ({
           id: c.id_cours,
-          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
+          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''} - ${c.filiere_module?.filiere?.niveau|| ''} ${c.filiere_module?.filiere?.nom|| ''}`
         })));
 
         // Extraction unique des classes
@@ -283,7 +283,6 @@ const EmploiDuTemps = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -297,12 +296,17 @@ const EmploiDuTemps = () => {
 
       const [heureDebut, heureFin] = formData.heure.split('-');
       const [niveau, nomFiliere] = classe.split(' ');
-
+    
+      console.log(classe);
+      
       // Trouver le cours correspondant
       const coursSelectionne = coursOptions.find(c => 
         c.label.includes(formData.matiere) && 
-        c.label.includes(formData.enseignant)
+        c.label.includes(formData.enseignant)&& 
+        c.label.includes(classe)
       );
+
+  console.log(coursSelectionne);
       
       if (!coursSelectionne) throw new Error('Cours non trouvé');
 

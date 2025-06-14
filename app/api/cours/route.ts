@@ -141,6 +141,111 @@ export async function POST(request: NextRequest) {
 }
 
 // Récupération de tous les cours :: GET /api/cours
+// export async function GET() {
+//   try {
+//     const cours = await prisma.cours.findMany({
+//       select: {
+//         id_cours: true,
+//         semestre: true,
+//         filiere_module: {
+//           select: {
+//             code_module: true,
+//             volume_horaire: true,
+//             coefficient: true,
+//             filiere: {
+//               select: {
+//                 id_filiere: true,
+//                 nom: true,
+//                 description: true,
+//                 niveau: true,
+//                 montant_annuel: true,
+//                 id_annexe: true,
+//                 etudiants: {
+//                   select: {
+//                     id: true,
+//                     matricule: true,
+//                     notes: {
+//                       select: {
+//                         note_exam: true,
+//                         note_class: true,
+//                         commentaire_enseignant: true,
+//                       },
+//                     },
+//                     utilisateur: {
+//                       select: {
+//                         nom: true,
+//                         prenom: true,
+//                         email: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//               },
+//             },
+//             module: {
+//               select: {
+//                 id_module: true,
+//                 nom: true,
+//               },
+//             },
+//           },
+//         },
+//         enseignant: {
+//           select: {
+//             id: true,
+//             specialite: true,
+//             utilisateur: {
+//               select: { 
+//                 nom: true,
+//                 prenom: true,
+//                 email: true,
+//               },
+//             },
+//           },
+//         },
+        
+//         sessions: {
+//           select: {
+//             annee_academique: true,
+//           },
+//         },
+//         notes: {
+//           select: {
+//             id_note: true,
+//             note_exam: true,
+//             note_class: true,
+//             commentaire_enseignant: true,
+//             statut_reclamation: true,
+//             commentaire_etudiant: true,
+//             etudiant: {
+//               select: {
+//                 id: true,
+//                 matricule: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     return NextResponse.json(
+//       { message: "Cours récupérés avec succès", cours },
+//       { status: 200 }
+//     );
+//   } catch (e) {
+//     if (e instanceof Error) {
+//       return NextResponse.json(
+//         { message: "Une erreur est survenue", erreur: e.message },
+//         { status: 500 }
+//       );
+//     }
+//     return NextResponse.json(
+//       { message: "Une erreur inconnue est survenue" },
+//       { status: 500 }
+//     );
+//   }
+// }
+
 export async function GET() {
   try {
     const cours = await prisma.cours.findMany({
@@ -191,6 +296,26 @@ export async function GET() {
                 nom: true,
               },
             },
+            documents: {
+              select: {
+                id: true,
+                titre: true,
+                description: true,
+                chemin_fichier: true,
+                type_fichier: true,
+                taille_fichier: true,
+                date_upload: true,
+                est_actif: true,
+                id_uploader: true,
+                uploader: {
+                  select: {
+                    id_utilisateur: true,
+                    nom: true,
+                    prenom: true,
+                  },
+                },
+              },
+            },
           },
         },
         enseignant: {
@@ -198,8 +323,7 @@ export async function GET() {
             id: true,
             specialite: true,
             utilisateur: {
-              select: { 
-                id_utilisateur: true,
+              select: {
                 nom: true,
                 prenom: true,
                 email: true,
@@ -207,7 +331,6 @@ export async function GET() {
             },
           },
         },
-        
         sessions: {
           select: {
             annee_academique: true,
@@ -229,6 +352,21 @@ export async function GET() {
             },
           },
         },
+        Absences: {
+          select: {
+            id_absence: true,
+            date_absence: true,
+            motif: true,
+            utilisateur: {
+              select: {
+                id_utilisateur: true,
+                nom: true,
+                prenom: true,
+              },
+            },
+          },
+        },
+        emplois_du_temps: true,
       },
     });
 
@@ -237,60 +375,10 @@ export async function GET() {
       { status: 200 }
     );
   } catch (e) {
-    if (e instanceof Error) {
-      return NextResponse.json(
-        { message: "Une erreur est survenue", erreur: e.message },
-        { status: 500 }
-      );
-    }
-    return NextResponse.json(
-      { message: "Une erreur inconnue est survenue" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const url = new URL(request.url);
-    const id = url.pathname.split("/").pop();
-    const id_cours = parseInt(id || "");
-
-    if (isNaN(id_cours)) {
-      return NextResponse.json(
-        { message: "ID de cours invalide" },
-        { status: 400 }
-      );
-    }
-
-    // Vérifier l'existence du cours
-    const coursExists = await prisma.cours.findUnique({
-      where: { id_cours },
-    });
-
-    if (!coursExists) {
-      return NextResponse.json(
-        { message: "Le cours spécifié n'existe pas" },
-        { status: 404 }
-      );
-    }
-
-    // Supprimer le cours
-    await prisma.cours.delete({
-      where: { id_cours },
-    });
-
-    return NextResponse.json(
-      { message: "Cours supprimé avec succès" },
-      { status: 200 }
-    );
-  } catch (error) {
-    console.error("Erreur lors de la suppression du cours:", error);
-
     return NextResponse.json(
       {
-        message: "Une erreur est survenue lors de la suppression du cours",
-        error: error instanceof Error ? error.message : "Erreur inconnue",
+        message: "Une erreur est survenue",
+        erreur: e instanceof Error ? e.message : "Erreur inconnue",
       },
       { status: 500 }
     );

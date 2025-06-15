@@ -60,35 +60,79 @@ const Imprimer = (students:ImprimerProps) => {
   //   },
   //   // Ajouter toutes les autres matières ici...
   // ];
+  type GroupedStudent = {
+    id: number;
+    matricule: string;
+    nom: string;
+    modules: {
+      id: number;
+      id_cours: number;
+      codeUE:string;
+      intituleUE: string;
+      matiere: string;
+      noteClasse:string;
+      noteExamen:string;
+      noteMatiere: string;
+      creditEQUE:string;
+      creditUE: string;
+      moyenneUE: string;
+      noteCoeff: string;
+      resultat:string;
+    }[];
+  };
+  
+  // Fonction de regroupement
+  function groupStudentsByModules(semester: Semestre): GroupedStudent[] {
+    console.log(semester);
+    
+    const grouped: { [key: number]: GroupedStudent } = {};
+    console.log(semester);
+    
+    semester.modules.forEach((module) => {
+      module.students.forEach((student) => {
+        if (!grouped[student.id]) {
+          grouped[student.id] = {
+            id: student.id,
+            matricule: student.matricule,
+            nom: student.name,
+            modules: [],
+          };
+        }
+  
+        grouped[student.id].modules.push({
+          id: module.id,
+          codeUE: module.id.toString(), // ID du module comme codeUE
+          intituleUE: module.name, // Nom du module
+          matiere: module.name, // Nom de l'étudiant
+          noteClasse: student.notes[0].note_class?.toFixed(2) || "N/A", // Note de classe
+          noteExamen: student.notes[0].note_exam?.toFixed(2) || "N/A", // Note d'examen
+          noteMatiere: (
+            ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
+            2
+          ).toFixed(2), // Moyenne des notes
+          creditEQUE: student.notes[0].coefficient?.toString() || "N/A", // Coefficient
+          creditUE: "4", // Exemple : valeur fixe ou calculée
+          moyenneUE: (
+            ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
+            2
+          ).toFixed(2), // Moyenne UE
+          noteCoeff: (
+            ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0))/2 *
+            (student.notes[0].coefficient|| 1)
+          ).toFixed(2), // Note coefficientée
+          resultat: ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) / 2 >=
+            10
+            ? "Validée"
+            : "Non Validée", // Résultat basé sur la moyenne
+          id_cours: student?.id_cours||0,
+        });
+      });
+    });
+  
+    return Object.values(grouped);
+  }
   const matieres = students.students.flatMap((semestre) =>
-    semestre.modules.flatMap((module) =>
-      module.students.map((student) => ({
-        codeUE: module.id.toString(), // ID du module comme codeUE
-        intituleUE: module.name, // Nom du module
-        matiere: module.name, // Nom de l'étudiant
-        nom: student.name,
-        noteClasse: student.notes[0].note_class?.toFixed(2) || "N/A", // Note de classe
-        noteExamen: student.notes[0].note_exam?.toFixed(2) || "N/A", // Note d'examen
-        noteMatiere: (
-          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
-          2
-        ).toFixed(2), // Moyenne des notes
-        creditEQUE: student.notes[0].coefficient?.toString() || "N/A", // Coefficient
-        creditUE: "4", // Exemple : valeur fixe ou calculée
-        moyenneUE: (
-          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) /
-          2
-        ).toFixed(2), // Moyenne UE
-        noteCoeff: (
-          ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) *
-          (student.notes[0].coefficient|| 1)
-        ).toFixed(2), // Note coefficientée
-        resultat: ((student.notes[0].note_class|| 0) + (student.notes[0].note_exam|| 0)) / 2 >=
-          10
-          ? "Validée"
-          : "Non Validée", // Résultat basé sur la moyenne
-      }))
-    )
+    groupStudentsByModules(semestre)
   );
   console.log(matieres);
   
@@ -153,39 +197,46 @@ const Imprimer = (students:ImprimerProps) => {
             </tr>
           </thead>
           <tbody>
-              <tr key={index}>
-                <td className="border border-gray-300 p-2">{matiere.codeUE}</td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.intituleUE}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.matiere}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.noteClasse}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.noteExamen}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.noteMatiere}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.creditEQUE}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.creditUE}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.moyenneUE}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  {matiere.noteCoeff}
-                </td>
-                <td className="border border-gray-300 p-2 text-green-600 italic">
-                  {matiere.resultat}
-                </td>
-              </tr>
+            {matiere.modules.map((mod:any)=>{
+             return(
+               <tr key={mod.id.toString()-index.toString()}>
+                  <td className="border border-gray-300 p-2">{mod.codeUE }</td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.intituleUE}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.matiere}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.noteClasse}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.noteExamen}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.noteMatiere}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.creditEQUE}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.creditUE}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.moyenneUE}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {mod.noteCoeff}
+                  </td>
+                  <td className="border border-gray-300 p-2 text-green-600 italic">
+                    {mod.resultat}
+                  </td>
+             </tr>
+             )
+            }
+            
+            )}
+             
             
           </tbody>
         </table>

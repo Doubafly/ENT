@@ -17,24 +17,6 @@ interface Student {
   classe: string;
 }
 
-interface EmploiDuTemps {
-  id: string;
-  jour: string;
-  heure_debut: string;
-  heure_fin: string;
-  classe_id: string;
-  cours_id: string;
-}
-
-type AbsenceRow = {
-  id: string;
-  firstName: string;
-  lastName: string;
-  Heure: string;
-  module: string;
-  classe: string;
-};
-
 const prepareAbsenceDataParJour = (data: any, jour: string): Student[] => {
   const rows: Student[] = [];
   data.cours.forEach((cours: any) => {

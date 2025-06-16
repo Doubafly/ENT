@@ -7,6 +7,7 @@ import GroupConfigProf from "@/components/list/GroupConfigProf";
 import { Tabs, Tab, Box } from "@mui/material";
 import Etudiant from "@/components/paiement/Etudiant";
 import Depense from "@/components/paiement/Depense";
+import Gestion from "@/components/paiement/Gestion";
 
 export default function Paiement() {
   const [tabIndex, setTabIndex] = useState(0);
@@ -22,6 +23,7 @@ export default function Paiement() {
           <Tab label="Etudiants " />
           <Tab label="Enseignants" />
           <Tab label="Depences" />
+          <Tab label="Gestion des paiements" />
         </Tabs>
       </Box>
 
@@ -29,6 +31,7 @@ export default function Paiement() {
       {tabIndex === 0 && <Etudiant></Etudiant>}
       {tabIndex === 1 && <Enseignant />}
       {tabIndex === 2 && <Depense />}
+      {tabIndex === 3 && <Gestion />}
     </Box>
   );
 }

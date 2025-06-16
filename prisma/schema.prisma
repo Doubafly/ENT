@@ -18,7 +18,6 @@ model Annexes {
 
   @@map("annexes")
 }
-
 // Table pour gérer les sessions académiques
 model Sessions {
   id_sessions      Int             @id @default(autoincrement())
@@ -114,6 +113,8 @@ model Utilisateurs {
   documents Document[]    @relation("UploaderToDocuments")
 
   Finance Finance[]
+
+  ForgotPassword ForgotPassword[]
 }
 // Table pour gérer les enseignants
 model Enseignants {
@@ -140,11 +141,10 @@ model Etudiants {
   filiere        Filieres     @relation(fields: [id_filiere], references: [id_filiere])
   utilisateur    Utilisateurs @relation("UtilisateurEtudiant", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
   notes          Notes[]
-  paiements      Paiements[]
-
+  Finance        Finance[]
   @@index([id_filiere], map: "Etudiants_id_filiere_fkey")
   @@unique([id_utilisateur, id_filiere], map: "Unique_Student_Filiere") // Un étudiant ne peut être inscrit deux fois à la même filière
-  Finance Finance[]
+ 
 }
 
 // Table pour gérer les filières et modules
@@ -216,23 +216,11 @@ model Modules {
 // Table pour gérer les notes
 
 
-// Table pour gérer les paiements
-model Paiements {
-  id_paiement        Int                     @id @default(autoincrement())
-  id_etudiant        Int
-  montant            Decimal                   @db.Decimal(10, 2)
-  date_paiement      DateTime
-  type_paiement      PaiementsTypePaiement
-  reference_paiement String                  @unique(map: "Paiements_reference_paiement_key")
-  etudiant           Etudiants               @relation(fields: [id_etudiant], references: [id])
-
-  @@index([id_etudiant], map: "Paiements_id_etudiant_fkey")
-}
-
 
 
 model Admin {
   id_admin      Int               @id @default(autoincrement())
+  supAdmin      Boolean           @default(false)
   id_utilisateur Int              @unique(map: "Admin_id_utilisateur_key")
   utilisateur   Utilisateurs      @relation("UtilisateurAdmin", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 
@@ -281,29 +269,35 @@ model Notes {
 }
 
 model Finance {
-  id_finance       Int               @id @default(autoincrement())
-  type_entite      FinanceEntiteType
-  id_entite        Int               // Peut être l'id d'un étudiant, enseignant ou autre
-  type_transaction FinanceTypeTransaction
-  montant          Decimal           @db.Decimal(10, 2)
-  date_transaction DateTime          @default(now())
-  description      String?
-  mode_paiement    FinanceModePaiement
-  reference        String?           @unique
-  statut           FinanceStatut     @default(Valide)
-  id_utilisateur   Int               // Utilisateur qui a enregistré la transaction (secrétaire/admin)
-  utilisateur      Utilisateurs      @relation(fields: [id_utilisateur], references: [id_utilisateur])
-  
-  // Pour lier explicitement aux étudiants ou enseignants si nécessaire
-  etudiant         Etudiants?        @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_etudiant_fkey")
-  enseignant       Enseignants?      @relation(fields: [id_entite], references: [id], map: "Finance_id_entite_enseignant_fkey")
+  id_finance        Int                    @id @default(autoincrement())
+  type_transaction  FinanceTypeTransaction
+  montant           Decimal                @db.Decimal(10, 2)
+  date_transaction  DateTime              @default(now())
+  description       String?
+  mode_paiement     FinanceModePaiement
+  reference         String?               @unique
+  statut            FinanceStatut         @default(Valide)
+  // Utilisateur qui enregistre
+  id_utilisateur    Int
+  utilisateur       Utilisateurs          @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  // Nouvelles relations claires
+  id_etudiant       Int?                 
+  etudiant          Etudiants?           @relation(fields: [id_etudiant], references: [id])
+  id_enseignant     Int?                  
+  enseignant        Enseignants?         @relation(fields: [id_enseignant], references: [id])
 
-  @@index([id_entite], name: "Finance_id_entite_idx")
-  @@index([type_entite], name: "Finance_type_entite_idx")
-  @@index([type_transaction], name: "Finance_type_transaction_idx")
-  @@index([id_utilisateur], name: "Finance_id_utilisateur_fkey")
+  @@index([id_utilisateur])
 }
 
+model ForgotPassword {
+  id                 Int           @id @default(autoincrement())
+  email              String
+  token              String        @unique
+  utilisateur        Utilisateurs? @relation(fields: [email], references: [email], onDelete: Cascade)
+  createdAt          DateTime      @default(now())
+  expiresAt          DateTime
+  used               Boolean       @default(false)
+}
 
 enum FinanceEntiteType {
   Etudiant
@@ -315,6 +309,7 @@ enum FinanceTypeTransaction {
   Inscription
   Scolarite
   Salaire
+  Remboursement
   Depense
   Autre
 }
@@ -322,6 +317,7 @@ enum FinanceTypeTransaction {
 enum FinanceModePaiement {
   Espèces
   Chèque
+  Virement
 }
 
 enum FinanceStatut {

@@ -45,7 +45,33 @@ interface Absence {
   motif?: string;
 }
 
-export default function AbsenceProfList() {
+    emplois.forEach((emploi: any) => {
+      if (emploi.jour.toLowerCase() === jour.toLowerCase()) {
+        const heure_debut = new Date(emploi.heure_debut)
+          .toISOString()
+          .substr(11, 5);
+        const heure_fin = new Date(emploi.heure_fin)
+          .toISOString()
+          .substr(11, 5);
+        const heure = `${heure_debut}H-${heure_fin}H`;
+
+          rows.push({
+            idCours: idCours,
+            id: prof.utilisateur.id_utilisateur,
+            firstName: prof.utilisateur.prenom,
+            lastName: prof.utilisateur.nom,
+            Heure: heure,
+            module: moduleNom,
+            classe: classeNom,
+          });
+      }
+    });
+  });
+
+  return rows;
+};
+
+export default function AbsenceEtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [classFilter, setClassFilter] = useState("");
   const [cours, setCours] = useState<Cours[]>([]);
@@ -134,7 +160,6 @@ console.log("rows",rows);
       });
     }
   };
-
   const handleEnregistrer = async () => {
     try {
       setLoading(true);
@@ -172,6 +197,7 @@ console.log("rows",rows);
     { field: "heure", headerName: "Heure", width: 130 },
     { field: "module", headerName: "Module", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
+    { field: "module", headerName: "module", width: 130 },
     {
       field: "present",
       headerName: "Présent",
@@ -186,9 +212,7 @@ console.log("rows",rows);
     {
       field: "action",
       headerName: "Action",
-      width: 180,
-      sortable: false,
-      filterable: false,
+      width: 150,
       renderCell: (params) => (
         <button className="text-blue-500 hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenModal(params.row); }}>
           Historique
@@ -196,6 +220,10 @@ console.log("rows",rows);
       )
     }
   ];
+
+  const heuresDisponibles = Array.from(
+    new Set(allRows.map((row) => row.Heure))
+  );
 
   return (
     <div className="ml-0 px-1 py-5 text-xl">
@@ -211,7 +239,6 @@ console.log("rows",rows);
           ))}
         </select>
       </div>
-
       <div className="h-[500px]">
         <DataGrid
           rows={filteredRows}
@@ -227,7 +254,6 @@ console.log("rows",rows);
           Enregistrer les absences
         </button>
       )}
-
       {selectedTeacher && (
         <Modal onClose={() => setSelectedTeacher(null)}>
           <div>

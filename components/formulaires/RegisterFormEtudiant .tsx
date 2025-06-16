@@ -1,32 +1,168 @@
+import { useState, useEffect } from "react";
+import ListCard, { User } from "@/components/card/ListCard";
 
-"use client";
-import { useState } from "react";
-import { registerUser } from "@/actions/signupetudiant";
-
-type RegisterFormProps = {
-  onSubmit: (formData: FormData) => Promise<void>;
-  title?: string;
-  onClose: () => void;
+type Filiere = {
+  id_filiere: number;
+  nom: string;
+  niveau: string;
 };
 
-const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant", onClose }: RegisterFormProps) => {
+type RegisterFormProps = {
+  onClose: () => void;
+  onrecharge: () => Promise<void>;
+  onStudentAdded: (newStudent: User) => void;
+};
+
+const RegisterFormEtudiant = ({
+  onStudentAdded,
+  onClose,
+  onrecharge,
+}: RegisterFormProps) => {
+  const [filieres, setFilieres] = useState<Filiere[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [verificationStep, setVerificationStep] = useState<boolean>(false);
+  const [verificationCode, setVerificationCode] = useState<string>("");
+  const [generatedCode, setGeneratedCode] = useState<string>("");
+  const [formData, setFormData] = useState<any>(null);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    async function fetchFilieres() {
+      try {
+        const response = await fetch("/api/filieres");
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement des filières");
+        }
+        const data = await response.json();
+        setFilieres(data.filieres);
+      } catch (error: any) {
+        console.error("Erreur :", error.message);
+        setError("Erreur lors de la récupération des filières");
+      }
+    }
+    fetchFilieres();
+  }, []);
+
+  const sendVerificationEmail = async (email: string) => {
+    const reset_code = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedCode(reset_code);
+
+    try {
+      const response = await fetch(
+        "https://codingmailer.onrender.com/send-email",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: "Code de vérification",
+            message: `Votre code de vérification est: ${reset_code}\n\nCe code expirera dans 15 minutes.`,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'envoi de l'email de vérification");
+      }
+
+      setVerificationStep(true);
+      setSuccess("Un code de vérification a été envoyé à votre email.");
+    } catch (error: any) {
+      setError(
+        error.message || "Erreur lors de l'envoi du code de vérification"
+      );
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
 
     const formData = new FormData(event.currentTarget);
+    const data = Object.fromEntries(formData.entries());
 
-    try {
-      await registerUser(formData);
-      setSuccess("Étudiant créé avec succès !");
-    } catch (err) {
-      setError("Erreur lors de la création de l'étudiant.");
+    // Si nous sommes à l'étape de vérification
+    if (verificationStep) {
+      if (verificationCode !== generatedCode) {
+        setError("Code de vérification incorrect");
+        return;
+      }
+
+      // Si le code est correct, procéder à l'inscription
+      try {
+        await registerStudent(data);
+      } catch (err: any) {
+        setError(err.message || "Erreur lors de la création de l'étudiant");
+      }
+    } else {
+      // Sinon, envoyer le code de vérification
+      setFormData(data);
+      await sendVerificationEmail(data.email as string);
     }
-  }
+  };
+
+  const registerStudent = async (data: any) => {
+ 
+    try {
+      const response = await fetch("/api/utilisateurs/etudiants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nom: data.nom,
+          prenom: data.prenom,
+          email: data.email,
+          sexe: data.sexe,
+          mot_de_passe: data.mot_de_passe,
+          telephone: data.telephone,
+          adresse: data.adresse,
+          matricule: data.matricule,
+          date_naissance: data.date_naissance,
+          date_inscription: data.date_inscription,
+          id_filiere: Number(data.id_filiere), // ✅ CONVERSION ICI
+        }),
+      });
+
+      if (response.ok) {
+        const { etudiant } = await response.json();
+        onStudentAdded({
+          id_utilisateur: etudiant.id_utilisateur,
+          nom: etudiant.utilisateur?.nom || "",
+          prenom: etudiant.utilisateur?.prenom || "",
+          email: etudiant.utilisateur?.email || "",
+          sexe: etudiant.utilisateur?.sexe || "",
+          image: etudiant.utilisateur?.profil || "/profils/default.jpg",
+          tel: etudiant.utilisateur?.telephone || "",
+          adresse: etudiant.utilisateur?.adresse || "",
+          matricule: etudiant.matricule,
+          filiere: {
+            id_filiere: etudiant.filiere?.id_filiere || 0,
+            nom: etudiant.filiere?.nom || "Non assigné",
+            filiere_module: etudiant.filiere?.filiere_module,
+          },
+          date_naissance: etudiant.date_naissance || "",
+          date_inscription: etudiant.date_inscription,
+          id: 0,
+          notes: undefined,
+          mot_de_passe: ""
+        });
+
+        setSuccess("Étudiant créé avec succès !");
+        setTimeout(() => {
+          setSuccess(null);
+          onrecharge();
+          onClose();
+        }, 2000);
+      } else {
+        console.error("Erreur lors de l'ajout :", await response.text());
+        throw new Error("Erreur lors de la création de l'étudiant");
+      }
+    } catch (err: any) {
+      setError(err.message || "Erreur lors de la requête");
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
@@ -39,73 +175,192 @@ const RegisterFormEtudiant = ({ onSubmit, title = "Créer un étudiant", onClose
           x
         </button>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <h1 className="text-lg font-bold text-center mb-3">{title}</h1>
+          <h1 className="text-lg font-bold text-center mb-3">
+            {verificationStep ? "Vérification d'email" : "Créer un étudiant"}
+          </h1>
           {error && <p className="text-red-500 text-center">{error}</p>}
           {success && <p className="text-green-500 text-center">{success}</p>}
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Nom :</label>
-              <input type="text" name="nom" className="w-full p-2 border rounded-lg" required />
+          {verificationStep ? (
+            <div className="space-y-4">
+              <p className="text-center">
+                Un code de vérification a été envoyé à l'adresse email fournie.
+                Veuillez le saisir ci-dessous.
+              </p>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Code de vérification :
+                </label>
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div className="flex justify-center mt-3">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 text-sm"
+                >
+                  Vérifier et créer
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Prénom :</label>
-              <input type="text" name="prenom" className="w-full p-2 border rounded-lg" required />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Nom :
+                </label>
+                <input
+                  type="text"
+                  name="nom"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Prénom :
+                </label>
+                <input
+                  type="text"
+                  name="prenom"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Email :
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Mot de passe :
+                </label>
+                <input
+                  type="password"
+                  name="mot_de_passe"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Sexe :
+                </label>
+                <select
+                  title="sexe"
+                  name="sexe"
+                  className="w-full p-2 border rounded-lg text-sm"
+                  required
+                >
+                  <option value="M">Masculin</option>
+                  <option value="F">Féminin</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Téléphone :
+                </label>
+                <input
+                  type="text"
+                  name="telephone"
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Adresse :
+                </label>
+                <input
+                  type="text"
+                  name="adresse"
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Matricule :
+                </label>
+                <input
+                  type="text"
+                  name="matricule"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Date de naissance :
+                </label>
+                <input
+                  type="date"
+                  name="date_naissance"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Date d'inscription :
+                </label>
+                <input
+                  type="date"
+                  name="date_inscription"
+                  className="w-full p-2 border rounded-lg"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 text-sm font-bold">
+                  Filière :
+                </label>
+                <select
+                  title="filiere"
+                  name="id_filiere"
+                  className="w-full p-2 border rounded-lg text-sm"
+                  required
+                >
+                  {filieres.length > 0 ? (
+                    filieres.map((filiere) => (
+                      <option
+                        key={filiere.id_filiere}
+                        value={filiere.id_filiere}
+                      >
+                        {`${
+                          filiere.niveau === "Primaire"
+                            ? "L1"
+                            : filiere.niveau === "Secondaire"
+                            ? "L2"
+                            : ""
+                        } ${filiere.nom}`}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>Chargement...</option>
+                  )}
+                </select>
+              </div>
+              <div className="flex justify-center mt-3 col-span-2">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 text-sm"
+                >
+                  Envoyer le code de vérification
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Email :</label>
-              <input type="email" name="email" className="w-full p-2 border rounded-lg" required />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Mot de passe :</label>
-              <input type="password" name="mot_de_passe" className="w-full p-2 border rounded-lg" required />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Sexe :</label>
-              <select name="sexe" className="w-full p-2 border rounded-lg  text-sm" required>
-                <option value="M">Masculin</option>
-                <option value="F">Féminin</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Téléphone :</label>
-              <input type="text" name="telephone" className="w-full p-2 border rounded-lg" />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Adresse :</label>
-              <input type="text" name="adresse" className="w-full p-2 border rounded-lg" />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Profil :</label>
-              <input type="text" name="profil" className="w-full p-2 border rounded-lg" required />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Date de naissance :</label>
-              <input type="date" name="date_naissance" className="w-full p-2 border rounded-lg  text-sm" required />
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Rôle :</label>
-              <select name="id_role" className="w-full p-2 border rounded-lg  text-sm" required>
-                <option value="1">Membre</option>
-                <option value="2">Syndicat</option>
-                <option value="3">Autre</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-gray-700 text-sm font-bold">Filière :</label>
-              <select name="id_filiere" className="w-full p-2 border rounded-lg  text-sm" required>
-                <option value="1">AP</option>
-                <option value="2">IG</option>
-                <option value="3">TEC</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex justify-center mt-3">
-            <button type="submit" className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600  text-sm">
-              Créer
-            </button>
-          </div>
+          )}
         </form>
       </div>
     </div>

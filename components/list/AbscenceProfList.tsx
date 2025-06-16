@@ -1,30 +1,49 @@
-import * as React from "react";
-import { useEffect, useState } from "react";
+"use client";
+import React, { useState, useEffect } from 'react';
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import Modal from "../modal/Modal";
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-// Interfaces
-interface Prof {
-  id: number;
-  idCours: number;
-  firstName: string;
-  lastName: string;
-  Heure: string;
-  module?: string;
-  justifier?: string;
-  classe_id?: string;
-  classe: string;
+interface Cours {
+  id_cours: number;
+  filiere_module: {
+    module: {
+      id_module: number;
+      nom: string;
+    };
+    filiere: {
+      id_filiere: number;
+      nom: string;
+      niveau: string;
+    };
+  };
+  enseignant: {
+    id_enseignant: number;
+    utilisateur: {
+      id_utilisateur: number;
+      nom: string;
+      prenom: string;
+    };
+  };
+  emplois?: {
+    id_emploi: number;
+    jour: string;
+    heure_debut: string;
+    heure_fin: string;
+    salle: string;
+  }[];
 }
 
-const prepareAbsenceDataParJour = (data: any, jour: string): Prof[] => {
-  const rows: Prof[] = [];
-  data.cours.forEach((cours: any) => {
-    const moduleNom = cours.filiere_module?.module?.nom || "Inconnu";
-    const idCours = cours.id_cours || "Inconnu";
-    const classeNom = cours.filiere_module?.filiere?.nom || "Inconnue";
-    const prof = cours.enseignant || [];
-    const emplois = cours.emplois_du_temps || [];
+interface Absence {
+  id_absence: number;
+  date: string;
+  id_emploi: number;
+  id_enseignant: number;
+  justifiee: boolean;
+  motif?: string;
+}
 
     emplois.forEach((emploi: any) => {
       if (emploi.jour.toLowerCase() === jour.toLowerCase()) {
@@ -54,153 +73,152 @@ const prepareAbsenceDataParJour = (data: any, jour: string): Prof[] => {
 
 export default function AbsenceEtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [data, setData] = useState("");
-  const [selectedTeacher, setSelectedTeacher] = useState<Prof | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [allRows, setAllRows] = useState<Prof[]>([]);
-  const [filteredClasse, setFilteredClasse] = useState("");
+  const [classFilter, setClassFilter] = useState("");
+  const [cours, setCours] = useState<Cours[]>([]);
+  const [absences, setAbsences] = useState<Absence[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [selectedTeacher, setSelectedTeacher] = useState<{
+    enseignant: Cours['enseignant'];
+    emploi: NonNullable<Cours['emplois']>[0];
+    module: string;
+    classe: string;
+  } | null>(null);
 
-  const getCurrentHourRange = (): string => {
-    const now = new Date();
-    const hours = now.getHours();
+  const fetchInitialData = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const [coursResponse, absencesResponse] = await Promise.all([
+        fetch('/api/cours'),
+        fetch('/api/absences')
+      ]);
 
-    if (hours < 10) return "08H-10H";
-    if (hours < 12) return "10H-12H";
-    if (hours < 14) return "12H-14H";
-    if (hours < 16) return "14H-16H";
-    return "16H-18H";
+      if (!coursResponse.ok) throw new Error('Erreur de chargement des cours');
+      if (!absencesResponse.ok) throw new Error('Erreur de chargement des absences');
+
+      const [coursData, absencesData] = await Promise.all([
+        coursResponse.json(),
+        absencesResponse.json()
+      ]);
+
+      setCours(coursData.cours || []);
+      setAbsences(absencesData.absences || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const [filteredHeure, setFilteredHeure] = useState(getCurrentHourRange());
   useEffect(() => {
-    const fetchCours = async () => {
-      try {
-        const res = await fetch("/api/cours");
-        const data = await res.json();
-        console.log(data);
-        
-        setData(data);
-
-      } catch (error) {
-        console.error("Erreur lors de la récupération des cours :", error);
-      }
-    };
-    fetchCours();
+    fetchInitialData();
   }, []);
 
-  const jours = [
-    "dimanche",
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-    "samedi",
-  ] as const;
-  const dayName = jours[new Date(selectedDate).getDay()];
+  const dayOfWeek = format(parseISO(selectedDate), 'EEEE', { locale: fr }).toLowerCase();
 
-  useEffect(() => {
-    if (!data) {
-      console.error("Aucune donnée de cours disponible");
-      return;
-    }
-    const rows = prepareAbsenceDataParJour(data, dayName);
-    setAllRows(rows);
-    console.log("All rows prepared:", allRows);
-  }, [data]);
+  const rows = React.useMemo(() => {
+    return cours.flatMap(c => {
+      if (!c.emplois || !Array.isArray(c.emplois)) return [];
+      return c.emplois
+        .filter(e => e.jour.toLowerCase() === dayOfWeek)
+        .map(e => ({
+          id: e.id_emploi,
+          id_enseignant: c.enseignant.id_enseignant,
+          nom: c.enseignant.utilisateur.nom,
+          prenom: c.enseignant.utilisateur.prenom,
+          heure: `${e.heure_debut}-${e.heure_fin}`,
+          module: c.filiere_module.module.nom,
+          classe: `${c.filiere_module.filiere.niveau} ${c.filiere_module.filiere.nom}`,
+          salle: e.salle,
+          present: !absences.some(a => a.id_emploi === e.id_emploi && a.date === selectedDate)
+        }));
+    });
+  }, [cours, absences, selectedDate, dayOfWeek]);
+console.log("rows",rows);
 
-  const filteredRows = allRows.filter((row) => {
-    const matchClasse = filteredClasse ? row.classe === filteredClasse : true;
-    const matchHeure = filteredHeure ? row.Heure === filteredHeure : true;
-    return matchClasse && matchHeure;
-  });
+  const filteredRows = React.useMemo(() => {
+    return rows.filter(row => {
+      const matchesSearch = `${row.prenom} ${row.nom}`.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesClass = classFilter ? row.classe === classFilter : true;
+      return matchesSearch && matchesClass;
+    });
+  }, [rows, searchTerm, classFilter]);
 
-  const paginationModel = { page: 0, pageSize: 5 };
+  const handleOpenModal = (row: typeof rows[0]) => {
+    const coursCorrespondant = cours.find(c => c.enseignant.id_enseignant === row.id_enseignant);
+    const emploiCorrespondant = coursCorrespondant?.emplois?.find(e => e.id_emploi === row.id);
 
-  const classesDisponibles = Array.from(
-    new Set(allRows.map((row) => row.classe))
-  );
-
-  const handleOpenModal = async (Prof: Prof) => {
-    setSelectedTeacher(Prof);
-    try {
-      const response = await fetch(`/api/absences/${Prof.id}`);
-      if (response.ok) {
-        const etudiantSelect = await response.json();
-        etudiantSelect.absence.map((abs: { date_absence: string | number | Date; })=>{
-        
-          const date = new Date(abs.date_absence) ;
-         
-          
-        })
-        
-      }
-    } catch (error) {
-      alert("pgf");
+    if (coursCorrespondant && emploiCorrespondant) {
+      setSelectedTeacher({
+        enseignant: coursCorrespondant.enseignant,
+        emploi: emploiCorrespondant,
+        module: coursCorrespondant.filiere_module.module.nom,
+        classe: `${coursCorrespondant.filiere_module.filiere.niveau} ${coursCorrespondant.filiere_module.filiere.nom}`
+      });
     }
   };
-
   const handleEnregistrer = async () => {
-    const enseignantsSelectionnes = allRows.filter((row) =>
-      selectedRows.includes(row.id)
-    );
-    const abs = filteredRows.filter(
-      (et) => !enseignantsSelectionnes.some((sel) => sel.id === et.id)
-    );
-    abs.map( async (a) => {
-      console.log(a.id);
-      const payload = {
-        id_etudiant:a.id, 
-        id_cours:a.idCours, 
-        date:new Date().getDay(), 
-        justification:"cvv"
-      };
-      try {
-        const response = await fetch("/api/absences/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+    try {
+      setLoading(true);
+      const absencesToCreate = selectedRows.map(id_emploi => {
+        const row = rows.find(r => r.id === id_emploi);
+        if (!row) throw new Error("Séance introuvable");
+        return {
+          id_emploi,
+          date: selectedDate,
+          id_enseignant: row.id_enseignant,
+          justifiee: false
+        };
+      });
 
-        if (response.ok) {
-          alert("ok")
-          console.log(response.json());
-          
-        }
-      } catch (error) {
-        alert("pgf");
-      }
-    });
+      const response = await fetch('/api/absences', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ absences: absencesToCreate })
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de l\'enregistrement');
+      await fetchInitialData();
+      setSelectedRows([]);
+      alert(`${absencesToCreate.length} absence(s) enregistrée(s).`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "firstName", headerName: "Nom", width: 130 },
-    { field: "lastName", headerName: "Prenom", width: 130 },
-    { field: "Heure", headerName: "Heure", width: 130 },
+    { field: "prenom", headerName: "Prénom", width: 130 },
+    { field: "nom", headerName: "Nom", width: 130 },
+    { field: "heure", headerName: "Heure", width: 130 },
+    { field: "module", headerName: "Module", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
     { field: "module", headerName: "module", width: 130 },
+    {
+      field: "present",
+      headerName: "Présent",
+      width: 100,
+      type: 'boolean',
+      renderCell: (params) => (
+        <span className={`px-2 py-1 rounded-full text-xs ${params.value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          {params.value ? 'Oui' : 'Non'}
+        </span>
+      )
+    },
     {
       field: "action",
       headerName: "Action",
       width: 150,
       renderCell: (params) => (
-        <button
-          className="text-blue-500 hover:underline"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleOpenModal(params.row);
-          }}
-        >
-          Voir ses absences
+        <button className="text-blue-500 hover:underline" onClick={(e) => { e.stopPropagation(); handleOpenModal(params.row); }}>
+          Historique
         </button>
-      ),
-    },
+      )
+    }
   ];
 
   const heuresDisponibles = Array.from(
@@ -209,107 +227,41 @@ export default function AbsenceEtudiantList() {
 
   return (
     <div className="ml-0 px-1 py-5 text-xl">
-      {/* Filtres */}
+      {error && <div className="p-4 mb-4 text-red-500 bg-red-50 rounded-lg">{error}</div>}
+
       <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
-        <input
-          type="text"
-          placeholder="Rechercher un étudiant..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
-        />
-
-        <select
-          value={filteredClasse}
-          onChange={(e) => setFilteredClasse(e.target.value)}
-          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
-        >
-          <option value="">Filtrer par Classe</option>
-          {classesDisponibles.map((classe) => (
-            <option key={classe} value={classe}>
-              {classe}
-            </option>
-          ))}
-        </select>
-
-        <select
-          onChange={(e) => setFilteredHeure(e.target.value)}
-          value={filteredHeure}
-          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
-        >
-          <option value="">Filtrer par heures</option>
-          {heuresDisponibles.map((heure) => (
-            <option key={heure} value={heure}>
-              {heure}
-            </option>
+        <input type="text" placeholder="Rechercher un enseignant..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm" />
+        <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="p-3 border rounded-lg text-sm" />
+        <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)} className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm" disabled={loading}>
+          <option value="">Toutes les classes</option>
+          {[...new Set(cours.map(c => `${c.filiere_module.filiere.niveau} ${c.filiere_module.filiere.nom}`))].map(cl => (
+            <option key={cl} value={cl}>{cl}</option>
           ))}
         </select>
       </div>
-
-      {/* Enregistrer + Jour */}
-      <div className="flex justify-between items-center min-w-[200px] p-3 border rounded-lg text-sm">
-        <div className="flex items-center text-ml text-green-600">
-          <span>Jour :</span>
-          <span className="ml-2 font-medium capitalize">{dayName}</span>
-        </div>
-        <button
-          onClick={handleEnregistrer}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          disabled={selectedRows.length === 0}
-        >
-          Enregistrer
-        </button>
-      </div>
-
-      {/* Tableau */}
-      <Paper sx={{ height: 500, width: "100%" }}>
+      <div className="h-[500px]">
         <DataGrid
           rows={filteredRows}
           columns={columns}
-          initialState={{ pagination: { paginationModel } }}
-          pageSizeOptions={[5, 10]}
           checkboxSelection
-          onRowSelectionModelChange={(newSelection) => {
-            // Extraire les IDs de l'objet `newSelection` et les convertir en tableau
-            const selectedIds = Array.from((newSelection as any).ids || []);
-            setSelectedRows(selectedIds as number[]);
-          }}
-          disableRowSelectionOnClick
-          sx={{ border: 0 }}
+          onRowSelectionModelChange={(ids) => setSelectedRows(ids as unknown as number[])}
+          loading={loading}
         />
-      </Paper>
+      </div>
 
-      {/* Modal étudiant */}
+      {selectedRows.length > 0 && (
+        <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={handleEnregistrer}>
+          Enregistrer les absences
+        </button>
+      )}
       {selectedTeacher && (
         <Modal onClose={() => setSelectedTeacher(null)}>
-          <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
-            <div className="flex flex-col items-center mb-4">
-              <img
-                src="/img/man2.jpg"
-                alt="Profile"
-                className="object-cover w-[120px] h-[120px] rounded-full border"
-              />
-              <h2 className="text-lg font-bold mt-2">
-                {selectedTeacher.firstName} {selectedTeacher.lastName}
-              </h2>
-              <p className="text-gray-500 text-sm">
-                Classe: {selectedTeacher.classe_id}
-              </p>
-              <p className="text-green-500 text-sm font-bold">
-                Justification: {selectedTeacher.justifier}
-              </p>
-            </div>
-            <div className="mt-4 text-center">
-              <h3 className="text-md font-semibold mb-4">
-                Liste des Absences :
-              </h3>
-              <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
-                <li>Absence le 20/04/2025</li>
-                <li>Absence le 05/05/2025</li>
-                <li>Absence le 10/05/2025</li>
-                <li>Absence le 15/05/2025</li>
-              </ul>
-            </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Historique d'absences</h2>
+            <p>Enseignant : {selectedTeacher.enseignant.utilisateur.prenom} {selectedTeacher.enseignant.utilisateur.nom}</p>
+            <p>Module : {selectedTeacher.module}</p>
+            <p>Classe : {selectedTeacher.classe}</p>
+            {/* Tu peux afficher ici les détails d'absences de cet enseignant */}
           </div>
         </Modal>
       )}

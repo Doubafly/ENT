@@ -9,6 +9,7 @@ export default function Home() {
     { link: "/icons/text-books.png", value: "0", nom: "Nombre Filiere" },
     { link: "/icons/friends.png", value: "0", nom: "Nombre etudiant" },
     { link: "/icons/Training.png", value: "0", nom: "Nombre enseignant" },
+    { link: "/icons/Training.png", value: "0", nom: "Nombre admin" },
   ]);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ export default function Home() {
           { link: "/icons/text-books.png", value: nombreFilieres.toString(), nom: "Nombre Filiere" },
           { link: "/icons/friends.png", value: nombreEtudiants.toString(), nom: "Nombre etudiant" },
           { link: "/icons/Training.png", value: nombreEnseignants.toString(), nom: "Nombre enseignant" },
+          { link: "/icons/Training.png", value: "0", nom: "Nombre admin" },
         ]);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques :", error);

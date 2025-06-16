@@ -220,6 +220,7 @@ model Modules {
 
 model Admin {
   id_admin      Int               @id @default(autoincrement())
+  supAdmin      Boolean           @default(false)
   id_utilisateur Int              @unique(map: "Admin_id_utilisateur_key")
   utilisateur   Utilisateurs      @relation("UtilisateurAdmin", fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
 

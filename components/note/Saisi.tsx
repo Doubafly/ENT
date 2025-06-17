@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/modal/ModalBox";
+import { FaExclamationTriangle } from "react-icons/fa";
 
 interface Student {
   id: number;
@@ -253,6 +254,9 @@ const Saisi: React.FC<NoteEntryProps> = ({ classes,onrecharge }) => {
 
   return (
     <div className="mt-4">
+        <h1 className="text-2xl font-bold mb-6 text-blue-600 flex items-center">
+              Gestion des Saisis
+            </h1>
       <div className="md:flex p-4">
         {/* Sélection de la classe */}
         <div className="mb-4 ml-2">

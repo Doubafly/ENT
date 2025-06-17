@@ -385,12 +385,7 @@ const DocumentsPage = () => {
         <h1 className="text-2xl font-bold text-gray-800">
           Gestion des Documents
         </h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <FiPlus /> Ajouter un document
-        </button>
+        
       </div>
 
       {/* Filtres */}

@@ -1,35 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Bar, Doughnut } from "react-chartjs-2";
+import { Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
   PointElement,
   LineElement,
-  LineController,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler,
 } from "chart.js";
 import { motion } from "framer-motion";
 import { FaUserGraduate, FaChalkboardTeacher, FaBook, FaUsers } from "react-icons/fa";
-import MiniSmallIconCard from "../card/MiniIconCard";
 import "./statistique.css";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
   PointElement,
   LineElement,
-  LineController
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler
 );
+
 
 interface StatistiqueAdminProps {
   menuStat: {
@@ -52,14 +48,14 @@ interface Cours {
 }
 
 const iconMap: Record<string, JSX.Element> = {
-  "Étudiants": <FaUserGraduate className="text-blue-500 text-2xl" />,
-  "Enseignants": <FaChalkboardTeacher className="text-green-500 text-2xl" />,
-  "Cours": <FaBook className="text-purple-500 text-2xl" />,
-  "Utilisateurs": <FaUsers className="text-yellow-500 text-2xl" />,
+  "Étudiants": <FaUserGraduate className="text-blue-500 text-3xl" />,
+  "Enseignants": <FaChalkboardTeacher className="text-green-500 text-3xl" />,
+  "Cours": <FaBook className="text-purple-500 text-3xl" />,
+  "Utilisateurs": <FaUsers className="text-yellow-500 text-3xl" />,
 };
 
 const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
-  const [barData, setBarData] = useState<any>(null);
+  const [lineData, setLineData] = useState<any>(null);
   const [doughnutData, setDoughnutData] = useState<any>(null);
 
   useEffect(() => {
@@ -83,16 +79,19 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           }
         });
 
-        const barData = {
+        const lineData = {
           labels: Object.keys(enseignantsParFiliere),
           datasets: [
             {
               label: "Enseignants",
               data: Object.values(enseignantsParFiliere).map((set) => set.size),
-              borderColor: "#8A2BE2",
-              backgroundColor: "rgb(49, 226, 43)",
-              tension: 0.4,
               fill: true,
+              borderColor: "#8A2BE2",
+              backgroundColor: "rgba(138, 43, 226, 0.2)",
+              tension: 0.4,
+              pointBackgroundColor: "#fff",
+              pointBorderColor: "#8A2BE2",
+              pointRadius: 5,
             },
           ],
         };
@@ -101,10 +100,14 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
 
         cours.forEach((coursItem) => {
           const filiere = coursItem.filiere_module.filiere.nom;
-          coursItem.filiere_module.filiere.etudiants?.forEach(() => {
-            etudiantsParFiliere[filiere] = (etudiantsParFiliere[filiere] || 0) + 1;
-          });
+          const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
+
+          // Ne pas écraser si on a déjà compté cette filière
+          if (!etudiantsParFiliere[filiere]) {
+            etudiantsParFiliere[filiere] = nbEtudiants;
+          }
         });
+
 
         const doughnutData = {
           labels: Object.keys(etudiantsParFiliere),
@@ -118,7 +121,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           ],
         };
 
-        setBarData(barData);
+        setLineData(lineData);
         setDoughnutData(doughnutData);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques admin :", error);
@@ -143,9 +146,9 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
             <div className="mb-2 flex justify-center">
-              {iconMap[stat.nom] || <FaUsers className="text-gray-400 text-2xl" />}
+              {iconMap[stat.nom] || <FaUsers className="text-gray-400 text-3xl" />}
             </div>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}+</div>
+            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
             <div className="text-sm text-gray-500 mt-1">{stat.nom}</div>
           </motion.div>
         ))}
@@ -159,7 +162,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           transition={{ duration: 0.5 }}
         >
           <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Enseignants</h3>
-          {barData && <Bar data={barData} options={{ responsive: true, plugins: { legend: { display: false } } }} />}
+          {lineData && <Line data={lineData} options={{ responsive: true, plugins: { legend: { display: false } } }} />}
         </motion.div>
 
         <motion.div
@@ -173,7 +176,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
             <Doughnut
               data={doughnutData}
               options={{
-                cutout: "70%",
+                cutout: "65%",
                 plugins: {
                   legend: {
                     display: true,

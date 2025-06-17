@@ -38,6 +38,7 @@ interface NoteEntryProps {
   classes: Classe[];
 }
 const Resultat: React.FC<NoteEntryProps> = ({ classes }) => {
+  
   const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
   const [filterClasse, setfilterClasse] = useState<Classe >(classes[0]);

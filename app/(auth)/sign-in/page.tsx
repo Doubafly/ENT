@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEnvelope, FaLock } from "react-icons/fa";
+import Link from "next/link";
 
 export default function Page() {
   const route = useRouter();
@@ -94,9 +95,9 @@ export default function Page() {
             </div>
 
             {/* Lien Mot de passe oublié */}
-            <a href="#" className="text-blue-500 text-sm block text-right mb-2"> {/* Réduit la marge en bas (mb-3 à mb-2) */}
+            <Link href="/forgotPassword" className="text-blue-500 text-sm block text-right mb-2"> {/* Réduit la marge en bas (mb-3 à mb-2) */}
               Mot de passe oublié ?
-            </a>
+            </Link>
 
             {/* Bouton Connexion */}
             <button

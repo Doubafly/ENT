@@ -61,7 +61,6 @@ export default function HomePage() {
         if (response.ok) {
           const userData = await response.json();
         
-
           setUser({
             id_utilisateur: userData.user.id_utilisateur,
             email: userData.user.email,

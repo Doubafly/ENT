@@ -292,13 +292,7 @@ export default function ClasseList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-200 shadow-md flex items-center gap-2"
-        >
-          <span>+</span>
-          <span>Ajouter une classe</span>
-        </button>
+      
       </div>
 
       {/* Tableau des classes */}

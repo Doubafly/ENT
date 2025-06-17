@@ -53,7 +53,7 @@ const EmploiDuTempsEnseignant = ({
   enseignantId: number;
 }) => {
   const [emplois, setEmplois] = useState<Emploi[]>([]);
-  const [classeSelectionnee, setClasseSelectionnee] = useState("");
+  const [classeSelectionnee, setClasseSelectionnee] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -61,30 +61,54 @@ const EmploiDuTempsEnseignant = ({
     const fetchEmplois = async () => {
       try {
         setLoading(true);
+        setError("");
+        
         const response = await fetch(
           `/api/emploisDuTemps?enseignantId=${enseignantId}`
         );
-        if (!response.ok) throw new Error("Erreur de chargement des emplois");
+        
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
 
         const data = await response.json();
-        setEmplois(data.emploisDuTemps || []);
+        
+        // Vérification des données reçues
+        if (!Array.isArray(data.emploisDuTemps)) {
+          throw new Error("Format de données invalide");
+        }
+
+        // Filtrage initial pour ne garder que les emplois de l'enseignant
+        const emploisFiltres = data.emploisDuTemps.filter(
+          (emploi: Emploi) => emploi.cours?.enseignant?.id_enseignant === enseignantId
+        );
+
+        setEmplois(emploisFiltres);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Erreur inconnue");
+        console.error("Erreur de récupération des emplois:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEmplois();
+    if (enseignantId) {
+      fetchEmplois();
+    }
   }, [enseignantId]);
 
   // Extraire les classes uniques enseignées avec leurs IDs
   const classesEnseignees = emplois.reduce((acc, emploi) => {
+    // Vérification de la structure des données
+    if (!emploi.cours?.filiere_module?.filiere) {
+      return acc;
+    }
+console.log("classe enseignée:", classesEnseignees);
+
     const filiere = emploi.cours.filiere_module.filiere;
     const classeKey = `${filiere.niveau} ${filiere.nom}`;
-    const classeExistante = acc.find((c) => c.id === filiere.id_filiere);
 
-    if (!classeExistante) {
+    if (!acc.some(c => c.id === filiere.id_filiere)) {
       acc.push({
         id: filiere.id_filiere,
         nom: classeKey,
@@ -96,37 +120,42 @@ const EmploiDuTempsEnseignant = ({
 
   // Filtrer les emplois par classe sélectionnée
   const emploisFiltres = classeSelectionnee
-    ? emplois.filter(
-        (emploi) =>
-          `${emploi.cours.filiere_module.filiere.niveau} ${emploi.cours.filiere_module.filiere.nom}` ===
-          classeSelectionnee
-      )
+    ? emplois.filter((emploi) => {
+        const filiere = emploi.cours.filiere_module.filiere;
+        const classeKey = `${filiere.niveau} ${filiere.nom}`;
+        return classeKey === classeSelectionnee;
+      })
     : emplois;
 
   // Créer le tableau d'emploi du temps
   const emploiDuTemps = creerTableauVide();
+  
   emploisFiltres.forEach((emploi) => {
-    const heureDebut = new Date(emploi.heure_debut).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-    const heureFin = new Date(emploi.heure_fin).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-    const heureKey = `${heureDebut}-${heureFin}`;
+    try {
+      const heureDebut = new Date(emploi.heure_debut).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      const heureFin = new Date(emploi.heure_fin).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+      const heureKey = `${heureDebut}-${heureFin}`;
 
-    if (emploiDuTemps[heureKey]?.[emploi.jour] !== undefined) {
-      emploiDuTemps[heureKey][emploi.jour] = {
-        matiere: emploi.cours.filiere_module.module.nom,
-        salle: emploi.salle,
-      };
+      if (emploiDuTemps[heureKey]?.[emploi.jour] !== undefined) {
+        emploiDuTemps[heureKey][emploi.jour] = {
+          matiere: emploi.cours.filiere_module.module.nom,
+          salle: emploi.salle,
+        };
+      }
+    } catch (error) {
+      console.error("Erreur de format de date:", error);
     }
   });
 
-  if (loading) return <div className="p-4">Chargement en cours...</div>;
+  // if (loading) return <div className="p-4">Chargement en cours...</div>;
   if (error) return <div className="p-4 text-red-500">Erreur: {error}</div>;
 
   return (

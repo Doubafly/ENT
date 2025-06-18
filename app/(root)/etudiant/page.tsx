@@ -29,7 +29,7 @@ export default function Home() {
           }
 
           setUser(userData.user);
-          fetchStats(matricule);
+          fetchStats(matricule,userData.user.id_utilisateur);
         } else {
           console.error("L'utilisateur connecté n'est pas un étudiant.");
         }
@@ -41,7 +41,7 @@ export default function Home() {
       }
     }
 
-    async function fetchStats(matricule: any) {
+    async function fetchStats(matricule: any, id_utilisateur: number) {
       try {
         const coursd = await fetch("/api/cours");
         const coursData = await coursd.json();
@@ -87,6 +87,14 @@ export default function Home() {
             note_class: any;  }) =>
             ((note?.note_class || 0) + (note?.note_exam || 0)) / 2 < 10
         ).length;
+        const nombreAbsences = coursFiltres.reduce((acc, cours) => {
+      if (!cours.Absences) return acc;
+      // On compte seulement les absences de l'étudiant connecté
+      const absencesEtudiant = cours.Absences.filter(
+        (a) => a.utilisateur?.id_utilisateur === id_utilisateur
+      );
+      return acc + absencesEtudiant.length;
+    }, 0);
 
         setStatData([
           {
@@ -94,7 +102,11 @@ export default function Home() {
             value: nombreModules,
             nom: "Nombre Module",
           },
-          { link: "/icons/friends.png", value: "0", nom: "Nombre Abscence" },
+          {
+            link: "/icons/friends.png",
+            value: nombreAbsences,
+            nom: "Nombre Abscence",
+          },
           {
             link: "/icons/teach.png",
             value: nombreModulesValides,

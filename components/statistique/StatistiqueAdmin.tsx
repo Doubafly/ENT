@@ -1,34 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Bar, Doughnut } from "react-chartjs-2";
+import { Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
   PointElement,
   LineElement,
-  LineController,
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler,
 } from "chart.js";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { motion } from "framer-motion";
 import { FaUserGraduate, FaChalkboardTeacher, FaBook, FaUsers } from "react-icons/fa";
-import MiniSmallIconCard from "../card/MiniIconCard";
 import "./statistique.css";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ArcElement,
   PointElement,
   LineElement,
-  LineController
+  ArcElement,
+  Tooltip,
+  Legend,
+  Filler,
+  ChartDataLabels
 );
 
 interface StatistiqueAdminProps {
@@ -48,18 +45,14 @@ interface Cours {
   };
   enseignant?: {
     id: string;
+    utilisateur: {
+      sexe: string;
+    };
   };
 }
 
-const iconMap: Record<string, JSX.Element> = {
-  "Étudiants": <FaUserGraduate className="text-blue-500 text-2xl" />,
-  "Enseignants": <FaChalkboardTeacher className="text-green-500 text-2xl" />,
-  "Cours": <FaBook className="text-purple-500 text-2xl" />,
-  "Utilisateurs": <FaUsers className="text-yellow-500 text-2xl" />,
-};
-
 const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
-  const [barData, setBarData] = useState<any>(null);
+  const [lineData, setLineData] = useState<any>(null);
   const [doughnutData, setDoughnutData] = useState<any>(null);
 
   useEffect(() => {
@@ -70,6 +63,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
         const cours: Cours[] = data.cours;
 
         const enseignantsParFiliere: Record<string, Set<string>> = {};
+        let nbEtudH = 0, nbEtudF = 0, nbEnsH = 0, nbEnsF = 0;
 
         cours.forEach((coursItem) => {
           const nomFiliere = coursItem.filiere_module.filiere.nom;
@@ -80,45 +74,70 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
               enseignantsParFiliere[nomFiliere] = new Set();
             }
             enseignantsParFiliere[nomFiliere].add(enseignantId);
+
+            const sexeEns = coursItem.enseignant?.utilisateur?.sexe;
+            if (sexeEns === "M") nbEnsH++;
+            else if (sexeEns === "F") nbEnsF++;
+          }
+
+          coursItem.filiere_module.filiere.etudiants?.forEach((etudiant) => {
+            const sexe = etudiant.utilisateur?.sexe;
+            if (sexe === "M") nbEtudH++;
+            else if (sexe === "F") nbEtudF++;
+          });
+        });
+
+        const etudiantsParFiliere: Record<string, number> = {};
+        cours.forEach((coursItem) => {
+          const filiere = coursItem.filiere_module.filiere.nom;
+          const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
+          if (!etudiantsParFiliere[filiere]) {
+            etudiantsParFiliere[filiere] = nbEtudiants;
           }
         });
 
+        const labels = Object.keys(enseignantsParFiliere);
+
         const barData = {
-          labels: Object.keys(enseignantsParFiliere),
+          labels,
           datasets: [
             {
               label: "Enseignants",
-              data: Object.values(enseignantsParFiliere).map((set) => set.size),
-              borderColor: "#8A2BE2",
-              backgroundColor: "rgb(49, 226, 43)",
+              data: labels.map((filiere) => enseignantsParFiliere[filiere]?.size || 0),
+              borderColor: "#4F46E5",
+              backgroundColor: "rgba(79, 70, 229, 0.2)",
               tension: 0.4,
               fill: true,
+              pointBackgroundColor: "#4F46E5",
+            },
+            {
+              label: "Étudiants",
+              data: labels.map((filiere) => etudiantsParFiliere[filiere] || 0),
+              borderColor: "#10B981",
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#10B981",
             },
           ],
         };
 
-        const etudiantsParFiliere: Record<string, number> = {};
-
-        cours.forEach((coursItem) => {
-          const filiere = coursItem.filiere_module.filiere.nom;
-          coursItem.filiere_module.filiere.etudiants?.forEach(() => {
-            etudiantsParFiliere[filiere] = (etudiantsParFiliere[filiere] || 0) + 1;
-          });
-        });
-
         const doughnutData = {
-          labels: Object.keys(etudiantsParFiliere),
+          labels: ["Étudiants Hommes", "Étudiants Femmes", "Enseignants Hommes", "Enseignants Femmes"],
           datasets: [
             {
-              data: Object.values(etudiantsParFiliere),
-              backgroundColor: ["#3B82F6", "#F97316", "#FACC15"],
-              hoverBackgroundColor: ["#60A5FA", "#FB923C", "#FDE047"],
+              data: [nbEtudH, nbEtudF, nbEnsH, nbEnsF],
+              backgroundColor: ["#3B82F6", "#F472B6", "#10B981", "#F59E0B"],
+              hoverBackgroundColor: ["#60A5FA", "#FB7185", "#34D399", "#FBBF24"],
               borderWidth: 0,
             },
           ],
         };
 
-        setBarData(barData);
+        console.log({ nbEtudH, nbEtudF, nbEnsH, nbEnsF });
+
+
+        setLineData(barData);
         setDoughnutData(doughnutData);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques admin :", error);
@@ -135,19 +154,21 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {menuStat.map((stat, index) => (
           <motion.div
-            key={index}
-            className="bg-white shadow-md rounded-xl p-5 text-center hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.05 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
-            <div className="mb-2 flex justify-center">
-              {iconMap[stat.nom] || <FaUsers className="text-gray-400 text-2xl" />}
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}+</div>
-            <div className="text-sm text-gray-500 mt-1">{stat.nom}</div>
-          </motion.div>
+          key={index}
+          className={`rounded-xl p-5 text-center hover:shadow-lg transition-all shadow-md ${stat.color || 'bg-gray-100'} text-white`}
+          whileHover={{ scale: 1.05 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+        >
+          <div className="mb-3 flex justify-center">
+          {stat.icon}
+        </div>
+
+          <div className="text-3xl font-bold">{stat.value}</div>
+          <div className="text-sm mt-1">{stat.nom}</div>
+        </motion.div>
+
         ))}
       </div>
 
@@ -158,8 +179,8 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Enseignants</h3>
-          {barData && <Bar data={barData} options={{ responsive: true, plugins: { legend: { display: false } } }} />}
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Enseignants & Étudiants</h3>
+          {lineData && <Line data={lineData} options={{ responsive: true, plugins: { legend: { display: true } } }} />}
         </motion.div>
 
         <motion.div
@@ -168,16 +189,24 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Étudiants</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition par Sexe</h3>
           {doughnutData && (
             <Doughnut
               data={doughnutData}
               options={{
-                cutout: "70%",
+                cutout: "65%",
                 plugins: {
                   legend: {
                     display: true,
                     position: "bottom",
+                  },
+                  datalabels: {
+                    color: "#000",
+                    formatter: (value: number, context: any) => {
+                      const total = context.chart.data.datasets[0].data.reduce((acc: number, val: number) => acc + val, 0);
+                      const percentage = ((value / total) * 100).toFixed(1);
+                      return `${percentage}%`;
+                    },
                   },
                 },
               }}

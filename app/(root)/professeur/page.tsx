@@ -9,6 +9,7 @@ export default function Home() {
     { link: "/icons/text-books.png", value: "0", nom: "Nombre Filiere" },
     { link: "/icons/friends.png", value: "0", nom: "Nombre etudiant" },
     { link: "/icons/teach.png", value: "0", nom: "Nombre Module" },
+    { link: "/icons/absent.png", value: "0", nom: "Mes Absences" },
   ]);
 
   useEffect(() => {
@@ -80,6 +81,16 @@ export default function Home() {
         );
         const modulesCount = modulesSet.size;
 
+        // Calcul du nombre d'absences de l'enseignant lui-même
+        const absencesEnseignant = coursEnseignant.reduce((acc: number, cours: any) => {
+          if (!cours.Absences) return acc;
+          // On compte seulement les absences de l'enseignant connecté
+          const absences = cours.Absences.filter(
+            (a: any) => a.utilisateur?.id_utilisateur === enseignantId
+          );
+          return acc + absences.length;
+        }, 0);
+
         // Mise à jour des statistiques
         setStatData([
           {
@@ -96,6 +107,11 @@ export default function Home() {
             link: "/icons/teach.png",
             value: modulesCount.toString(),
             nom: "Nombre Module",
+          },
+          {
+            link: "/icons/absent.png",
+            value: absencesEnseignant.toString(),
+            nom: "Mes Absences",
           },
         ]);
       } catch (error) {

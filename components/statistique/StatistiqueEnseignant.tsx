@@ -37,6 +37,7 @@ const StatistiqueEnseignant = () => {
     { link: "/icons/text-books.png", value: "0", nom: "Nombre Filiere" },
     { link: "/icons/friends.png", value: "0", nom: "Nombre etudiant" },
     { link: "/icons/teach.png", value: "0", nom: "Nombre Module" },
+    { link: "/icons/absent.png", value: "0", nom: "Mes Absences" },
   ]);
 
   useEffect(() => {
@@ -70,6 +71,10 @@ const StatistiqueEnseignant = () => {
             c.filiere_module.filiere.etudiants?.map((e: any) => e.matricule) || []
           )
         );
+        const absencesEnseignant = coursEnseignant.reduce(
+          (acc: number, c: any) => acc + (c.absences?.length || 0),
+          0
+        );
   
         setMenuStat([
           {
@@ -86,6 +91,11 @@ const StatistiqueEnseignant = () => {
             link: "/icons/teach.png",
             value: modulesSet.size.toString(),
             nom: "Nombre Module",
+          },
+          {
+            link: "/icons/friends.png",
+            value: absencesEnseignant.toString(),
+            nom: "Mes Absences",
           },
         ]);
   

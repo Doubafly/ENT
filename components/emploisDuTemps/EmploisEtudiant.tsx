@@ -94,7 +94,6 @@ const EmploiDuTempsEtudiant = () => {
 
     getUserData();
   }, []);
-
   useEffect(() => {
     if (!idEtudiant) return;
 

@@ -11,6 +11,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { motion } from "framer-motion";
 import { FaUserGraduate, FaChalkboardTeacher, FaBook, FaUsers } from "react-icons/fa";
 import "./statistique.css";
@@ -23,9 +24,9 @@ ChartJS.register(
   ArcElement,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  ChartDataLabels
 );
-
 
 interface StatistiqueAdminProps {
   menuStat: {
@@ -44,6 +45,9 @@ interface Cours {
   };
   enseignant?: {
     id: string;
+    utilisateur: {
+      sexe: string;
+    };
   };
 }
 
@@ -66,6 +70,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
         const cours: Cours[] = data.cours;
 
         const enseignantsParFiliere: Record<string, Set<string>> = {};
+        let nbEtudH = 0, nbEtudF = 0, nbEnsH = 0, nbEnsF = 0;
 
         cours.forEach((coursItem) => {
           const nomFiliere = coursItem.filiere_module.filiere.nom;
@@ -76,52 +81,70 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
               enseignantsParFiliere[nomFiliere] = new Set();
             }
             enseignantsParFiliere[nomFiliere].add(enseignantId);
+
+            const sexeEns = coursItem.enseignant?.utilisateur?.sexe;
+            if (sexeEns === "M") nbEnsH++;
+            else if (sexeEns === "F") nbEnsF++;
           }
+
+          coursItem.filiere_module.filiere.etudiants?.forEach((etudiant) => {
+            const sexe = etudiant.utilisateur?.sexe;
+            if (sexe === "M") nbEtudH++;
+            else if (sexe === "F") nbEtudF++;
+          });
         });
 
-        const lineData = {
-          labels: Object.keys(enseignantsParFiliere),
-          datasets: [
-            {
-              label: "Enseignants",
-              data: Object.values(enseignantsParFiliere).map((set) => set.size),
-              fill: true,
-              borderColor: "#8A2BE2",
-              backgroundColor: "rgba(138, 43, 226, 0.2)",
-              tension: 0.4,
-              pointBackgroundColor: "#fff",
-              pointBorderColor: "#8A2BE2",
-              pointRadius: 5,
-            },
-          ],
-        };
-
         const etudiantsParFiliere: Record<string, number> = {};
-
         cours.forEach((coursItem) => {
           const filiere = coursItem.filiere_module.filiere.nom;
           const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
-
-          // Ne pas écraser si on a déjà compté cette filière
           if (!etudiantsParFiliere[filiere]) {
             etudiantsParFiliere[filiere] = nbEtudiants;
           }
         });
 
+        const labels = Object.keys(enseignantsParFiliere);
 
-        const doughnutData = {
-          labels: Object.keys(etudiantsParFiliere),
+        const barData = {
+          labels,
           datasets: [
             {
-              data: Object.values(etudiantsParFiliere),
-              backgroundColor: ["#3B82F6", "#F97316", "#FACC15"],
-              hoverBackgroundColor: ["#60A5FA", "#FB923C", "#FDE047"],
+              label: "Enseignants",
+              data: labels.map((filiere) => enseignantsParFiliere[filiere]?.size || 0),
+              borderColor: "#4F46E5",
+              backgroundColor: "rgba(79, 70, 229, 0.2)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#4F46E5",
+            },
+            {
+              label: "Étudiants",
+              data: labels.map((filiere) => etudiantsParFiliere[filiere] || 0),
+              borderColor: "#10B981",
+              backgroundColor: "rgba(16, 185, 129, 0.2)",
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#10B981",
+            },
+          ],
+        };
+
+        const doughnutData = {
+          labels: ["Étudiants Hommes", "Étudiants Femmes", "Enseignants Hommes", "Enseignants Femmes"],
+          datasets: [
+            {
+              data: [nbEtudH, nbEtudF, nbEnsH, nbEnsF],
+              backgroundColor: ["#3B82F6", "#F472B6", "#10B981", "#F59E0B"],
+              hoverBackgroundColor: ["#60A5FA", "#FB7185", "#34D399", "#FBBF24"],
               borderWidth: 0,
             },
           ],
         };
 
-        setLineData(lineData);
+        console.log({ nbEtudH, nbEtudF, nbEnsH, nbEnsF });
+
+
+        setLineData(barData);
         setDoughnutData(doughnutData);
       } catch (error) {
         console.error("Erreur lors de la récupération des statistiques admin :", error);
@@ -161,8 +184,8 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Enseignants</h3>
-          {lineData && <Line data={lineData} options={{ responsive: true, plugins: { legend: { display: false } } }} />}
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Enseignants & Étudiants</h3>
+          {lineData && <Line data={lineData} options={{ responsive: true, plugins: { legend: { display: true } } }} />}
         </motion.div>
 
         <motion.div
@@ -171,7 +194,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition Étudiants</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">Répartition par Sexe</h3>
           {doughnutData && (
             <Doughnut
               data={doughnutData}
@@ -181,6 +204,14 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
                   legend: {
                     display: true,
                     position: "bottom",
+                  },
+                  datalabels: {
+                    color: "#000",
+                    formatter: (value: number, context: any) => {
+                      const total = context.chart.data.datasets[0].data.reduce((acc: number, val: number) => acc + val, 0);
+                      const percentage = ((value / total) * 100).toFixed(1);
+                      return `${percentage}%`;
+                    },
                   },
                 },
               }}

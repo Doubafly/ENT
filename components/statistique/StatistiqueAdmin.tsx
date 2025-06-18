@@ -66,7 +66,7 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
 const etudiantsParFiliere: Record<string, number> = {};
 
 const etudiantsDejaComptes = new Set<string>();
-const enseignantsDejaComptes = new Set<string>(); // 👈 nouveau
+const enseignantsDejaComptes = new Set<string>(); 
 
 let nbEtudH = 0, nbEtudF = 0, nbEnsH = 0, nbEnsF = 0;
 
@@ -74,14 +74,14 @@ cours.forEach((coursItem) => {
   const nomFiliere = coursItem.filiere_module.filiere.nom;
   const enseignantId = coursItem.enseignant?.id;
 
-  // ⬇️ Comptage des enseignants par filière
+  // Comptage des enseignants par filière
   if (enseignantId) {
     if (!enseignantsParFiliere[nomFiliere]) {
       enseignantsParFiliere[nomFiliere] = new Set();
     }
     enseignantsParFiliere[nomFiliere].add(enseignantId);
 
-    // ⬇️ Comptage unique des enseignants par sexe
+    // Comptage unique des enseignants par sexe
     if (!enseignantsDejaComptes.has(enseignantId)) {
       enseignantsDejaComptes.add(enseignantId);
       const sexeEns = coursItem.enseignant?.utilisateur?.sexe;
@@ -90,7 +90,7 @@ cours.forEach((coursItem) => {
     }
   }
 
-  // ⬇️ Comptage unique des étudiants par sexe
+  // Comptage unique des étudiants par sexe
   coursItem.filiere_module.filiere.etudiants?.forEach((etudiant) => {
     const idEtudiant = etudiant.id || etudiant.utilisateur?.id;
     if (!etudiantsDejaComptes.has(idEtudiant)) {
@@ -101,7 +101,7 @@ cours.forEach((coursItem) => {
     }
   });
 
-  // ⬇️ Comptage des étudiants par filière
+  // Comptage des étudiants par filière
   const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
   if (!etudiantsParFiliere[nomFiliere]) {
     etudiantsParFiliere[nomFiliere] = nbEtudiants;

@@ -7,7 +7,7 @@ export default function SendEmail(vEmail: string,typeEnvoie : string, id:string)
 
     const reset_code = Math.floor(100000 + Math.random() * 900000);
     console.log("Code généré:", reset_code);
-
+    
     // Envoi du code par email
     fetch("https://codingmailer.onrender.com/send-email", {
       method: "POST",
@@ -30,12 +30,14 @@ export default function SendEmail(vEmail: string,typeEnvoie : string, id:string)
       });
       if (typeEnvoie === "forgotPassword") {
         const handleSub = async () => {
-          const tokenExpiration = new Date(Date.now() + 20 * 60 * 1000);
+          const tokenExpiration = new Date(Date.now() + 20 * 60 * 1000).toISOString();
             const payload = {
               email:email,
-              token:reset_code,
+              token:reset_code.toString(),
               expiresAt:tokenExpiration,
             };
+            console.log(payload);
+            
             try {
               const response = await fetch("/api/forgotPassword", {
                 method: "POST",
@@ -45,10 +47,9 @@ export default function SendEmail(vEmail: string,typeEnvoie : string, id:string)
                 body: JSON.stringify(payload),
               });
       
-          }catch (error) {
-            console.log("Erreur de serveur", error);
-            
-          }
+            }catch (error) {
+              console.log("Erreur de serveur", error);
+            }
         };
         handleSub();
       }

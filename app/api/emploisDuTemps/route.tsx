@@ -18,6 +18,7 @@ export async function GET() {
               select: {
                 filiere: {
                   select: {
+                    id_filiere:true,
                     nom: true,
                     niveau: true,
                   },

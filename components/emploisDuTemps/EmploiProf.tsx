@@ -36,8 +36,16 @@ const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 const creerTableauVide = () => {
   const tableau: Record<
     string,
-    Record<string, { matiere: string; salle: string } | null>
+    Record<
+      string,
+      {
+        matiere: string;
+        enseignant: string;
+        salle: string;
+      } | null
+    >
   > = {};
+
   heures.forEach((h) => {
     tableau[h] = {};
     jours.forEach((j) => {
@@ -47,116 +55,196 @@ const creerTableauVide = () => {
   return tableau;
 };
 
-const EmploiDuTempsEnseignant = ({
-  enseignantId,
-}: {
-  enseignantId: number;
-}) => {
+const EmploiDuTempsEnseignant = () => {
   const [emplois, setEmplois] = useState<Emploi[]>([]);
   const [classeSelectionnee, setClasseSelectionnee] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [idEnseignant, setIdEnseignant] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchEmplois = async () => {
+    const getUserData = () => {
+      try {
+        const userDataString = localStorage.getItem("user");
+        if (!userDataString) {
+          throw new Error("Aucune donnée utilisateur trouvée dans le localStorage");
+        }
+
+        const userData = JSON.parse(userDataString);
+        console.log("Données complètes du localStorage:", userData);
+
+        if (userData?.user?.enseignant?.id) {
+          console.log("ID enseignant trouvé:", userData.user.enseignant.id);
+          setIdEnseignant(userData.user.enseignant.id);
+        } else if (userData?.user?.id) {
+          console.log("ID utilisateur trouvé:", userData.user.id);
+          setIdEnseignant(userData.user.id);
+        } else {
+          throw new Error("Structure des données utilisateur inattendue");
+        }
+      } catch (err) {
+        console.error("Erreur de lecture du localStorage:", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+        setLoading(false);
+      }
+    };
+
+    getUserData();
+  }, []);
+
+  useEffect(() => {
+    if (!idEnseignant) return;
+
+    const fetchEmploiDuTemps = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/emploisDuTemps?enseignantId=${enseignantId}`
-        );
-        if (!response.ok) throw new Error("Erreur de chargement des emplois");
+
+        // 1. Récupérer les données enseignant
+        const response = await fetch(`/api/utilisateurs/enseignants/${idEnseignant}`);
+        if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
         const data = await response.json();
-        setEmplois(data.emploisDuTemps || []);
+        console.log("Réponse API enseignant:", data.enseignant[0].id);
+
+        // 2. Récupérer TOUS les emplois du temps
+        const emploiResponse = await fetch("/api/emploisDuTemps");
+        if (!emploiResponse.ok) {
+          throw new Error("Erreur de chargement des emplois");
+        }
+
+        const emploiData = await emploiResponse.json();
+        console.log("Tous les emplois:", emploiData);
+
+        
+        // 3. Filtrer côté client pour ne garder que ceux de l'enseignant
+        const emploisFiltres = emploiData.emploisDuTemps.filter(
+          (emploi: Emploi) => {
+            return emploi.cours?.enseignant?.utilisateur.id_utilisateur === data.enseignant[0].id;
+          }
+        );
+
+        console.log("Emplois filtrés:", emploisFiltres);
+        setEmplois(emploisFiltres);
       } catch (err) {
+        console.error("Erreur fetch:", err);
         setError(err instanceof Error ? err.message : "Erreur inconnue");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEmplois();
-  }, [enseignantId]);
+    fetchEmploiDuTemps();
+  }, [idEnseignant]);
 
-  // Extraire les classes uniques enseignées avec leurs IDs
+  // Extraire les classes uniques enseignées
   const classesEnseignees = emplois.reduce((acc, emploi) => {
     const filiere = emploi.cours.filiere_module.filiere;
     const classeKey = `${filiere.niveau} ${filiere.nom}`;
-    const classeExistante = acc.find((c) => c.id === filiere.id_filiere);
-
-    if (!classeExistante) {
+    
+    if (!acc.some(c => c.id === filiere.id_filiere)) {
       acc.push({
         id: filiere.id_filiere,
-        nom: classeKey,
+        nom: classeKey
       });
     }
-
     return acc;
-  }, [] as { id: number; nom: string }[]);
+  },
+   [] as { id: number; nom: string }[]);
+   console.log("Classes enseignées:", classesEnseignees);
+   
 
   // Filtrer les emplois par classe sélectionnée
   const emploisFiltres = classeSelectionnee
-    ? emplois.filter(
-        (emploi) =>
-          `${emploi.cours.filiere_module.filiere.niveau} ${emploi.cours.filiere_module.filiere.nom}` ===
-          classeSelectionnee
-      )
+    ? emplois.filter(emploi => {
+        const filiere = emploi.cours.filiere_module.filiere;
+        return `${filiere.niveau} ${filiere.nom}` === classeSelectionnee;
+      })
     : emplois;
 
-  // Créer le tableau d'emploi du temps
-  const emploiDuTemps = creerTableauVide();
-  emploisFiltres.forEach((emploi) => {
-    const heureDebut = new Date(emploi.heure_debut).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-    const heureFin = new Date(emploi.heure_fin).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-    const heureKey = `${heureDebut}-${heureFin}`;
+  const formatHeureAffichage = (dateTime: string) => {
+    try {
+      const date = new Date(dateTime);
+      return date.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
+    } catch {
+      console.warn("Format de date invalide:", dateTime);
+      return "00:00";
+    }
+  };
 
-    if (emploiDuTemps[heureKey]?.[emploi.jour] !== undefined) {
-      emploiDuTemps[heureKey][emploi.jour] = {
-        matiere: emploi.cours.filiere_module.module.nom,
-        salle: emploi.salle,
-      };
+  // Préparer les données pour l'affichage
+  const emploiDuTemps = creerTableauVide();
+
+  emploisFiltres.forEach((emploi) => {
+    try {
+      const heureDebut = formatHeureAffichage(emploi.heure_debut);
+      const heureFin = formatHeureAffichage(emploi.heure_fin);
+      const heureKey = `${heureDebut}-${heureFin}`;
+
+      if (emploiDuTemps[heureKey]?.[emploi.jour] !== undefined) {
+        emploiDuTemps[heureKey][emploi.jour] = {
+          matiere: emploi.cours.filiere_module.module.nom,
+          enseignant: `${emploi.cours.enseignant.utilisateur.prenom} ${emploi.cours.enseignant.utilisateur.nom}`,
+          salle: emploi.salle,
+        };
+      }
+    } catch (err) {
+      console.error("Erreur de traitement de l'emploi:", emploi, err);
     }
   });
 
-  if (loading) return <div className="p-4">Chargement en cours...</div>;
-  if (error) return <div className="p-4 text-red-500">Erreur: {error}</div>;
+  if (loading) {
+    return <div className="p-4 text-center">Chargement en cours...</div>;
+  }
 
-  return (
-    <div className="p-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
-          <h1 className="text-xl font-bold">Mon Emploi du Temps Enseignant</h1>
-          <select
-            className="flex-1 min-w-[350px] p-3 border rounded-lg text-sm"
-            value={classeSelectionnee}
-            onChange={(e) => setClasseSelectionnee(e.target.value)}
-            disabled={loading}
+  if (error) {
+    return (
+      <div className="p-4 text-center">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <h2 className="font-bold">Erreur</h2>
+          <p>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-red-100 hover:bg-red-200 rounded"
           >
-            <option value="">Toutes mes classes</option>
-            {classesEnseignees.map((classe) => (
-              <option key={classe.id} value={classe.nom}>
-                {classe.nom}
-              </option>
-            ))}
-          </select>
+            Réessayer
+          </button>
         </div>
       </div>
+    );
+  }
 
-      <div className="overflow-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="border p-2">Heure</th>
+  return (
+    <div className="p-4 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        Mon Emploi du Temps Enseignant
+      </h1>
+
+      <div className="mb-4">
+        <select
+          className="p-2 border rounded"
+          value={classeSelectionnee}
+          onChange={(e) => setClasseSelectionnee(e.target.value)}
+        >
+          <option value="">Toutes mes classes</option>
+          {classesEnseignees.map((classe) => (
+            <option key={classe.id} value={classe.nom}>
+              {classe.nom}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 text-left min-w-[120px]">Heure</th>
               {jours.map((jour) => (
-                <th key={jour} className="border p-2">
+                <th key={jour} className="p-3 text-center min-w-[150px]">
                   {jour}
                 </th>
               ))}
@@ -164,20 +252,27 @@ const EmploiDuTempsEnseignant = ({
           </thead>
           <tbody>
             {heures.map((heure) => (
-              <tr key={heure} className="hover:bg-gray-50">
-                <td className="border p-2 font-medium">{heure}</td>
+              <tr key={heure} className="border-t hover:bg-gray-50">
+                <td className="p-3 font-medium">{heure}</td>
                 {jours.map((jour) => {
                   const seance = emploiDuTemps[heure]?.[jour];
                   return (
-                    <td key={jour} className="border p-2 text-center text-sm">
+                    <td key={jour} className="p-3">
                       {seance ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">{seance.matiere}</span>
-                          <span className="text-gray-500 text-xs">
+                        <div className="flex flex-col items-center text-center">
+                          <span className="font-medium text-gray-800">
+                            {seance.matiere}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {seance.enseignant}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">
                             {seance.salle}
                           </span>
                         </div>
-                      ) : null}
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                   );
                 })}

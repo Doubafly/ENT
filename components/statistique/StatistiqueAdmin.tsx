@@ -51,13 +51,6 @@ interface Cours {
   };
 }
 
-const iconMap: Record<string, JSX.Element> = {
-  "Étudiants": <FaUserGraduate className="text-blue-500 text-3xl" />,
-  "Enseignants": <FaChalkboardTeacher className="text-green-500 text-3xl" />,
-  "Cours": <FaBook className="text-purple-500 text-3xl" />,
-  "Utilisateurs": <FaUsers className="text-yellow-500 text-3xl" />,
-};
-
 const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
   const [lineData, setLineData] = useState<any>(null);
   const [doughnutData, setDoughnutData] = useState<any>(null);
@@ -161,19 +154,21 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {menuStat.map((stat, index) => (
           <motion.div
-            key={index}
-            className="bg-white shadow-md rounded-xl p-5 text-center hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.05 }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.1 }}
-          >
-            <div className="mb-2 flex justify-center">
-              {iconMap[stat.nom] || <FaUsers className="text-gray-400 text-3xl" />}
-            </div>
-            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-            <div className="text-sm text-gray-500 mt-1">{stat.nom}</div>
-          </motion.div>
+          key={index}
+          className={`rounded-xl p-5 text-center hover:shadow-lg transition-all shadow-md ${stat.color || 'bg-gray-100'} text-white`}
+          whileHover={{ scale: 1.05 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: index * 0.1 }}
+        >
+          <div className="mb-3 flex justify-center">
+          {stat.icon}
+        </div>
+
+          <div className="text-3xl font-bold">{stat.value}</div>
+          <div className="text-sm mt-1">{stat.nom}</div>
+        </motion.div>
+
         ))}
       </div>
 

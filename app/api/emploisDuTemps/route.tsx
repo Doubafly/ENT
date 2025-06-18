@@ -34,6 +34,7 @@ export async function GET() {
               select: {
                 utilisateur: {
                   select: {
+                    id_utilisateur:true,
                     nom: true,
                     prenom: true,
                     telephone: true,

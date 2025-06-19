@@ -218,71 +218,74 @@ const EmploiDuTempsEnseignant = () => {
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        Mon Emploi du Temps Enseignant
-      </h1>
+  <div className="p-4 max-w-7xl mx-auto">
+    <h1 className="text-3xl font-bold mb-6 text-center text-blue-800 underline decoration-blue-300 underline-offset-8">
+  Emploi du Temps de la Semaine
+</h1>
 
-      <div className="mb-4">
-        <select
-          className="p-2 border rounded"
-          value={classeSelectionnee}
-          onChange={(e) => setClasseSelectionnee(e.target.value)}
-        >
-          <option value="">Toutes mes classes</option>
-          {classesEnseignees.map((classe) => (
-            <option key={classe.id} value={classe.nom}>
-              {classe.nom}
-            </option>
-          ))}
-        </select>
-      </div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="w-full">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left min-w-[120px]">Heure</th>
-              {jours.map((jour) => (
-                <th key={jour} className="p-3 text-center min-w-[150px]">
-                  {jour}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {heures.map((heure) => (
-              <tr key={heure} className="border-t hover:bg-gray-50">
-                <td className="p-3 font-medium">{heure}</td>
-                {jours.map((jour) => {
-                  const seance = emploiDuTemps[heure]?.[jour];
-                  return (
-                    <td key={jour} className="p-3">
-                      {seance ? (
-                        <div className="flex flex-col items-center text-center">
-                          <span className="font-medium text-gray-800">
-                            {seance.matiere}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {seance.enseignant}
-                          </span>
-                          <span className="text-xs text-gray-500 mt-1">
-                            {seance.salle}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    <div className="mb-4">
+  <select
+    className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    value={classeSelectionnee}
+    onChange={(e) => setClasseSelectionnee(e.target.value)}
+  >
+    <option value="">Toutes mes classes</option>
+    {classesEnseignees.map((classe) => (
+      <option key={classe.id} value={classe.nom}>
+        {classe.nom}
+      </option>
+    ))}
+  </select>
+</div>
+
+
+    <div className="overflow-x-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
+  <table className="min-w-full table-auto text-base text-gray-700">
+    <thead className="bg-gradient-to-r from-blue-100 to-blue-200 text-gray-800 text-md uppercase">
+      <tr>
+        <th className="px-6 py-4 text-left border-r border-gray-300">Heure</th>
+        {jours.map((jour) => (
+          <th key={jour} className="px-6 py-4 text-center border-r border-gray-300">
+            {jour}
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {heures.map((heure) => (
+        <tr key={heure} className="border-t border-gray-200 hover:bg-gray-50 transition">
+          <td className="px-6 py-4 font-bold text-blue-600 bg-gray-50 border-r border-gray-200 text-lg">
+            {heure}
+          </td>
+          {jours.map((jour) => {
+            const seance = emploiDuTemps[heure]?.[jour];
+            return (
+              <td key={jour} className="px-6 py-4 text-center align-top border-r border-gray-100">
+                {seance ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-lg transition duration-200 ease-in-out">
+                    <div className="text-blue-900 font-semibold text-lg mb-1">
+                      {seance.matiere}
+                    </div>
+                    <div className="text-sm text-gray-700">{seance.enseignant}</div>
+                    <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
+                  </div>
+                ) : (
+                  <div className="text-gray-300 text-sm">–</div>
+                )}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+
+  </div>
+);
+
 };
 
 export default EmploiDuTempsEnseignant;

@@ -162,7 +162,7 @@ cours.forEach((coursItem) => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800">Dashboard Admin</h2>
+      {/* <h2 className="text-3xl font-semibold mb-6 text-gray-800">Dashboard Admin</h2> */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {menuStat.map((stat, index) => (

@@ -328,6 +328,7 @@ export async function GET() {
                 prenom: true,
                 email: true,
                 sexe: true,
+                telephone: true,
               },
             },
           },

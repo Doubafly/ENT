@@ -74,6 +74,7 @@ export async function GET() {
             notes: {
               select: {
                 id_note: true,
+                id_cours:true,
                 note_class: true,
                 note_exam: true,
                 commentaire_etudiant: true,

@@ -39,6 +39,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes ,onrecharge}) => {
   const [teacherComment, setTeacherComment] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
+console.log(classes);
 
   // Fonction pour compter le nombre total de réclamations dans une classe
   const countReclamations = (classe: Classe): number => {

@@ -77,10 +77,10 @@ const EmploiDuTempsEtudiant = () => {
 
         // Vérification approfondie de la structure
         if (userData?.user?.etudiant?.id) {
-          console.log("ID étudiant trouvé:", userData.user.etudiant.id);
+          console.log("ID étudiant trouvé:", userData.user);
           setIdEtudiant(userData.user.etudiant.id);
         } else if (userData?.user?.id) {
-          console.log("ID utilisateur trouvé:", userData.user.id);
+          console.log("ID utilisateur trouvé:", userData.user);
           setIdEtudiant(userData.user.id);
         } else {
           throw new Error("Structure des données utilisateur inattendue");

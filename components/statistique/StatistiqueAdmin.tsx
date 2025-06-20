@@ -56,100 +56,113 @@ const StatistiqueAdmin: React.FC<StatistiqueAdminProps> = ({ menuStat }) => {
   const [doughnutData, setDoughnutData] = useState<any>(null);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await fetch("/api/cours");
-        const data = await response.json();
-        const cours: Cours[] = data.cours;
+  async function fetchData() {
+    try {
+      const response = await fetch("/api/cours");
+      const data = await response.json();
+      const cours: Cours[] = data.cours;
 
-        const enseignantsParFiliere: Record<string, Set<string>> = {};
-        let nbEtudH = 0, nbEtudF = 0, nbEnsH = 0, nbEnsF = 0;
+      const enseignantsParFiliere: Record<string, Set<string>> = {};
+const etudiantsParFiliere: Record<string, number> = {};
 
-        cours.forEach((coursItem) => {
-          const nomFiliere = coursItem.filiere_module.filiere.nom;
-          const enseignantId = coursItem.enseignant?.id;
+const etudiantsDejaComptes = new Set<string>();
+const enseignantsDejaComptes = new Set<string>(); 
 
-          if (enseignantId) {
-            if (!enseignantsParFiliere[nomFiliere]) {
-              enseignantsParFiliere[nomFiliere] = new Set();
-            }
-            enseignantsParFiliere[nomFiliere].add(enseignantId);
+let nbEtudH = 0, nbEtudF = 0, nbEnsH = 0, nbEnsF = 0;
 
-            const sexeEns = coursItem.enseignant?.utilisateur?.sexe;
-            if (sexeEns === "M") nbEnsH++;
-            else if (sexeEns === "F") nbEnsF++;
-          }
+cours.forEach((coursItem) => {
+  const nomFiliere = coursItem.filiere_module.filiere.nom;
+  const enseignantId = coursItem.enseignant?.id;
 
-          coursItem.filiere_module.filiere.etudiants?.forEach((etudiant) => {
-            const sexe = etudiant.utilisateur?.sexe;
-            if (sexe === "M") nbEtudH++;
-            else if (sexe === "F") nbEtudF++;
-          });
-        });
-
-        const etudiantsParFiliere: Record<string, number> = {};
-        cours.forEach((coursItem) => {
-          const filiere = coursItem.filiere_module.filiere.nom;
-          const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
-          if (!etudiantsParFiliere[filiere]) {
-            etudiantsParFiliere[filiere] = nbEtudiants;
-          }
-        });
-
-        const labels = Object.keys(enseignantsParFiliere);
-
-        const barData = {
-          labels,
-          datasets: [
-            {
-              label: "Enseignants",
-              data: labels.map((filiere) => enseignantsParFiliere[filiere]?.size || 0),
-              borderColor: "#4F46E5",
-              backgroundColor: "rgba(79, 70, 229, 0.2)",
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: "#4F46E5",
-            },
-            {
-              label: "Étudiants",
-              data: labels.map((filiere) => etudiantsParFiliere[filiere] || 0),
-              borderColor: "#10B981",
-              backgroundColor: "rgba(16, 185, 129, 0.2)",
-              tension: 0.4,
-              fill: true,
-              pointBackgroundColor: "#10B981",
-            },
-          ],
-        };
-
-        const doughnutData = {
-          labels: ["Étudiants Hommes", "Étudiants Femmes", "Enseignants Hommes", "Enseignants Femmes"],
-          datasets: [
-            {
-              data: [nbEtudH, nbEtudF, nbEnsH, nbEnsF],
-              backgroundColor: ["#3B82F6", "#F472B6", "#10B981", "#F59E0B"],
-              hoverBackgroundColor: ["#60A5FA", "#FB7185", "#34D399", "#FBBF24"],
-              borderWidth: 0,
-            },
-          ],
-        };
-
-        console.log({ nbEtudH, nbEtudF, nbEnsH, nbEnsF });
-
-
-        setLineData(barData);
-        setDoughnutData(doughnutData);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des statistiques admin :", error);
-      }
+  // Comptage des enseignants par filière
+  if (enseignantId) {
+    if (!enseignantsParFiliere[nomFiliere]) {
+      enseignantsParFiliere[nomFiliere] = new Set();
     }
+    enseignantsParFiliere[nomFiliere].add(enseignantId);
 
-    fetchData();
-  }, []);
+    // Comptage unique des enseignants par sexe
+    if (!enseignantsDejaComptes.has(enseignantId)) {
+      enseignantsDejaComptes.add(enseignantId);
+      const sexeEns = coursItem.enseignant?.utilisateur?.sexe;
+      if (sexeEns === "M") nbEnsH++;
+      else if (sexeEns === "F") nbEnsF++;
+    }
+  }
+
+  // Comptage unique des étudiants par sexe
+  coursItem.filiere_module.filiere.etudiants?.forEach((etudiant) => {
+    const idEtudiant = etudiant.id || etudiant.utilisateur?.id;
+    if (!etudiantsDejaComptes.has(idEtudiant)) {
+      etudiantsDejaComptes.add(idEtudiant);
+      const sexe = etudiant.utilisateur?.sexe;
+      if (sexe === "M") nbEtudH++;
+      else if (sexe === "F") nbEtudF++;
+    }
+  });
+
+  // Comptage des étudiants par filière
+  const nbEtudiants = coursItem.filiere_module.filiere.etudiants?.length || 0;
+  if (!etudiantsParFiliere[nomFiliere]) {
+    etudiantsParFiliere[nomFiliere] = nbEtudiants;
+  }
+});
+
+
+      const labels = Object.keys(enseignantsParFiliere);
+
+      const barData = {
+        labels,
+        datasets: [
+          {
+            label: "Enseignants",
+            data: labels.map((filiere) => enseignantsParFiliere[filiere]?.size || 0),
+            borderColor: "#4F46E5",
+            backgroundColor: "rgba(79, 70, 229, 0.2)",
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "#4F46E5",
+          },
+          {
+            label: "Étudiants",
+            data: labels.map((filiere) => etudiantsParFiliere[filiere] || 0),
+            borderColor: "#10B981",
+            backgroundColor: "rgba(16, 185, 129, 0.2)",
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "#10B981",
+          },
+        ],
+      };
+
+      const doughnutData = {
+        labels: ["Étudiants Hommes", "Étudiants Femmes", "Enseignants Hommes", "Enseignants Femmes"],
+        datasets: [
+          {
+            data: [nbEtudH, nbEtudF, nbEnsH, nbEnsF],
+            backgroundColor: ["#3B82F6", "#F472B6", "#10B981", "#F59E0B"],
+            hoverBackgroundColor: ["#60A5FA", "#FB7185", "#34D399", "#FBBF24"],
+            borderWidth: 0,
+          },
+        ],
+      };
+
+      console.log({ nbEtudH, nbEtudF, nbEnsH, nbEnsF });
+
+      setLineData(barData);
+      setDoughnutData(doughnutData);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des statistiques admin :", error);
+    }
+  }
+
+  fetchData();
+}, []);
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-semibold mb-6 text-gray-800">Dashboard Admin</h2>
+      {/* <h2 className="text-3xl font-semibold mb-6 text-gray-800">Dashboard Admin</h2> */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {menuStat.map((stat, index) => (

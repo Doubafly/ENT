@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 // GET: Récupère une transaction spécifique
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
+
+  const id = request.nextUrl.pathname.split("/").pop();
   try {
     const transaction = await prisma.finance.findUnique({
-      where: { id_finance: Number(params.id) },
+      where: { id_finance :id ? parseInt(id) : 0  },
       include: {
         utilisateur: { select: { nom: true, prenom: true } },
         etudiant: {

@@ -99,7 +99,7 @@ export default function UpdateEnseignantModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-bold mb-4 text-center">
-          Modifier l'enseigants
+          Modifier l'enseignants
         </h2>
         <form
           onSubmit={handleSubmit}
@@ -283,7 +283,7 @@ export default function UpdateEnseignantModal({
             <button
               type="button"
               onClick={onClose}
-              className="bg-gray-500 text-white px-3 py-1 rounded"
+              className="bg-red-500 text-white px-3 py-1 rounded"
             >
               Annuler
             </button>

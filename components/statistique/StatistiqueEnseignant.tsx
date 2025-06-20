@@ -43,13 +43,20 @@ const StatistiqueEnseignant = () => {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const sessionRes = await fetch("/api/auth/session", {
-          credentials: "include",
-        });
-        const sessionData = await sessionRes.json();
-        const enseignant = sessionData.user?.enseignant;
-  
-        if (!enseignant) return;
+ // Récupération des données depuis localStorage
+                const userDataString = localStorage.getItem("user");
+                if (!userDataString) {
+                    throw new Error("Aucune donnée utilisateur trouvée");
+                }
+
+                const userData = JSON.parse(userDataString);
+                const enseignant = userData?.user?.enseignant || userData?.enseignant;
+                console.log("Données utilisateur :", userData);
+                console.log("Données enseignant :", enseignant);
+                if (!enseignant) {
+                    console.error("Aucune donnée enseignant trouvée");
+                    return;
+                }
   
         const coursRes = await fetch("/api/cours");
         const coursData = await coursRes.json();

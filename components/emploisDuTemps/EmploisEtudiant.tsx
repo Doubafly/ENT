@@ -211,7 +211,7 @@ const EmploiDuTempsEtudiant = () => {
 
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="bg-bleu-500 text-white">
             <tr>
               <th className="p-3 text-left min-w-[120px]">Heure</th>
               {jours.map((jour) => (

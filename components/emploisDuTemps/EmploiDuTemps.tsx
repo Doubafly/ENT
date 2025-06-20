@@ -487,8 +487,8 @@ const EmploiDuTemps = () => {
       </div>
 
       <div className="overflow-auto">
-        <table className="table-auto border-collapse w-full">
-          <thead>
+        <table className="table-auto border-collapse w-full ">
+          <thead className="bg-blue-500 text-white">
             <tr>
               <th className="border p-2">Heure</th>
               {jours.map((jour) => (

@@ -125,6 +125,11 @@ export const EtudiantLinks = [
     path: "/etudiant/documents",
     title: "Documents",
   },
+   {
+    image:  "/icons/finance.svg",
+    path: "/etudiant/paiement",
+    title: "Paiements",
+  },
   {
     image: "/icons/user.png",
     path: "/etudiant/profil",
@@ -178,6 +183,11 @@ export const ProfesseurLinks = [
     image: "/icons/documentation.png",
     path: "/professeur/documents",
     title: "Documents",
+  },
+   {
+    image:  "/icons/finance.svg",
+    path: "/professeur/paiement",
+    title: "Paiements",
   },
 
   {

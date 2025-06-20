@@ -95,7 +95,8 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
       const student = students.find((s) => s.id === note.id);
 
       if (!student) return;
-
+      console.log(student,"eleve");
+      
       const { notes, id: id_etudiant, id_cours } = student;
       const id_note = notes?.[0]?.id_note ;
       
@@ -117,9 +118,11 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
         if (!res.ok) {
           const error = await res.json();
-          throw new Error(`Erreur update pour ${student.name} : ${error.message}`);
+
+        setModal({ message: "Erreur lors de la modification des notes : ", status: "error" });
         }
 
+        setModal({ message: "Traitement success !", status: "success" });
         return res.json();
       }
 
@@ -139,17 +142,16 @@ const submitNote = async (event: React.MouseEvent<HTMLButtonElement>) => {
 
       if (!res.ok) {
         const error = await res.json();
+        console.log("Erreur création pour", student.name ,error.message,id_etudiant,id_cours,payload);
+        
         throw new Error(`Erreur création pour ${student.name} : ${error.message}`);
       }
-      onrecharge() ;
       return res.json();
     });
     const results = await Promise.all(updatePromises);
     setModal({ message: "Traitement success !", status: "success" });
-    onrecharge() ;
   } catch (error: any) {
     setModal({ message: "Erreur pendant l'enregistrement des notes : " + error.message, status: "error" });
-    
   }
 };
 

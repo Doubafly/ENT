@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import Modal from "../modal/Modal";
+import { Input } from "@mui/material";
 
 // Interfaces
 interface Student {
@@ -141,13 +142,11 @@ export default function AbsenceEtudiantList() {
       const response = await fetch(`/api/absences/${student.id}`);
       if (response.ok) {
         const etudiantSelect = await response.json();
-        etudiantSelect.absence.map((abs: { date_absence: string | number | Date; })=>{
-        
-          const date = new Date(abs.date_absence) ;
-         
-          
-        })
-        
+        etudiantSelect.absence.map(
+          (abs: { date_absence: string | number | Date }) => {
+            const date = new Date(abs.date_absence);
+          }
+        );
       }
     } catch (error) {
       alert("pgf");
@@ -161,13 +160,13 @@ export default function AbsenceEtudiantList() {
     const abs = filteredRows.filter(
       (et) => !enseignantsSelectionnes.some((sel) => sel.id === et.id)
     );
-    abs.map( async (a) => {
+    abs.map(async (a) => {
       console.log(a.id);
       const payload = {
-        id_etudiant:a.id, 
-        id_cours:a.idCours, 
-        date:new Date().getDay(), 
-        justification:"cvv"
+        id_etudiant: a.id,
+        id_cours: a.idCours,
+        date: new Date().getDay(),
+        justification: "cvv",
       };
       try {
         const response = await fetch("/api/absences/", {
@@ -179,9 +178,8 @@ export default function AbsenceEtudiantList() {
         });
 
         if (response.ok) {
-          alert("ok")
+          alert("ok");
           console.log(response.json());
-          
         }
       } catch (error) {
         alert("pgf");
@@ -196,6 +194,14 @@ export default function AbsenceEtudiantList() {
     { field: "Heure", headerName: "Heure", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
     { field: "module", headerName: "module", width: 130 },
+    // { field: "justificatif", headerName: "Justificatifier", width: 130 },
+
+    {
+      field: "justificatif",
+      headerName: "Justificatif",
+      width: 150,
+      renderCell: (params) => <Input></Input>,
+    },
     {
       field: "action",
       headerName: "Action",

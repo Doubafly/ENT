@@ -303,6 +303,26 @@ export async function GET() {
             code_module: true,
             volume_horaire: true,
             coefficient: true,
+            documents: {
+          select: {
+            id: true,
+            titre: true,
+            description: true,
+            chemin_fichier: true,
+            type_fichier: true,
+            taille_fichier: true,
+            date_upload: true,
+            est_actif: true,
+            id_uploader: true,
+            uploader: {
+              select: {
+                id_utilisateur: true,
+                nom: true,
+                prenom: true,
+              },
+            },
+          },
+        },
             filiere: {
               select: {
                 id_filiere: true,
@@ -392,26 +412,7 @@ export async function GET() {
             },
           },
         },
-        documents: {
-          select: {
-            id: true,
-            titre: true,
-            description: true,
-            chemin_fichier: true,
-            type_fichier: true,
-            taille_fichier: true,
-            date_upload: true,
-            est_actif: true,
-            id_uploader: true,
-            uploader: {
-              select: {
-                id_utilisateur: true,
-                nom: true,
-                prenom: true,
-              },
-            },
-          },
-        },
+        
       },
     });
 

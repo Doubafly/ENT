@@ -1,26 +1,18 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
 
 
+import { NextRequest, NextResponse } from "next/server";
 // GET : Récupérer une note spécifique par son ID
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
 ) {
   try {
-    const id = parseInt(params.id); // Convertir l'ID en nombre
+    const id = request.nextUrl.pathname.split("/").pop();
 
-    // Vérifier si l'ID est valide
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "ID de note invalide" },
-        { status: 400 }
-      );
-    }
 
     // Récupérer la note par son ID
     const note = await prisma.notes.findUnique({
-      where: { id_note: id },
+      where: { id_note: id ? parseInt(id) : undefined, },
       include: {
         cours: true, // Inclure les détails du cours associé
         etudiant: true, // Inclure les détails de l'étudiant associé
@@ -49,19 +41,11 @@ export async function GET(
 
 // PUT : Mettre à jour une note spécifique par son ID
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
 ) {
   try {
-    const id = parseInt(params.id); // Convertir l'ID en nombre
+    const id = request.nextUrl.pathname.split("/").pop();
 
-    // Vérifier si l'ID est valide
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "ID de note invalide" },
-        { status: 400 }
-      );
-    }
 
     // Extraire les données de la requête
     const { note_class, note_exam, commentaire_enseignant } = await request.json();
@@ -76,7 +60,7 @@ export async function PUT(
 
     // Mettre à jour la note
     const noteMaj = await prisma.notes.update({
-      where: { id_note: id },
+      where: { id_note: id ? parseInt(id) : undefined, },
       data: {
         note_class,
         note_exam,
@@ -101,23 +85,14 @@ export async function PUT(
 
 // DELETE : Supprimer une note spécifique par son ID
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
 ) {
   try {
-    const id = parseInt(params.id); // Convertir l'ID en nombre
-
-    // Vérifier si l'ID est valide
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "ID de note invalide" },
-        { status: 400 }
-      );
-    }
-
+    
+    const id = request.nextUrl.pathname.split("/").pop();
     // Supprimer la note
     await prisma.notes.delete({
-      where: { id_note: id },
+      where: { id_note: id ? parseInt(id) : undefined, },
     });
 
     // Retourner une confirmation de suppression

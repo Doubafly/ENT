@@ -218,71 +218,73 @@ const EmploiDuTempsEnseignant = () => {
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        Mon Emploi du Temps Enseignant
-      </h1>
+  <div className="p-4 max-w-7xl mx-auto">
+    {/* Titre + Sélecteur en ligne */}
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide text-center sm:text-left flex-1 text-wrap">
+    Emploi du Temps de la Semaine {classeSelectionnee && `- ${classeSelectionnee}`}
+  </h1>
 
-      <div className="mb-4">
-        <select
-          className="p-2 border rounded"
-          value={classeSelectionnee}
-          onChange={(e) => setClasseSelectionnee(e.target.value)}
-        >
-          <option value="">Toutes mes classes</option>
-          {classesEnseignees.map((classe) => (
-            <option key={classe.id} value={classe.nom}>
-              {classe.nom}
-            </option>
-          ))}
-        </select>
-      </div>
+  <select
+    className="w-full sm:w-auto p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    value={classeSelectionnee}
+    onChange={(e) => setClasseSelectionnee(e.target.value)}
+  >
+    <option value="">Toutes mes classes</option>
+    {classesEnseignees.map((classe) => (
+      <option key={classe.id} value={classe.nom}>
+        {classe.nom}
+      </option>
+    ))}
+  </select>
+</div>
 
-      <div className="overflow-x-auto bg-white rounded-lg shadow">
-        <table className="w-full">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-3 text-left min-w-[120px]">Heure</th>
-              {jours.map((jour) => (
-                <th key={jour} className="p-3 text-center min-w-[150px]">
-                  {jour}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {heures.map((heure) => (
-              <tr key={heure} className="border-t hover:bg-gray-50">
-                <td className="p-3 font-medium">{heure}</td>
-                {jours.map((jour) => {
-                  const seance = emploiDuTemps[heure]?.[jour];
-                  return (
-                    <td key={jour} className="p-3">
-                      {seance ? (
-                        <div className="flex flex-col items-center text-center">
-                          <span className="font-medium text-gray-800">
-                            {seance.matiere}
-                          </span>
-                          <span className="text-sm text-gray-600">
-                            {seance.enseignant}
-                          </span>
-                          <span className="text-xs text-gray-500 mt-1">
-                            {seance.salle}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
+
+    {/* Tableau emploi du temps (identique) */}
+    <div className="overflow-x-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6">
+      <table className="min-w-full table-fixed text-gray-800 text-sm sm:text-base">
+        <thead>
+          <tr className="bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-900 text-md uppercase tracking-wider">
+            <th className="px-4 py-4 text-left border-r border-indigo-300 w-24">Heure</th>
+            {jours.map((jour) => (
+              <th key={jour} className="px-4 py-4 text-center border-r border-indigo-300 min-w-[120px]">
+                {jour}
+              </th>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        </thead>
+        <tbody>
+          {heures.map((heure) => (
+            <tr key={heure} className="border-t border-gray-200 hover:bg-indigo-50 transition duration-300">
+              <td className="px-4 py-4 font-semibold text-indigo-600 bg-gray-50 border-r border-gray-200 text-md whitespace-nowrap">
+                {heure}
+              </td>
+              {jours.map((jour) => {
+                const seance = emploiDuTemps[heure]?.[jour];
+                return (
+                  <td key={jour} className="px-2 sm:px-4 py-3 text-center align-top border-r border-gray-100">
+                    {seance ? (
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-3 py-2 shadow hover:shadow-md transition-all duration-200 ease-in-out">
+                        <div className="text-indigo-900 font-bold text-sm sm:text-base mb-1">
+                          {seance.matiere}
+                        </div>
+                        <div className="text-sm text-gray-700">{seance.enseignant}</div>
+                        <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-300 text-sm">–</div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default EmploiDuTempsEnseignant;

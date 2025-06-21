@@ -139,7 +139,6 @@ const StudentTable: React.FC<{ students: Student[]; moduleKey: number | null; on
         onrecharge();
         return res.json();
       });
-
       const results = await Promise.all(updatePromises);
       setModal({ message: "Notes enregistrées avec succès !", status: "success" });
       onrecharge();

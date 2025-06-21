@@ -17,6 +17,7 @@ export default function Page() {
     message: string;
     status: "success" | "error" | "info";
   } | null>(null);
+  const [idUser,setIdUser]=useState(0);
 
   const handleSub = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,7 +41,8 @@ export default function Page() {
           const userData = await response.json();
           const email = userData.user.email;
           const id = userData.user.id;
-          SendEmail(email,"forgotPassword",id);
+          setIdUser(id)
+          SendEmail(email, "forgotPassword", id);
           setStep("ValiderEmail");
         } else {
           setModal({ message: "Erreur de connexion", status: "error" });
@@ -51,37 +53,41 @@ export default function Page() {
     }
 
     if (step === "nouveauPassword") {
-      const payload = {
-        password: data.mot_de_passe,
-        confirme: data.confirmer,
-      };
-      try {
-        const response = await fetch("/api/auth/forgotPassword", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+      if (data.mot_de_passe == data.confirmer) {
+        const payload = {
+          mot_de_passe: data.mot_de_passe,
+        };
+        console.log(idUser,"idUser");
+        
+        try {
+          const response = await fetch(`/api/auth/forgotPassword/${idUser}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
 
-        if (response.ok) {
-          const userData = await response.json();
-          setStep("nouveauPassword");
-          console.log(userData);
-        } else {
-          setModal({ message: "Erreur de connexion", status: "error" });
+          if (response.ok) {
+            const userData = await response.json();
+            setModal({ message: "Mot de passe modifier !", status: "success" });
+            console.log(userData);
+          } else {
+            setModal({ message: "Erreur de connexion", status: "error" });
+          }
+        } catch (error) {
+          setModal({ message: "Erreur de serveur", status: "error" });
         }
-      } catch (error) {
-        setModal({ message: "Erreur de serveur", status: "error" });
+      }else{
+        setModal({ message: "les mots de passe doivent etre identique", status: "error" });
       }
     }
     if (step === "ValiderEmail") {
-    
-        const token= data.valide;
-    
+      const token = data.valide;
+
       try {
         const response = await fetch(`/api/forgotPassword?token=${token}`, {
-          method: 'GET',
+          method: "GET",
         });
         if (response.ok) {
           setStep("nouveauPassword");
@@ -132,7 +138,6 @@ export default function Page() {
               </div>
             )}
             {step === "ValiderEmail" && (
-              
               <div className="mb-2 relative">
                 {" "}
                 {/* Réduit la marge en bas (mb-3 à mb-2) */}

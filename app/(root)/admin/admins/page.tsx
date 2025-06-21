@@ -2,8 +2,7 @@ import AdminList from "@/components/list/AdminList";
 
 const AdminPage = () => {
   return (
-    <div>
-      liste et gestion des admins
+    <div className="p-4">
       <AdminList />
     </div>
   );

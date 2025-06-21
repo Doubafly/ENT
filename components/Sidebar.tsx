@@ -28,11 +28,11 @@ const Sidebar = ({ user }: UserProfileProps) => {
       <nav className="flex flex-col gap-2 h-full mb-3">
         <Link href="/" className="mb-6 cursor-pointer items-center gap-2">
           <Image
-            src="/logo.ico"
+            src="/img/logoS.png"
             alt="logo"
-            width={36}
-            height={36}
-            className="size-[24px] max-xl:size-14"
+            width={50}
+            height={50}
+            className="size-[30px] max-xl:size-20"
           />
           <h1 className="sidebar-logo">TECHNOLAB ISTA </h1>
         </Link>

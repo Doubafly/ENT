@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     if (!id_professeur) missingFields.push("id_professeur");
     if (!id_sessions) missingFields.push("id_sessions");
     if (!semestre) missingFields.push("semestre");
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
-          message: "Tous les champs sont obligatoires"+missingFields.join(", "),
-          
+          message:
+            "Tous les champs sont obligatoires" + missingFields.join(", "),
         },
         { status: 400 }
       );
@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
         id_filiere_module,
         id_sessions,
         semestre,
-        id_professeur,
       },
     });
 
@@ -89,7 +88,6 @@ export async function POST(request: NextRequest) {
         enseignant: {
           include: {
             utilisateur: true,
-
           },
         },
       },
@@ -195,7 +193,7 @@ export async function POST(request: NextRequest) {
 //             id: true,
 //             specialite: true,
 //             utilisateur: {
-//               select: { 
+//               select: {
 //                 nom: true,
 //                 prenom: true,
 //                 email: true,
@@ -203,7 +201,7 @@ export async function POST(request: NextRequest) {
 //             },
 //           },
 //         },
-        
+
 //         sessions: {
 //           select: {
 //             annee_academique: true,
@@ -274,7 +272,7 @@ export async function GET() {
                         id_note: true,
                         note_exam: true,
                         note_class: true,
-                        id_etudiant:true,
+                        id_etudiant: true,
                         commentaire_enseignant: true,
                       },
                     },
@@ -325,11 +323,12 @@ export async function GET() {
             specialite: true,
             utilisateur: {
               select: {
-                id_utilisateur:true,
+                id_utilisateur: true,
                 nom: true,
                 prenom: true,
                 email: true,
                 sexe: true,
+                telephone: true,
               },
             },
           },

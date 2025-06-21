@@ -105,11 +105,11 @@ export const EtudiantLinks = [
     path: "/etudiant/annonces",
     title: "Annonces",
   },
-  {
-    image: "/icons/grades.png",
-    path: "/etudiant/result",
-    title: "Résulat",
-  },
+  // {
+  //   image: "/icons/grades.png",
+  //   path: "/etudiant/result",
+  //   title: "Résulat",
+  // },
   // {
   //   image: "/icons/email.png",
   //   path: "/etudiant/messages",
@@ -124,6 +124,11 @@ export const EtudiantLinks = [
     image: "/icons/documentation.png",
     path: "/etudiant/documents",
     title: "Documents",
+  },
+   {
+    image:  "/icons/finance.svg",
+    path: "/etudiant/paiement",
+    title: "Paiements",
   },
   {
     image: "/icons/user.png",
@@ -144,11 +149,11 @@ export const ProfesseurLinks = [
     path: "/professeur",
     title: "Acceuil",
   },
-  {
-    image: "/icons/presentation.png",
-    path: "/professeur/classe",
-    title: "Classe",
-  },
+  // {
+  //   image: "/icons/presentation.png",
+  //   path: "/professeur/classe",
+  //   title: "Classe",
+  // },
   {
     image: "/icons/graduation-cap.png",
     path: "/professeur/etudiant",
@@ -164,20 +169,25 @@ export const ProfesseurLinks = [
     path: "/professeur/note",
     title: "Note",
   },
-  {
-    image: "/icons/email.png",
-    path: "/professeur/messages",
-    title: "Messages",
-  },
-  {
-    image: "/icons/assessment.png",
-    path: "/professeur/sujets",
-    title: "Sujets",
-  },
+  // {
+  //   image: "/icons/email.png",
+  //   path: "/professeur/messages",
+  //   title: "Messages",
+  // },
+  // {
+  //   image: "/icons/assessment.png",
+  //   path: "/professeur/sujets",
+  //   title: "Sujets",
+  // },
   {
     image: "/icons/documentation.png",
     path: "/professeur/documents",
     title: "Documents",
+  },
+   {
+    image:  "/icons/finance.svg",
+    path: "/professeur/paiement",
+    title: "Paiements",
   },
 
   {
@@ -185,11 +195,11 @@ export const ProfesseurLinks = [
     path: "/professeur/profil",
     title: "Profil",
   },
-  {
-    image: "/icons/settings.png",
-    path: "/professeur/parametre",
-    title: "parametre",
-  },
+  // {
+  //   image: "/icons/settings.png",
+  //   path: "/professeur/parametre",
+  //   title: "parametre",
+  // },
   {
     image: "/icons/out.png",
     path: "/deconnexion",

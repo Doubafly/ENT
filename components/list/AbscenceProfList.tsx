@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import Modal from "../modal/Modal";
+import { Input } from "@mui/material";
 
 // Interfaces
 interface Prof {
@@ -36,15 +37,15 @@ const prepareAbsenceDataParJour = (data: any, jour: string): Prof[] => {
           .substr(11, 5);
         const heure = `${heure_debut}H-${heure_fin}H`;
 
-          rows.push({
-            idCours: idCours,
-            id: prof.utilisateur.id_utilisateur,
-            firstName: prof.utilisateur.prenom,
-            lastName: prof.utilisateur.nom,
-            Heure: heure,
-            module: moduleNom,
-            classe: classeNom,
-          });
+        rows.push({
+          idCours: idCours,
+          id: prof.utilisateur.id_utilisateur,
+          firstName: prof.utilisateur.prenom,
+          lastName: prof.utilisateur.nom,
+          Heure: heure,
+          module: moduleNom,
+          classe: classeNom,
+        });
       }
     });
   });
@@ -81,9 +82,8 @@ export default function AbsenceEtudiantList() {
         const res = await fetch("/api/cours");
         const data = await res.json();
         console.log(data);
-        
-        setData(data);
 
+        setData(data);
       } catch (error) {
         console.error("Erreur lors de la récupération des cours :", error);
       }
@@ -130,13 +130,11 @@ export default function AbsenceEtudiantList() {
       const response = await fetch(`/api/absences/${Prof.id}`);
       if (response.ok) {
         const etudiantSelect = await response.json();
-        etudiantSelect.absence.map((abs: { date_absence: string | number | Date; })=>{
-        
-          const date = new Date(abs.date_absence) ;
-         
-          
-        })
-        
+        etudiantSelect.absence.map(
+          (abs: { date_absence: string | number | Date }) => {
+            const date = new Date(abs.date_absence);
+          }
+        );
       }
     } catch (error) {
       alert("pgf");
@@ -144,19 +142,19 @@ export default function AbsenceEtudiantList() {
   };
 
   const handleEnregistrer = async () => {
+    alert("on est la");
     const enseignantsSelectionnes = allRows.filter((row) =>
       selectedRows.includes(row.id)
     );
     const abs = filteredRows.filter(
       (et) => !enseignantsSelectionnes.some((sel) => sel.id === et.id)
     );
-    abs.map( async (a) => {
-      console.log(a.id);
+    abs.map(async (a) => {
       const payload = {
-        id_etudiant:a.id, 
-        id_cours:a.idCours, 
-        date:new Date().getDay(), 
-        justification:"cvv"
+        id_etudiant: a.id,
+        id_cours: a.idCours,
+        date: new Date().getDay(),
+        justification: "cvv",
       };
       try {
         const response = await fetch("/api/absences/", {
@@ -168,9 +166,8 @@ export default function AbsenceEtudiantList() {
         });
 
         if (response.ok) {
-          alert("ok")
+          alert("ok");
           console.log(response.json());
-          
         }
       } catch (error) {
         alert("pgf");
@@ -185,6 +182,12 @@ export default function AbsenceEtudiantList() {
     { field: "Heure", headerName: "Heure", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
     { field: "module", headerName: "module", width: 130 },
+    {
+      field: "justificatif",
+      headerName: "Justificatif",
+      width: 150,
+      renderCell: (params) => <Input></Input>,
+    },
     {
       field: "action",
       headerName: "Action",
@@ -255,7 +258,7 @@ export default function AbsenceEtudiantList() {
         <button
           onClick={handleEnregistrer}
           className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          disabled={selectedRows.length === 0}
+          // disabled={selectedRows.length === 0}
         >
           Enregistrer
         </button>

@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import ListCard1, { User } from "@/components/card/EnseignantListCard";
 import Modal from "@/components/modal/Modal";
 
-
 // Composant principal pour afficher la liste des étudiants
 export default function EtudiantList() {
   const [etudiants, setEtudiants] = useState<User[]>([]);
@@ -35,7 +34,7 @@ export default function EtudiantList() {
     return `${year}-${month}-${day}`; // Format compatible avec les champs HTML de type date
   };
 
- useEffect(() => {
+  useEffect(() => {
     const fetchProfesseurId = () => {
       try {
         // Vérifier si on est côté client avant d'accéder à localStorage
@@ -46,12 +45,13 @@ export default function EtudiantList() {
           }
 
           const userData = JSON.parse(userDataString);
-          
+          console.log(userData);
+
           // Vérification plus robuste de la structure des données
-          if (userData?.user?.enseignant?.id) {
-            setIdProfesseur(userData.user.enseignant.id);
+          if (userData?.user?.id) {
+            setIdProfesseur(userData?.user?.enseignant?.id);
           } else if (userData?.user?.id) {
-            setIdProfesseur(userData.user.id);
+            setIdProfesseur(userData?.user?.enseignant?.id);
           } else {
             throw new Error("Données utilisateur incomplètes");
           }
@@ -71,12 +71,9 @@ export default function EtudiantList() {
     try {
       const response = await fetch("/api/utilisateurs/etudiants");
       const data = await response.json();
-      console.log(data);
 
       if (response.ok) {
         const formattedEtudiants = data.etudiants.map((etudiant: any) => ({
-
-          
           id: etudiant.id_utilisateur,
           id_utilisateur: etudiant.id_utilisateur, // ✅ Ajout explicite
           nom: etudiant.utilisateur.nom,
@@ -88,12 +85,13 @@ export default function EtudiantList() {
           adresse: etudiant.utilisateur.adresse,
           matricule: etudiant.matricule,
           filiere: {
-          id_filiere: etudiant.filiere.id_filiere,
-          nom: etudiant.filiere.nom, 
-          filiere_module:etudiant.filiere.filiere_module,
-
+            id_filiere: etudiant.filiere.id_filiere,
+            nom: etudiant.filiere.nom,
+            filiere_module: etudiant.filiere.filiere_module,
           },
-          annee_academique: etudiant.filiere.filiere_module[0]?.sessions?.annee_academique || "Non renseignée", // Récupération de l'année académique
+          annee_academique:
+            etudiant.filiere.filiere_module[0]?.sessions?.annee_academique ||
+            "Non renseignée", // Récupération de l'année académique
           date_naissance: formatDate(etudiant.date_naissance),
           date_inscription: formatDate(etudiant.date_inscription),
           notes: etudiant.notes || [], // Ajout des notes pour le filtre par session
@@ -110,35 +108,35 @@ export default function EtudiantList() {
       console.error("Erreur lors du fetch :", error);
     }
   };
-  useEffect(() => {
-    fetchProfesseurId(); // Récupérer l'ID du professeur connecté
-    fetchEtudiants();
-  }, []);
 
- // Filtrage des étudiants
- const filteredEtudiants = etudiants.filter((etudiant) => {
-  const matchesSearchTerm = `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
-    .toLowerCase()
-    .includes(searchTerm.toLowerCase());
+  // Filtrage des étudiants
+  const filteredEtudiants = etudiants.filter((etudiant) => {
+    const matchesSearchTerm =
+      `${etudiant.nom} ${etudiant.prenom} ${etudiant.email}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-  const matchesSession =
-    sessionFilter === "" ||
-    etudiant.filiere.filiere_module.some((module: any) =>
-      module.cours.some((cours: any) => cours.sessions?.annee_academique === sessionFilter)
+    const matchesSession =
+      sessionFilter === "" ||
+      etudiant.filiere.filiere_module.some((module: any) =>
+        module.cours.some(
+          (cours: any) => cours.sessions?.annee_academique === sessionFilter
+        )
+      );
+
+    const matchesClass =
+      classFilter === "" || etudiant.filiere.nom === classFilter;
+
+    const matchesProfesseur = etudiant.filiere.filiere_module.some(
+      (module: any) =>
+        module.cours.some((cours: any) => cours.id_professeur === idProfesseur)
     );
 
-  const matchesClass =
-    classFilter === "" || etudiant.filiere.nom === classFilter;
-
-  const matchesProfesseur =
-    etudiant.filiere.filiere_module.some((module: any) =>
-      module.cours.some((cours: any) => cours.id_professeur === idProfesseur)
+    return (
+      matchesSearchTerm && matchesSession && matchesClass && matchesProfesseur
     );
-
-  return matchesSearchTerm && matchesSession && matchesClass && matchesProfesseur;
-});
-console.log(filteredEtudiants);
-
+  });
+  console.log(filteredEtudiants, "filteredEtudiants");
 
   // Pagination
   const totalPages = Math.ceil(filteredEtudiants.length / itemsPerPage);
@@ -146,10 +144,6 @@ console.log(filteredEtudiants);
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
- 
-  // console.log("Liste des étudiants affichée :", currentEtudiants);
-
-  console.log(etudiants);
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Barre de recherche et filtres */}
@@ -164,57 +158,61 @@ console.log(filteredEtudiants);
           }}
           className="w-1/4 p-3 border rounded-lg text-sm"
         />
-{/* Filtre par classe */}
-<select
-  value={classFilter}
-  onChange={(e) => {
-    setClassFilter(e.target.value);
-    setCurrentPage(1);
-  }}
-  className="w-1/4 p-3 border rounded-lg text-sm"
->
-  <option value="">Toutes les classes</option>
-  {Array.from(
-    new Set(
-      etudiants
-        .filter((etudiant) =>
-          etudiant.filiere.filiere_module.some((module: any) =>
-            module.cours.some((cours: any) => cours.id_professeur === idProfesseur)
-          )
-        )
-        .map((etudiant) => etudiant.filiere.nom)
-    )
-  ).map((classe) => (
-    <option key={classe} value={classe}>
-      {classe}
-    </option>
-  ))}
-</select>
+        {/* Filtre par classe */}
+        <select
+          value={classFilter}
+          onChange={(e) => {
+            setClassFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-1/4 p-3 border rounded-lg text-sm"
+        >
+          <option value="">Toutes les classes</option>
+          {Array.from(
+            new Set(
+              etudiants
+                .filter((etudiant) =>
+                  etudiant.filiere.filiere_module.some((module: any) =>
+                    module.cours.some(
+                      (cours: any) => cours.id_professeur === idProfesseur
+                    )
+                  )
+                )
+                .map((etudiant) => etudiant.filiere.nom)
+            )
+          ).map((classe) => (
+            <option key={classe} value={classe}>
+              {classe}
+            </option>
+          ))}
+        </select>
 
         {/* Filtre par session */}
-  <select
-    value={sessionFilter}
-    onChange={(e) => {
-      setSessionFilter(e.target.value);
-      setCurrentPage(1);
-    }}
-    className="w-1/4 p-3 border rounded-lg text-sm"
-  >
-    <option value="">Toutes les sessions</option>
-    {Array.from(
-      new Set(
-        etudiants.flatMap((etudiant) =>
-          etudiant.filiere.filiere_module.flatMap((module: any) =>
-            module.cours.flatMap((cours: any) => cours.sessions?.annee_academique)
-          )
-        )
-      )
-    ).map((session) => (
-      <option key={session} value={session}>
-        {session}
-      </option>
-    ))}
-  </select>
+        <select
+          value={sessionFilter}
+          onChange={(e) => {
+            setSessionFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="w-1/4 p-3 border rounded-lg text-sm"
+        >
+          <option value="">Toutes les sessions</option>
+          {Array.from(
+            new Set(
+              etudiants.flatMap((etudiant) =>
+                etudiant.filiere.filiere_module.flatMap((module: any) =>
+                  module.cours.flatMap(
+                    (cours: any) => cours.sessions?.annee_academique
+                  )
+                )
+              )
+            )
+          ).map((session) => (
+            <option key={session} value={session}>
+              {session}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Liste des étudiants */}
@@ -259,7 +257,6 @@ console.log(filteredEtudiants);
         </div>
       )}
 
-     
       {/* Modal d'affichage des détails */}
       {selectedEtudiant && (
         <Modal onClose={() => setSelectedEtudiant(null)}>
@@ -283,50 +280,70 @@ console.log(filteredEtudiants);
         <p className="text-gray-500 text-sm">{selectedEtudiant.email}</p> */}
             </div>
 
-           {/* Informations détaillées en colonnes */}
-<div className="grid grid-cols-2 gap-4 text-lg border-t pt-4">
-  <p>
-    <span className="italic underline font-bold">Nom</span> : {selectedEtudiant.nom}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Prénom</span> : {selectedEtudiant.prenom}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Email</span> : {selectedEtudiant.email}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Sexe</span> : {selectedEtudiant.sexe}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Téléphone</span> : {selectedEtudiant.tel || "Non renseigné"}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Adresse</span> : {selectedEtudiant.adresse || "Non renseignée"}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Matricule</span> : {selectedEtudiant.matricule}
-  </p>
-  <p>
-  <span className="italic underline font-bold">Année académique</span> :{" "}
-  {selectedEtudiant.filiere.filiere_module[0]?.cours[0]?.sessions?.annee_academique || "Non renseignée"}
-</p>
-  <p>
-    <span className="italic underline font-bold">Filière</span> : {selectedEtudiant.filiere.nom}
-  </p>
-  <p>
-    <span className="italic underline font-bold">Date d'inscription</span> :{" "}
-    {new Date(selectedEtudiant.date_inscription).toLocaleDateString("fr-FR")}
-  </p>
-  <p >
-    <span className="italic underline font-bold ">Date de naissance</span> :{" "}
-    {new Date(selectedEtudiant.date_naissance).toLocaleDateString("fr-FR")}
-  </p>
-</div>
+            {/* Informations détaillées en colonnes */}
+            <div className="grid grid-cols-2 gap-4 text-lg border-t pt-4">
+              <p>
+                <span className="italic underline font-bold">Nom</span> :{" "}
+                {selectedEtudiant.nom}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Prénom</span> :{" "}
+                {selectedEtudiant.prenom}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Email</span> :{" "}
+                {selectedEtudiant.email}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Sexe</span> :{" "}
+                {selectedEtudiant.sexe}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Téléphone</span> :{" "}
+                {selectedEtudiant.tel || "Non renseigné"}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Adresse</span> :{" "}
+                {selectedEtudiant.adresse || "Non renseignée"}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Matricule</span> :{" "}
+                {selectedEtudiant.matricule}
+              </p>
+              <p>
+                <span className="italic underline font-bold">
+                  Année académique
+                </span>{" "}
+                :{" "}
+                {selectedEtudiant.filiere.filiere_module[0]?.cours[0]?.sessions
+                  ?.annee_academique || "Non renseignée"}
+              </p>
+              <p>
+                <span className="italic underline font-bold">Filière</span> :{" "}
+                {selectedEtudiant.filiere.nom}
+              </p>
+              <p>
+                <span className="italic underline font-bold">
+                  Date d'inscription
+                </span>{" "}
+                :{" "}
+                {new Date(selectedEtudiant.date_inscription).toLocaleDateString(
+                  "fr-FR"
+                )}
+              </p>
+              <p>
+                <span className="italic underline font-bold ">
+                  Date de naissance
+                </span>{" "}
+                :{" "}
+                {new Date(selectedEtudiant.date_naissance).toLocaleDateString(
+                  "fr-FR"
+                )}
+              </p>
+            </div>
           </div>
         </Modal>
       )}
-     
-     
     </div>
   );
 }

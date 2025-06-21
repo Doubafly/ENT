@@ -29,7 +29,7 @@ export default function Home() {
           }
 
           setUser(userData.user);
-          fetchStats(matricule,userData.user.id_utilisateur);
+          fetchStats(matricule, userData.user.id_utilisateur);
         } else {
           console.error("L'utilisateur connecté n'est pas un étudiant.");
         }
@@ -54,7 +54,7 @@ export default function Home() {
             )
         );
         console.log(coursFiltres);
-        
+
         // const notesEtudiant = coursFiltres
         //   .map(
         //     (c: { filiere_module: { filiere: { etudiants: any[] } } }) =>
@@ -64,37 +64,37 @@ export default function Home() {
         //   )
         //   .flat();
 
-        
         const notesEtudiant = coursFiltres
-        .map(
-          (c: { notes: { etudiant: { matricule: any; }; }[] }) =>
-            c.notes?.find((n: { etudiant: { matricule: any; }; })=> n.etudiant.matricule === matricule)
-        )
-        .flat();
+          .map((c: { notes: { etudiant: { matricule: any } }[] }) =>
+            c.notes?.find(
+              (n: { etudiant: { matricule: any } }) =>
+                n.etudiant.matricule === matricule
+            )
+          )
+          .flat();
         console.log(notesEtudiant);
-        
-
 
         const nombreModules = coursFiltres.length;
-        
+
         const nombreModulesValides = notesEtudiant.filter(
-          (note: { note_class: number | null; note_exam: number | null; }) =>
+          (note: { note_class: number | null; note_exam: number | null }) =>
             ((note?.note_class || 0) + (note?.note_exam || 0)) / 2 >= 10
         ).length;
         const nombreModulesNonValides = notesEtudiant.filter(
-          (note: {
-            note_exam: any;
-            note_class: any;  }) =>
+          (note: { note_exam: any; note_class: any }) =>
             ((note?.note_class || 0) + (note?.note_exam || 0)) / 2 < 10
         ).length;
-        const nombreAbsences = coursFiltres.reduce((acc, cours) => {
-      if (!cours.Absences) return acc;
-      // On compte seulement les absences de l'étudiant connecté
-      const absencesEtudiant = cours.Absences.filter(
-        (a) => a.utilisateur?.id_utilisateur === id_utilisateur
-      );
-      return acc + absencesEtudiant.length;
-    }, 0);
+        const nombreAbsences = coursFiltres.reduce(
+          (acc: any, cours: { Absences: any[] }) => {
+            if (!cours.Absences) return acc;
+            // On compte seulement les absences de l'étudiant connecté
+            const absencesEtudiant = cours.Absences.filter(
+              (a) => a.utilisateur?.id_utilisateur === id_utilisateur
+            );
+            return acc + absencesEtudiant.length;
+          },
+          0
+        );
 
         setStatData([
           {

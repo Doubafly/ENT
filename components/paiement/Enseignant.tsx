@@ -66,7 +66,7 @@ type FinanceModePaiement = 'Espèces' | 'Chèque'|'Virement';
 
 const paymentTypes: FinanceTypeTransaction[] = ['Salaire', 'Autre'];
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque','Virement'];
-const SESSION_API_URL = "/api/auth/session";
+// const SESSION_API_URL = "/api/auth/session";
 
 export default function Enseignant() {
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
@@ -93,18 +93,25 @@ export default function Enseignant() {
   useEffect(() => {
     const checkUserSession = async () => {
       try {
-        const response = await fetch(SESSION_API_URL, {
-          credentials: "include",
-        });
 
-        if (!response.ok) throw new Error("Erreur de session");
+const userDataString = localStorage.getItem("user");
+        if (!userDataString) {
+          throw new Error("Aucune session utilisateur trouvée");
+        }
 
-        const { user } = await response.json();
-        if (user?.id_utilisateur) {
-          setCurrentUserId(user.id_utilisateur);
+        const userData = JSON.parse(userDataString);
+        // console.log("Données utilisateur:", userData);
+        // Vérification plus robuste de la structure des données
+        if (userData?.user?.id) {
+          setCurrentUserId(userData.user.id);
+        } else if (userData?.id) {
+          setCurrentUserId(userData.id);
+        } else {
+          throw new Error("Données utilisateur incomplètes");
         }
       } catch (err) {
         console.error("Erreur vérification session:", err);
+        setError(err instanceof Error ? err.message : "Erreur de session");
       } finally {
         setLoading(prev => ({...prev, session: false}));
       }
@@ -175,6 +182,7 @@ export default function Enseignant() {
     };
     fetchInitialData();
   }, [loading.session]);
+
 
   // Filtrer les enseignants
   const filteredEnseignants = enseignants.filter(enseignant => {
@@ -491,14 +499,14 @@ export default function Enseignant() {
             <Box sx={{ overflowX: 'auto' }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                    <TableCell>Enseignant</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Montant</TableCell>
-                    <TableCell>Mode</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Actions</TableCell>
+                  <TableRow sx={{ backgroundColor: '#0080FF' }}>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Enseignant</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Date</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Type</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Montant</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Mode</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Description</TableCell>
+                    <TableCell sx={{ color: '#FFFFFF' }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

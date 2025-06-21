@@ -67,17 +67,16 @@ const EmploiDuTempsEnseignant = () => {
       try {
         const userDataString = localStorage.getItem("user");
         if (!userDataString) {
-          throw new Error("Aucune donnée utilisateur trouvée dans le localStorage");
+          throw new Error(
+            "Aucune donnée utilisateur trouvée dans le localStorage"
+          );
         }
 
         const userData = JSON.parse(userDataString);
-        console.log("Données complètes du localStorage:", userData);
 
         if (userData?.user?.enseignant?.id) {
-          console.log("ID enseignant trouvé:", userData.user.enseignant.id);
-          setIdEnseignant(userData.user.enseignant.id);
+          setIdEnseignant(userData.user.id);
         } else if (userData?.user?.id) {
-          console.log("ID utilisateur trouvé:", userData.user.id);
           setIdEnseignant(userData.user.id);
         } else {
           throw new Error("Structure des données utilisateur inattendue");
@@ -100,11 +99,12 @@ const EmploiDuTempsEnseignant = () => {
         setLoading(true);
 
         // 1. Récupérer les données enseignant
-        const response = await fetch(`/api/utilisateurs/enseignants/${idEnseignant}`);
+        const response = await fetch(
+          `/api/utilisateurs/enseignants/${idEnseignant}`
+        );
         if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
 
         const data = await response.json();
-        console.log("Réponse API enseignant:", data.enseignant[0].id);
 
         // 2. Récupérer TOUS les emplois du temps
         const emploiResponse = await fetch("/api/emploisDuTemps");
@@ -113,16 +113,16 @@ const EmploiDuTempsEnseignant = () => {
         }
 
         const emploiData = await emploiResponse.json();
-        console.log("Tous les emplois:", emploiData);
 
-        
         // 3. Filtrer côté client pour ne garder que ceux de l'enseignant
         const emploisFiltres = emploiData.emploisDuTemps.filter(
           (emploi: Emploi) => {
-            return emploi.cours?.enseignant?.utilisateur.id_utilisateur === data.enseignant[0].id;
+            return (
+              emploi.cours?.enseignant?.utilisateur.id_utilisateur ===
+              data.enseignant[0].id_utilisateur
+            );
           }
         );
-
         console.log("Emplois filtrés:", emploisFiltres);
         setEmplois(emploisFiltres);
       } catch (err) {
@@ -140,22 +140,19 @@ const EmploiDuTempsEnseignant = () => {
   const classesEnseignees = emplois.reduce((acc, emploi) => {
     const filiere = emploi.cours.filiere_module.filiere;
     const classeKey = `${filiere.niveau} ${filiere.nom}`;
-    
-    if (!acc.some(c => c.id === filiere.id_filiere)) {
+
+    if (!acc.some((c) => c.id === filiere.id_filiere)) {
       acc.push({
         id: filiere.id_filiere,
-        nom: classeKey
+        nom: classeKey,
       });
     }
     return acc;
-  },
-   [] as { id: number; nom: string }[]);
-   console.log("Classes enseignées:", classesEnseignees);
-   
+  }, [] as { id: number; nom: string }[]);
 
   // Filtrer les emplois par classe sélectionnée
   const emploisFiltres = classeSelectionnee
-    ? emplois.filter(emploi => {
+    ? emplois.filter((emploi) => {
         const filiere = emploi.cours.filiere_module.filiere;
         return `${filiere.niveau} ${filiere.nom}` === classeSelectionnee;
       })
@@ -218,73 +215,67 @@ const EmploiDuTempsEnseignant = () => {
   }
 
   return (
-  <div className="p-4 max-w-7xl mx-auto">
-    {/* Titre + Sélecteur en ligne */}
-    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-  <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide text-center sm:text-left flex-1 text-wrap">
-    Emploi du Temps de la Semaine {classeSelectionnee && `- ${classeSelectionnee}`}
-  </h1>
-
-  <select
-    className="w-full sm:w-auto p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    value={classeSelectionnee}
-    onChange={(e) => setClasseSelectionnee(e.target.value)}
-  >
-    <option value="">Toutes mes classes</option>
-    {classesEnseignees.map((classe) => (
-      <option key={classe.id} value={classe.nom}>
-        {classe.nom}
-      </option>
-    ))}
-  </select>
-</div>
-
-
-    {/* Tableau emploi du temps (identique) */}
-    <div className="overflow-x-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6">
-      <table className="min-w-full table-fixed text-gray-800 text-sm sm:text-base">
-        <thead>
-          <tr className="bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-900 text-md uppercase tracking-wider">
-            <th className="px-4 py-4 text-left border-r border-indigo-300 w-24">Heure</th>
-            {jours.map((jour) => (
-              <th key={jour} className="px-4 py-4 text-center border-r border-indigo-300 min-w-[120px]">
-                {jour}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {heures.map((heure) => (
-            <tr key={heure} className="border-t border-gray-200 hover:bg-indigo-50 transition duration-300">
-              <td className="px-4 py-4 font-semibold text-indigo-600 bg-gray-50 border-r border-gray-200 text-md whitespace-nowrap">
-                {heure}
-              </td>
-              {jours.map((jour) => {
-                const seance = emploiDuTemps[heure]?.[jour];
-                return (
-                  <td key={jour} className="px-2 sm:px-4 py-3 text-center align-top border-r border-gray-100">
-                    {seance ? (
-                      <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-3 py-2 shadow hover:shadow-md transition-all duration-200 ease-in-out">
-                        <div className="text-indigo-900 font-bold text-sm sm:text-base mb-1">
-                          {seance.matiere}
-                        </div>
-                        <div className="text-sm text-gray-700">{seance.enseignant}</div>
-                        <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
-                      </div>
-                    ) : (
-                      <div className="text-gray-300 text-sm">–</div>
-                    )}
-                  </td>
-                );
-              })}
+    <div className="p-4 max-w-7xl mx-auto">
+      {/* Titre + Sélecteur en ligne */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide text-center sm:text-left flex-1 text-wrap">
+          Emploi du Temps de la Semaine{" "}
+          {classeSelectionnee && `- ${classeSelectionnee}`}
+        </h1>
+      </div>
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full">
+          <thead className="bg-blue-500 text-white">
+            <tr>
+              <th className="p-3 text-left min-w-[120px]">Heure</th>
+              {jours.map((jour) => (
+                <th key={jour} className="p-3 text-center min-w-[150px]">
+                  {jour}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {heures.map((heure) => (
+              <tr
+                key={heure}
+                className="border-t border-gray-200 hover:bg-indigo-50 transition duration-300"
+              >
+                <td className="px-4 py-4 font-semibold text-indigo-600 bg-gray-50 border-r border-gray-200 text-md whitespace-nowrap">
+                  {heure}
+                </td>
+                {jours.map((jour) => {
+                  const seance = emploiDuTemps[heure]?.[jour];
+                  return (
+                    <td
+                      key={jour}
+                      className="px-2 sm:px-4 py-3 text-center align-top border-r border-gray-100"
+                    >
+                      {seance ? (
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-3 py-2 shadow hover:shadow-md transition-all duration-200 ease-in-out">
+                          <div className="text-indigo-900 font-bold text-sm sm:text-base mb-1">
+                            {seance.matiere}
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            {seance.enseignant}
+                          </div>
+                          <div className="text-xs text-gray-500 italic mt-1">
+                            {seance.salle}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-300 text-sm">–</div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default EmploiDuTempsEnseignant;

@@ -14,6 +14,7 @@ export default function EtudiantList() {
   const [selectedEtudiant, setSelectedEtudiant] = useState<User | null>(null);
   const [idProfesseur, setIdProfesseur] = useState<number | null>(null); // État pour l'ID du professeur
   const [sessionFilter, setSessionFilter] = useState<string>(""); // État pour le filtre par session
+  const [error, setError] = useState("");
 
   const itemsPerPage = 8;
 
@@ -34,25 +35,36 @@ export default function EtudiantList() {
     return `${year}-${month}-${day}`; // Format compatible avec les champs HTML de type date
   };
 
- // Récupération de l'ID du professeur connecté via l'endpoint /api/auth/session
- const fetchProfesseurId = async () => {
-  try {
-    const response = await fetch("/api/auth/session");
-    const data = await response.json();
+ useEffect(() => {
+    const fetchProfesseurId = () => {
+      try {
+        // Vérifier si on est côté client avant d'accéder à localStorage
+        if (typeof window !== "undefined") {
+          const userDataString = localStorage.getItem("user");
+          if (!userDataString) {
+            throw new Error("Aucune session utilisateur trouvée");
+          }
 
-    if (response.ok) {
-      if (data.user.enseignant) {
-        setIdProfesseur(data.user.enseignant.id); // Stocker l'ID du professeur
-      } else {
-        console.error("L'utilisateur connecté n'est pas un enseignant.");
+          const userData = JSON.parse(userDataString);
+          
+          // Vérification plus robuste de la structure des données
+          if (userData?.user?.enseignant?.id) {
+            setIdProfesseur(userData.user.enseignant.id);
+          } else if (userData?.user?.id) {
+            setIdProfesseur(userData.user.id);
+          } else {
+            throw new Error("Données utilisateur incomplètes");
+          }
+        }
+      } catch (err) {
+        console.error("Erreur de lecture du localStorage:", err);
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
       }
-    } else {
-      console.error("Erreur lors de la récupération de la session :", data.error);
-    }
-  } catch (error) {
-    console.error("Erreur lors de la récupération de la session :", error);
-  }
-};
+    };
+
+    fetchProfesseurId();
+    fetchEtudiants();
+  }, []);
 
   // Récupération des étudiants depuis l'API
   const fetchEtudiants = async () => {

@@ -204,14 +204,13 @@ const EmploiDuTempsEtudiant = () => {
   }
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-center">
-        Mon Emploi du Temps {classeEtudiant && `- ${classeEtudiant}`}
-      </h1>
-
+  <div className="p-4 max-w-7xl mx-auto">
+    <h1 className="text-3xl font-extrabold mb-8 text-center text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide">
+      Mon Emploi du Temps {classeEtudiant && `- ${classeEtudiant}`}
+    </h1>
       <div className="overflow-x-auto bg-white rounded-lg shadow">
         <table className="w-full">
-          <thead className="bg-gray-100">
+          <thead className="bg-bleu-500 text-white">
             <tr>
               <th className="p-3 text-left min-w-[120px]">Heure</th>
               {jours.map((jour) => (
@@ -249,11 +248,41 @@ const EmploiDuTempsEtudiant = () => {
                 })}
               </tr>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </tr>
+        </thead>
+        <tbody>
+          {heures.map((heure) => (
+            <tr key={heure} className="border-t border-gray-200 hover:bg-indigo-50 transition duration-300">
+              <td className="px-4 py-4 font-semibold text-indigo-600 bg-gray-50 border-r border-gray-200 text-md whitespace-nowrap">
+                {heure}
+              </td>
+              {jours.map((jour) => {
+                const seance = emploiDuTemps[heure]?.[jour];
+                return (
+                  <td key={jour} className="px-2 sm:px-4 py-3 text-center align-top border-r border-gray-100">
+                    {seance ? (
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-3 py-2 shadow hover:shadow-md transition-all duration-200 ease-in-out">
+                        <div className="text-indigo-900 font-bold text-sm sm:text-base mb-1">
+                          {seance.matiere}
+                        </div>
+                        <div className="text-sm text-gray-700">{seance.enseignant}</div>
+                        <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-300 text-sm">–</div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
-  );
+  </div>
+);
+
+
 };
 
 export default EmploiDuTempsEtudiant;

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 interface BoutonParametreProps {
-  reglage: () => void;
   onCreateSession: () => void;
   onCreateAnnexe: () => void;
   onCreateModule: () => void;
@@ -11,7 +11,6 @@ interface BoutonParametreProps {
 }
 
 const BoutonParametre: React.FC<BoutonParametreProps> = ({
-  reglage,
   onCreateSession,
   onCreateAnnexe,
   onCreateModule,
@@ -40,12 +39,11 @@ const BoutonParametre: React.FC<BoutonParametreProps> = ({
         <div className="fixed right-8 mt-10 w-48 bg-white border rounded shadow-lg">
           <button
             className="w-full px-4 py-2 text-left hover:bg-gray-200"
-            onClick={() => {
-              setIsMenuOpen(false);
-              reglage();
-            }}
+            onClick={()=>{setIsMenuOpen(false)}}
           >
+            <Link href="/admin/parametre">
             Parametre
+            </Link>
           </button>
 
           <button

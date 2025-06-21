@@ -73,9 +73,10 @@ let resultat;
 
   return <div>
 
-  <h1 className="text-2xl font-bold mb-6 text-blue-600 flex items-center">
-        Gestion des Resultats
-      </h1>
+<div className="mt-4">
+      <div className="md:flex p-4">
+      </div>
+    </div>
 
           {/* Tableau des classes */}
           <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">
@@ -206,44 +207,7 @@ let resultat;
 
               {/* Section Étudiants */}
               <div>
-                {/* <button
-                  onClick={() => setShowStudents(!showStudents)}
-                  className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
-                >
-                  <span className="text-lg font-semibold text-blue-500">
-                    Étudiants ({selectedClass.effectif || 0})
-                  </span>
-                  <span className="text-blue-500">
-                    {showStudents ? "▲" : "▼"}
-                  </span>
-                </button> */}
-            {/* {showStudents && (
-                  <div className="mt-4 space-y-4">
-                    {selectedClass.effectif === 0 && (
-                      <div className="text-gray-500 text-center py-4">
-                        Aucun étudiant inscrit dans cette classe.
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedClass.filtreEtudiant
-                        ?.slice(0, selectedClass.effectif || 0)
-                        .map((etudiant: User) => (
-                          <ListCard
-                            type="etudiant"
-                            key={etudiant.id}
-                            item={etudiant}
-                            onDelete={() => {}}
-                            onEdit={() => {}}
-                            onSelect={() => {}}
-                            onrecharge={() => {}}
-                          />
-                        ))}
-                    </div>
-                  </div>
-                )} 
-              */}
               </div>
-
             </div>
 
           </div>

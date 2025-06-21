@@ -77,48 +77,6 @@ let resultat;
 
 <div className="mt-4">
       <div className="md:flex p-4">
-        {/* Sélection de la classe */}
-        {/* <div className="mb-4 ml-2">
-          <label className="block font-medium mb-1">
-            Sélectionner une classe
-          </label>
-          <select
-            title="Sélectionner une classe"
-            className="p-2 border rounded w-full"
-            onChange={(e) => handleClassChange(Number(e.target.value))}
-          >
-            <option value="">-- Choisir --</option>
-            {classes.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
-        </div> */}
-
-        {/* Sélection du semestre */}
-        {/* {selectedClass && (
-          <div className="mb-4 ml-2">
-            <label className="block font-medium mb-1">
-              Sélectionner un semestre
-            </label>
-            <select
-              title="Sélectionner un semestre"
-              className="p-2 border rounded w-full"
-              onChange={(e) => handleSemesterChange(e.target.value)}
-            >
-              <option value="">-- Choisir --</option>
-              {classes
-                .find((cls) => cls.id === selectedClass)
-                ?.semestres.map((sem) => (
-                  <option key={sem.id} value={sem.id}>
-                    {sem.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-        )} */}
-
       </div>
     </div>
 
@@ -261,44 +219,7 @@ let resultat;
 
               {/* Section Étudiants */}
               <div>
-                {/* <button
-                  onClick={() => setShowStudents(!showStudents)}
-                  className="flex items-center justify-between w-full bg-blue-100 p-3 rounded-lg hover:bg-blue-200 transition duration-200"
-                >
-                  <span className="text-lg font-semibold text-blue-500">
-                    Étudiants ({selectedClass.effectif || 0})
-                  </span>
-                  <span className="text-blue-500">
-                    {showStudents ? "▲" : "▼"}
-                  </span>
-                </button> */}
-            {/* {showStudents && (
-                  <div className="mt-4 space-y-4">
-                    {selectedClass.effectif === 0 && (
-                      <div className="text-gray-500 text-center py-4">
-                        Aucun étudiant inscrit dans cette classe.
-                      </div>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {selectedClass.filtreEtudiant
-                        ?.slice(0, selectedClass.effectif || 0)
-                        .map((etudiant: User) => (
-                          <ListCard
-                            type="etudiant"
-                            key={etudiant.id}
-                            item={etudiant}
-                            onDelete={() => {}}
-                            onEdit={() => {}}
-                            onSelect={() => {}}
-                            onrecharge={() => {}}
-                          />
-                        ))}
-                    </div>
-                  </div>
-                )} 
-              */}
               </div>
-
             </div>
 
           </div>
@@ -319,18 +240,6 @@ let resultat;
         </div>
       
       )}
-
-    {/* 
-      <Imprimer 
-        students={
-          classes
-            .find((cls) => cls.id === selectedClass)
-            ?.semestres.find((sem) => sem.id === selectedSemester)
-            ?.modules.find((mod) => mod.id === selectedModule)?.students ||
-          []
-        } 
-      /> 
-    */}
   </div>;
 }
 export default Resultat;

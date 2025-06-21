@@ -55,7 +55,7 @@ export default function page() {
       // }
       if (data1.cours) {
         const filieresMap = new Map();
-      
+        
         data1.cours.forEach((cours: any, index: number) => {
           const filiere = cours.filiere_module.filiere;
           const filiereId = filiere.id_filiere;
@@ -69,6 +69,7 @@ export default function page() {
             statut_reclamation: note.statut_reclamation,
             commentaire_enseignant: note.commentaire_enseignant,
             id_etudiant: note.etudiant.id,
+            coefficient:cours.filiere_module.coefficient
           }))
       
           if (!filieresMap.has(filiereId)) {

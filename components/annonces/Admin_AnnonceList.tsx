@@ -3,6 +3,7 @@ import AnnonceCard from "@/components/annonces/AnnonceCard";
 import AnnonceDetail from "@/components/annonces/AnnonceDetail";
 import { FaSpinner, FaLock, FaSignInAlt } from "react-icons/fa";
 import { ConfirmDialog } from "../ConfirmDialog";
+import { log } from "util";
 
 interface Annonce {
   id_annonce: number;
@@ -20,8 +21,6 @@ interface Annonce {
 }
 
 const API_BASE_URL = "/api/annonce";
-
-const SESSION_API_URL = "/api/auth/session";
 
 const AnnonceList: React.FC = () => {
   const [annonces, setAnnonces] = useState<Annonce[]>([]);
@@ -42,21 +41,20 @@ const AnnonceList: React.FC = () => {
   const [currentAdminId, setCurrentAdminId] = useState<number | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
 
-  // Vérification de la session et des droits admin
+  // Vérification de la session via localStorage
   useEffect(() => {
-    const checkAdminSession = async () => {
+    const checkAdminSession = () => {
       try {
-        const response = await fetch(SESSION_API_URL, {
-          credentials: "include",
-        });
+        const userData = localStorage.getItem("user");
+        if (!userData) {
+          setSessionChecked(true);
+          return;
+        }
 
-        if (!response.ok) throw new Error("Erreur de session");
-
-        const { user } = await response.json();
-
-        if (user?.admin) {
-          setCurrentAdminId(user.admin.id_admin);
-          setFormData((prev) => ({ ...prev, id_admin: user.admin.id_admin }));
+        const parsedData = JSON.parse(userData);
+        if (parsedData?.user?.admin) {
+          setCurrentAdminId(parsedData.user.admin.id_admin);
+          setFormData((prev) => ({ ...prev, id_admin: parsedData.user.admin.id_admin }));
         }
       } catch (error) {
         console.error("Erreur vérification session:", error);
@@ -72,10 +70,8 @@ const AnnonceList: React.FC = () => {
   const fetchAnnonces = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(API_BASE_URL, {
-        credentials: "include",
-      });
-
+      const response = await fetch(API_BASE_URL);
+      
       if (!response.ok) throw new Error("Échec du chargement");
 
       const data = await response.json();
@@ -108,16 +104,22 @@ const AnnonceList: React.FC = () => {
       const method = editingId ? "PUT" : "POST";
       const url = editingId ? `${API_BASE_URL}/${editingId}` : API_BASE_URL;
 
+      // Récupérer le token du localStorage
+      const userData = localStorage.getItem("user");
+      const token = userData ? JSON.parse(userData).token : null;
+
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...formData,
           id_admin: currentAdminId,
         }),
       });
-
+      
       if (!response.ok) throw new Error(await response.text());
 
       await fetchAnnonces();
@@ -141,6 +143,7 @@ const AnnonceList: React.FC = () => {
     setAnnonceToDelete(id);
     setShowDeleteConfirm(true);
   };
+
   // Gestion de la suppression
   const handleDelete = async () => {
     if (!annonceToDelete || !currentAdminId) return;
@@ -148,9 +151,16 @@ const AnnonceList: React.FC = () => {
     setIsProcessing(true);
 
     try {
+      // Récupérer le token du localStorage
+      const userData = localStorage.getItem("user");
+      const token = userData ? JSON.parse(userData).token : null;
+      console.log(`Token récupéré: ${token}`);
+      
       const response = await fetch(`${API_BASE_URL}/${annonceToDelete}`, {
         method: "DELETE",
-        credentials: "include",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
 
       if (!response.ok) throw new Error("Échec de la suppression");
@@ -339,7 +349,7 @@ const AnnonceList: React.FC = () => {
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 border rounded hover:bg-gray-50"
+                    className="px-4 py-2 border rounded bg-red-500 text-white hover:bg-grey-50"
                   >
                     Annuler
                   </button>

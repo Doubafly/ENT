@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { message: "Étudiant créé avec succès", etudiant },
+      { message: "Étudiant créé avec succès", etudiant ,utilisateur},
       { status: 201 }
     );
   } catch (error: any) {

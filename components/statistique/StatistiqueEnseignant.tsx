@@ -1,63 +1,72 @@
+"use client";
 import React, { useEffect, useState } from "react";
-import { Bar, Doughnut } from "react-chartjs-2";
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement,
-  } from "chart.js";
-  
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
-  );  
-import MiniSmallIconCard from "../card/MiniIconCard";
+  FaBookOpen,
+  FaUserGraduate,
+  FaChalkboardTeacher,
+  FaCalendarTimes,
+} from "react-icons/fa";
+import { motion } from "framer-motion";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
+import { Bar, Doughnut } from "react-chartjs-2";
+import EmploiDuTempsEnseignant from "../emploisDuTemps/EmploiProf";
 import "./statistique.css";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 const StatistiqueEnseignant = () => {
   const [barData, setBarData] = useState<any>(null);
   const [doughnutData, setDoughnutData] = useState<any>(null);
-  const [menuStat, setMenuStat] = useState([
-    { link: "/icons/text-books.png", value: "0", nom: "Nombre Filiere" },
-    { link: "/icons/friends.png", value: "0", nom: "Nombre etudiant" },
-    { link: "/icons/teach.png", value: "0", nom: "Nombre Module" },
-  ]);
+  const [menuStat, setMenuStat] = useState<any[]>([]);
+  const [enseignantId, setEnseignantId] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        const sessionRes = await fetch("/api/auth/session", {
-          credentials: "include",
-        });
-        const sessionData = await sessionRes.json();
-        const enseignant = sessionData.user?.enseignant;
-  
-        if (!enseignant) return;
-  
+ // Récupération des données depuis localStorage
+                const userDataString = localStorage.getItem("user");
+                if (!userDataString) {
+                    throw new Error("Aucune donnée utilisateur trouvée");
+                }
+
+                const userData = JSON.parse(userDataString);
+                const enseignant = userData?.user?.enseignant || userData?.enseignant;
+                console.log("Données utilisateur :", userData);
+                console.log("Données enseignant :", enseignant);
+                if (!enseignant) {
+                    console.error("Aucune donnée enseignant trouvée");
+                    return;
+                }
         const coursRes = await fetch("/api/cours");
         const coursData = await coursRes.json();
         const cours = coursData.cours || [];
-  
+
         const coursEnseignant = cours.filter(
           (c: any) => c.enseignant.id === enseignant.id
         );
-  
-        // === Cartes Statistiques ===
+
+        // === Statistiques ===
         const filieresSet = new Set(
           coursEnseignant.map((c: any) => c.filiere_module.filiere.nom)
         );
@@ -69,52 +78,63 @@ const StatistiqueEnseignant = () => {
             c.filiere_module.filiere.etudiants?.map((e: any) => e.matricule) || []
           )
         );
-  
+        const absencesEnseignant = coursEnseignant.reduce(
+          (acc: number, c: any) => acc + (c.absences?.length || 0),
+          0
+        );
+
         setMenuStat([
           {
-            link: "/icons/text-books.png",
+            icon: <FaBookOpen className="text-4xl text-white" />,
             value: filieresSet.size.toString(),
-            nom: "Nombre Filiere",
+            nom: "Nombre Filière",
+            color: "bg-blue-500",
           },
           {
-            link: "/icons/friends.png",
+            icon: <FaUserGraduate className="text-4xl text-white" />,
             value: etudiantsSet.size.toString(),
-            nom: "Nombre etudiant",
+            nom: "Nombre Étudiant",
+            color: "bg-green-500",
           },
           {
-            link: "/icons/teach.png",
+            icon: <FaChalkboardTeacher className="text-4xl text-white" />,
             value: modulesSet.size.toString(),
             nom: "Nombre Module",
+            color: "bg-purple-500",
+          },
+          {
+            icon: <FaCalendarTimes className="text-4xl text-white" />,
+            value: absencesEnseignant.toString(),
+            nom: "Mes Absences",
+            color: "bg-red-500",
           },
         ]);
-  
-        // === Line Chart: cours par filière ===
+
+        // === Graphiques ===
         const coursParFiliere: Record<string, number> = {};
+        const etudiantsParFiliere: Record<string, number> = {};
+
         coursEnseignant.forEach((c: any) => {
-          const nomFiliere = c.filiere_module.filiere.nom;
-          coursParFiliere[nomFiliere] = (coursParFiliere[nomFiliere] || 0) + 1;
+          const filiere = c.filiere_module.filiere.nom;
+          coursParFiliere[filiere] = (coursParFiliere[filiere] || 0) + 1;
+
+          const nbEtud = c.filiere_module.filiere.etudiants?.length || 0;
+          etudiantsParFiliere[filiere] = (etudiantsParFiliere[filiere] || 0) + nbEtud;
         });
-  
+
         setBarData({
           labels: Object.keys(coursParFiliere),
           datasets: [
             {
               label: "Cours par Filière",
               data: Object.values(coursParFiliere),
-              borderColor: "#42A5F5",
-              backgroundColor: "rgba(66,165,245,0.2)",
+              borderColor: "#4F46E5",
+              backgroundColor: "rgba(79, 70, 229, 0.2)",
               tension: 0.4,
               fill: true,
+              pointBackgroundColor: "#4F46E5",
             },
           ],
-        });
-  
-        // === Doughnut Chart: étudiants par filière ===
-        const etudiantsParFiliere: Record<string, number> = {};
-        coursEnseignant.forEach((c: any) => {
-          const nomFiliere = c.filiere_module.filiere.nom;
-          const nbEtudiants = c.filiere_module.filiere.etudiants?.length || 0;
-          etudiantsParFiliere[nomFiliere] = (etudiantsParFiliere[nomFiliere] || 0) + nbEtudiants;
         });
 
         setDoughnutData({
@@ -122,8 +142,23 @@ const StatistiqueEnseignant = () => {
           datasets: [
             {
               data: Object.values(etudiantsParFiliere),
-              backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"],
-              hoverBackgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"],
+              backgroundColor: [
+                "#3B82F6",
+                "#10B981",
+                "#F59E0B",
+                "#EF4444",
+                "#6366F1",
+                "#14B8A6",
+              ],
+              hoverBackgroundColor: [
+                "#60A5FA",
+                "#34D399",
+                "#FBBF24",
+                "#F87171",
+                "#818CF8",
+                "#2DD4BF",
+              ],
+              borderWidth: 0,
             },
           ],
         });
@@ -131,38 +166,47 @@ const StatistiqueEnseignant = () => {
         console.error("Erreur Statistique Enseignant :", err);
       }
     }
-  
+
     fetchStats();
   }, []);
-  
-  return (
-    <div className="stat-admin">
-      <h2 className="statistique-title">Statistiques Enseignant</h2>
 
-      <div className="gridStat">
-        {menuStat.map((stat, index) => (
-          <MiniSmallIconCard
-            key={index}
-            photoName={stat.link}
-            stats={stat.value}
-            name={stat.nom}
-          />
-        ))}
+
+return (
+  <div className="p-6 bg-gray-50 min-h-screen">
+    {/* <h2 className="text-3xl font-semibold mb-6 text-gray-800">Dashboard Enseignant</h2> */}
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  {menuStat.map((stat, index) => (
+    <motion.div
+      key={index}
+      className={`rounded-xl p-5 text-center hover:shadow-lg transition-all shadow-md ${stat.color || 'bg-gray-100'} text-white`}
+      whileHover={{ scale: 1.05 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+    >
+      <div className="mb-3 flex justify-center">
+        {/* Utilise une icône selon le nom ou une par défaut */}
+        {stat.icon ?? <FaBookOpen className="text-4xl text-white" />}
       </div>
+      <div className="text-3xl font-bold">{stat.value}</div>
+      <div className="text-sm mt-1">{stat.nom}</div>
+    </motion.div>
+  ))}
+</div>
 
-      <div className="charts-container">
-        <div className="chart bar-chart">
-          <h3>Cours par Filière</h3>
-          {barData && <Bar data={barData} />}
-        </div>
+    {/* Conteneur stylé pour Emploi du temps */}
+    <motion.div
+      className="bg-white p-6 rounded-xl shadow-md"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <EmploiDuTempsEnseignant />
+    </motion.div>
+  </div>
+);
 
-        <div className="chart doughnut-chart">
-          <h3>Répartition Étudiants</h3>
-          {doughnutData && <Doughnut data={doughnutData} />}
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default StatistiqueEnseignant;

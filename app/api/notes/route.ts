@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       note_exam === undefined
     ) {
       return NextResponse.json(
-        { message: "Veuillez fournir tous les champs obligatoires" },
+        { message: "Veuillez fournir tous les champs obligatoires",id_etudiant,id_cours,note_class,note_exam },
         { status: 400 }
       );
     }

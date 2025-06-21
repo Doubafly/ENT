@@ -6,12 +6,12 @@ interface Params {
 }
 
 // GET : Récupérer une absence par ID
-export async function GET(request: NextRequest, { params }: Params) {
-  const id = parseInt(params.id);
-
+export async function GET(request: NextRequest) {
+  
+  const id = request.nextUrl.pathname.split("/").pop();
   try {
-    const absence = await prisma.absences.findUnique({
-        where: { id_absence: id },
+    const absence = await prisma.absences.findMany({
+        where: { id_utilisateur: id ? parseInt(id) : 0 },
         select: {
           id_absence: true,
           date_absence: true,

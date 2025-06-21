@@ -68,7 +68,7 @@ const ParametrePage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-52 bg-gray-50 text-gray-800 mt-15 p-4 md:p-8 w-full">
+    <div className="flex flex-col min-h-52 bg-gray-50 text-gray-800 mt-15 p-4 md:p-8 w-full mt-8">
       <div className="flex flex-1 flex-col md:flex-row">
         {/* Le sidebar du paramètre */}
         <span className="bg-white text-gray-800 rounded-lg shadow-lg w-full md:w-64 border-r border-gray-200 p-5 mb-50 md:mb-0 h-100">

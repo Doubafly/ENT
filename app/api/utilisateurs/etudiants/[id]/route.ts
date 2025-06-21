@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         },
         filiere: true, // Inclure les détails de la filière
         notes: true, // Inclure les notes de l'étudiant
-        paiements: true, // Inclure les paiements de l'étudiant
+        Finance: true, // Inclure les paiements de l'étudiant
       },
     });
 

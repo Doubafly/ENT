@@ -1,105 +1,95 @@
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import Paper from "@mui/material/Paper";
 import Modal from "../modal/Modal";
+import { Input } from "@mui/material";
 
-// Définir l'interface pour un enseignant
-interface Teacher {
+// Interfaces
+interface Prof {
   id: number;
+  idCours: number;
   firstName: string;
   lastName: string;
   Heure: string;
   module?: string;
-  classe?: string;
+  justifier?: string;
+  classe_id?: string;
+  classe: string;
 }
 
-// Exemple de données
-const initialRows: Teacher[] = [
-  {
-    id: 1,
-    lastName: "Diallo",
-    firstName: "Kadidia",
-    Heure: "8H-10H",
-    module: "Python",
-    classe: "Licence",
-  },
-  {
-    id: 2,
-    lastName: "Cisse",
-    firstName: "Moussa",
-    Heure: "10H-12H",
-    module: "Versioning",
-    classe: "Licence",
-  },
-  {
-    id: 3,
-    lastName: "Konaté",
-    firstName: "Souleymane",
-    Heure: "10H-12H",
-    module: "Java",
-    classe: "Secondaire",
-  },
-  {
-    id: 4,
-    lastName: "Toure",
-    firstName: "Boubacar",
-    Heure: "10H-12H",
-    module: "Maths",
-    classe: "Primaire",
-  },
-  {
-    id: 5,
-    lastName: "Sidibe",
-    firstName: "Adam",
-    Heure: "10H-12H",
-    module: "Finances",
-    classe: "Primaire",
-  },
-  {
-    id: 6,
-    lastName: "Sylla",
-    firstName: "Ousmane",
-    Heure: "10H-12H",
-    module: "Shell",
-    classe: "Primaire",
-  },
-  {
-    id: 7,
-    lastName: "Diarra",
-    firstName: "Mamadou",
-    Heure: "10H-12H",
-    module: "Langage C",
-    classe: "Primaire",
-  },
-  {
-    id: 8,
-    lastName: "Diakite",
-    firstName: "Madi",
-    Heure: "10H-12H",
-    module: "PHP",
-    classe: "Secondaire",
-  },
-  {
-    id: 9,
-    lastName: "Ba",
-    firstName: "Mamadou",
-    Heure: "10H-12H",
-    module: "React",
-    classe: "Licence",
-  },
-];
+const prepareAbsenceDataParJour = (data: any, jour: string): Prof[] => {
+  const rows: Prof[] = [];
+  data.cours.forEach((cours: any) => {
+    const moduleNom = cours.filiere_module?.module?.nom || "Inconnu";
+    const idCours = cours.id_cours || "Inconnu";
+    const classeNom = cours.filiere_module?.filiere?.nom || "Inconnue";
+    const prof = cours.enseignant || [];
+    const emplois = cours.emplois_du_temps || [];
 
-export default function AbsenceProfList() {
+    emplois.forEach((emploi: any) => {
+      if (emploi.jour.toLowerCase() === jour.toLowerCase()) {
+        const heure_debut = new Date(emploi.heure_debut)
+          .toISOString()
+          .substr(11, 5);
+        const heure_fin = new Date(emploi.heure_fin)
+          .toISOString()
+          .substr(11, 5);
+        const heure = `${heure_debut}H-${heure_fin}H`;
+
+        rows.push({
+          idCours: idCours,
+          id: prof.utilisateur.id_utilisateur,
+          firstName: prof.utilisateur.prenom,
+          lastName: prof.utilisateur.nom,
+          Heure: heure,
+          module: moduleNom,
+          classe: classeNom,
+        });
+      }
+    });
+  });
+
+  return rows;
+};
+
+export default function AbsenceEtudiantList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [classFilter, setClassFilter] = useState("");
-  const [moduleFilter, setModuleFilter] = useState("");
-  const [rows] = useState<Teacher[]>(initialRows);
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
+  const [data, setData] = useState("");
+  const [selectedTeacher, setSelectedTeacher] = useState<Prof | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
-  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [allRows, setAllRows] = useState<Prof[]>([]);
+  const [filteredClasse, setFilteredClasse] = useState("");
+
+  const getCurrentHourRange = (): string => {
+    const now = new Date();
+    const hours = now.getHours();
+
+    if (hours < 10) return "08H-10H";
+    if (hours < 12) return "10H-12H";
+    if (hours < 14) return "12H-14H";
+    if (hours < 16) return "14H-16H";
+    return "16H-18H";
+  };
+
+  const [filteredHeure, setFilteredHeure] = useState(getCurrentHourRange());
+  useEffect(() => {
+    const fetchCours = async () => {
+      try {
+        const res = await fetch("/api/cours");
+        const data = await res.json();
+        console.log(data);
+
+        setData(data);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des cours :", error);
+      }
+    };
+    fetchCours();
+  }, []);
 
   const jours = [
     "dimanche",
@@ -112,40 +102,96 @@ export default function AbsenceProfList() {
   ] as const;
   const dayName = jours[new Date(selectedDate).getDay()];
 
-  const paginationModel = { page: 0, pageSize: 5 };
+  useEffect(() => {
+    if (!data) {
+      console.error("Aucune donnée de cours disponible");
+      return;
+    }
+    const rows = prepareAbsenceDataParJour(data, dayName);
+    setAllRows(rows);
+    console.log("All rows prepared:", allRows);
+  }, [data]);
 
-  const filteredRows = rows.filter((row) => {
-    const matchesSearch = `${row.firstName} ${row.lastName}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesClass = classFilter ? row.classe === classFilter : true;
-    const matchesModule = moduleFilter ? row.module === moduleFilter : true;
-    return matchesSearch && matchesClass && matchesModule;
+  const filteredRows = allRows.filter((row) => {
+    const matchClasse = filteredClasse ? row.classe === filteredClasse : true;
+    const matchHeure = filteredHeure ? row.Heure === filteredHeure : true;
+    return matchClasse && matchHeure;
   });
 
-  const handleOpenModal = (teacher: Teacher) => {
-    setSelectedTeacher(teacher);
+  const paginationModel = { page: 0, pageSize: 5 };
+
+  const classesDisponibles = Array.from(
+    new Set(allRows.map((row) => row.classe))
+  );
+
+  const handleOpenModal = async (Prof: Prof) => {
+    setSelectedTeacher(Prof);
+    try {
+      const response = await fetch(`/api/absences/${Prof.id}`);
+      if (response.ok) {
+        const etudiantSelect = await response.json();
+        etudiantSelect.absence.map(
+          (abs: { date_absence: string | number | Date }) => {
+            const date = new Date(abs.date_absence);
+          }
+        );
+      }
+    } catch (error) {
+      alert("pgf");
+    }
   };
 
-   const handleEnregistrer = () => {
-    const enseignantsSelectionnes = rows.filter((row) =>
+  const handleEnregistrer = async () => {
+    alert("on est la");
+    const enseignantsSelectionnes = allRows.filter((row) =>
       selectedRows.includes(row.id)
-    )
-    console.log('Enseignants sélectionnés :', enseignantsSelectionnes)
-    alert(`${enseignantsSelectionnes.length} enseignant(s) enregistré(s).`)
-  }
+    );
+    const abs = filteredRows.filter(
+      (et) => !enseignantsSelectionnes.some((sel) => sel.id === et.id)
+    );
+    abs.map(async (a) => {
+      const payload = {
+        id_etudiant: a.id,
+        id_cours: a.idCours,
+        date: new Date().getDay(),
+        justification: "cvv",
+      };
+      try {
+        const response = await fetch("/api/absences/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          alert("ok");
+          console.log(response.json());
+        }
+      } catch (error) {
+        alert("pgf");
+      }
+    });
+  };
+
   const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 70 },
     { field: "firstName", headerName: "Nom", width: 130 },
-    { field: "lastName", headerName: "Prénom", width: 130 },
+    { field: "lastName", headerName: "Prenom", width: 130 },
     { field: "Heure", headerName: "Heure", width: 130 },
-    { field: "module", headerName: "Module", width: 130 },
     { field: "classe", headerName: "Classe", width: 130 },
+    { field: "module", headerName: "module", width: 130 },
+    {
+      field: "justificatif",
+      headerName: "Justificatif",
+      width: 150,
+      renderCell: (params) => <Input></Input>,
+    },
     {
       field: "action",
       headerName: "Action",
-      width: 180,
-      sortable: false,
-      filterable: false,
+      width: 150,
       renderCell: (params) => (
         <button
           className="text-blue-500 hover:underline"
@@ -160,59 +206,63 @@ export default function AbsenceProfList() {
     },
   ];
 
+  const heuresDisponibles = Array.from(
+    new Set(allRows.map((row) => row.Heure))
+  );
+
   return (
     <div className="ml-0 px-1 py-5 text-xl">
       {/* Filtres */}
       <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
         <input
           type="text"
-          placeholder="Rechercher un enseignant..."
+          placeholder="Rechercher un étudiant..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         />
+
         <select
-          value={moduleFilter}
-          onChange={(e) => setModuleFilter(e.target.value)}
-          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
-        >
-          <option value="">Filtrer par Module</option>
-          {[...new Set(rows.map((e) => e.module))].map((module) => (
-            <option key={module} value={module}>
-              {module}
-            </option>
-          ))}
-        </select>
-        <select
-          value={classFilter}
-          onChange={(e) => setClassFilter(e.target.value)}
+          value={filteredClasse}
+          onChange={(e) => setFilteredClasse(e.target.value)}
           className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
         >
           <option value="">Filtrer par Classe</option>
-          {[...new Set(rows.map((e) => e.classe))].map((classe) => (
+          {classesDisponibles.map((classe) => (
             <option key={classe} value={classe}>
               {classe}
             </option>
           ))}
         </select>
-      </div>
-      {/* Bouton Enregistrer et Jour alignés sur la même ligne */}
-<div className="flex justify-between items-center min-w-[200px] p-3 border rounded-lg text-sm">
 
-  {/* Jour à droite */}
-  <div className="flex items-center text-ml text-green-600">
-    <span>Jour :</span>
-    <span className="ml-2 font-medium capitalize">{dayName}</span>
-  </div>
-  {/* Bouton Enregistrer à gauche */}
-  <button
-    onClick={handleEnregistrer}
-    className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-    disabled={selectedRows.length === 0}
-  >
-    Enregistrer
-  </button>
-</div>
+        <select
+          onChange={(e) => setFilteredHeure(e.target.value)}
+          value={filteredHeure}
+          className="flex-1 min-w-[200px] p-3 border rounded-lg text-sm"
+        >
+          <option value="">Filtrer par heures</option>
+          {heuresDisponibles.map((heure) => (
+            <option key={heure} value={heure}>
+              {heure}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Enregistrer + Jour */}
+      <div className="flex justify-between items-center min-w-[200px] p-3 border rounded-lg text-sm">
+        <div className="flex items-center text-ml text-green-600">
+          <span>Jour :</span>
+          <span className="ml-2 font-medium capitalize">{dayName}</span>
+        </div>
+        <button
+          onClick={handleEnregistrer}
+          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          // disabled={selectedRows.length === 0}
+        >
+          Enregistrer
+        </button>
+      </div>
 
       {/* Tableau */}
       <Paper sx={{ height: 500, width: "100%" }}>
@@ -223,21 +273,22 @@ export default function AbsenceProfList() {
           pageSizeOptions={[5, 10]}
           checkboxSelection
           onRowSelectionModelChange={(newSelection) => {
-            setSelectedRows(newSelection as unknown as number[]);
+            // Extraire les IDs de l'objet `newSelection` et les convertir en tableau
+            const selectedIds = Array.from((newSelection as any).ids || []);
+            setSelectedRows(selectedIds as number[]);
           }}
           disableRowSelectionOnClick
           sx={{ border: 0 }}
         />
       </Paper>
 
-      {/* Modal */}
+      {/* Modal étudiant */}
       {selectedTeacher && (
         <Modal onClose={() => setSelectedTeacher(null)}>
           <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
             <div className="flex flex-col items-center mb-4">
               <img
-                title="teacher-profile"
-                src="img/man2.jpg"
+                src="/img/man2.jpg"
                 alt="Profile"
                 className="object-cover w-[120px] h-[120px] rounded-full border"
               />
@@ -245,25 +296,21 @@ export default function AbsenceProfList() {
                 {selectedTeacher.firstName} {selectedTeacher.lastName}
               </h2>
               <p className="text-gray-500 text-sm">
-                Module: {selectedTeacher.module}
+                Classe: {selectedTeacher.classe_id}
               </p>
-              <p className="text-gray-500 text-sm">
-                Classe: {selectedTeacher.classe}
+              <p className="text-green-500 text-sm font-bold">
+                Justification: {selectedTeacher.justifier}
               </p>
             </div>
-
-
-            {/* Liste d'absences */}
             <div className="mt-4 text-center">
-              <h3 className="text-md font-semibold mb-4">Liste des Absences :</h3>
+              <h3 className="text-md font-semibold mb-4">
+                Liste des Absences :
+              </h3>
               <ul className="grid grid-cols-2 gap-2 list-none text-gray-700">
                 <li>Absence le 20/04/2025</li>
                 <li>Absence le 05/05/2025</li>
                 <li>Absence le 10/05/2025</li>
                 <li>Absence le 15/05/2025</li>
-                <li>Absence le 20/05/2025</li>
-                <li>Absence le 25/05/2025</li>
-                <li>Absence le 30/05/2025</li>
               </ul>
             </div>
           </div>

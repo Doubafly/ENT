@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/api/prisma";
 import bcrypt from "bcryptjs";
+import { permission } from "process";
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
       include: {
         etudiant: true,
         enseignant: true,
-        admin: true
+        admin: true,
+        Permission: true, // Inclure les permissions
       }
     });
 
@@ -54,6 +56,7 @@ export async function POST(request: NextRequest) {
       // Données spécifiques au type
       ...(user.type === 'Etudiant' && user.etudiant && {
         etudiant: {
+          id: user.etudiant.id,
           matricule: user.etudiant.matricule,
           date_naissance: user.etudiant.date_naissance,
           date_inscription: user.etudiant.date_inscription,
@@ -62,13 +65,16 @@ export async function POST(request: NextRequest) {
       }),
       ...(user.type === 'Enseignant' && user.enseignant && {
         enseignant: {
+          id: user.enseignant.id,
           matricule: user.enseignant.matricule,
           specialite: user.enseignant.specialite
         }
       }),
       ...(user.type === 'Admin' && user.admin && {
         admin: {
-          id_admin: user.admin.id_admin
+          id_admin: user.admin.id_admin,
+          isAdmin: user.admin,
+          Permission:user.Permission
         }
       })
     };

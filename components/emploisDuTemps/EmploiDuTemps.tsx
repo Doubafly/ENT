@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import Modal from '../modal/Modal';
+import React, { useState, useEffect } from "react";
+import Modal from "../modal/Modal";
 
 interface Emploi {
   id_emploi: number;
@@ -28,6 +28,7 @@ interface Emploi {
         id_utilisateur: number;
         nom: string;
         prenom: string;
+        telephone: any;
       };
     };
   };
@@ -50,17 +51,29 @@ interface Enseignant {
     id_utilisateur: number;
     nom: string;
     prenom: string;
+    telephone: any;
   };
 }
 
-const heures = ['08:00-10:00', '10:30-12:30', '12:30-14:30', '17:00-20:00'];
-const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const heures = ["08:00-10:00", "10:30-12:30", "12:30-14:30", "17:00-20:00"];
+const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 
 const creerTableauVide = () => {
-  const tableau: Record<string, Record<string, { matiere: string; enseignant: string; salle: string } | null>> = {};
-  heures.forEach(h => {
+  const tableau: Record<
+    string,
+    Record<
+      string,
+      {
+        matiere: string;
+        enseignant: string;
+        salle: string;
+        telephone: any;
+      } | null
+    >
+  > = {};
+  heures.forEach((h) => {
     tableau[h] = {};
-    jours.forEach(j => {
+    jours.forEach((j) => {
       tableau[h][j] = null;
     });
   });
@@ -68,54 +81,70 @@ const creerTableauVide = () => {
 };
 
 const EmploiDuTemps = () => {
-  const [classe, setClasse] = useState('');
+  const [classe, setClasse] = useState("");
   const [emploiDuTemps, setEmploiDuTemps] = useState(creerTableauVide());
   const [showForm, setShowForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [formData, setFormData] = useState({
-    matiere: '',
-    enseignant: '',
-    salle: '',
-    jour: '',
-    heure: '',
-    id_cours: '',
-    id_emploi: null as number | null
+    matiere: "",
+    enseignant: "",
+    salle: "",
+    jour: "",
+    heure: "",
+    id_cours: "",
+    id_emploi: null as number | null,
   });
-  const [selectedCell, setSelectedCell] = useState<{ jour: string; heure: string } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{
+    jour: string;
+    heure: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [emplois, setEmplois] = useState<Emploi[]>([]);
   const [classes, setClasses] = useState<Classe[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
   const [enseignants, setEnseignants] = useState<Enseignant[]>([]);
-  const [mode, setMode] = useState<'create' | 'edit' | null>(null);
-  const [coursOptions, setCoursOptions] = useState<{id: number, label: string}[]>([]);
+  const [mode, setMode] = useState<"create" | "edit" | null>(null);
+  const [coursOptions, setCoursOptions] = useState<
+    { id: number; label: string }[]
+  >([]);
 
   // Charger les données initiales
   const fetchInitialData = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       // Charger tous les emplois du temps
-      const emploisResponse = await fetch('/api/emploisDuTemps');
-      if (!emploisResponse.ok) throw new Error('Erreur de chargement des emplois');
+      const emploisResponse = await fetch("/api/emploisDuTemps");
+      if (!emploisResponse.ok)
+        throw new Error("Erreur de chargement des emplois");
       const emploisData = await emploisResponse.json();
       setEmplois(emploisData.emploisDuTemps || []);
 
       // Charger les options de cours
-      const coursResponse = await fetch('/api/cours');
+      const coursResponse = await fetch("/api/cours");
       if (coursResponse.ok) {
         const coursData = await coursResponse.json();
         (coursData.cours || []).map((c: any) => ({
           id: c.id_cours,
-          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
-        }))
-        
-        setCoursOptions((coursData.cours || []).map((c: any) => ({
-          id: c.id_cours,
-          label: `${c.filiere_module?.module?.nom || 'Inconnu'} - ${c.enseignant?.utilisateur?.prenom || ''} ${c.enseignant?.utilisateur?.nom || ''}`
-        })));
+          label: `${c.filiere_module?.module?.nom || "Inconnu"} - ${
+            c.enseignant?.utilisateur?.prenom || ""
+          } ${c.enseignant?.utilisateur?.nom || ""} - ${
+            c.filiere_module?.filiere?.niveau || ""
+          } ${c.filiere_module?.filiere?.nom || ""}`,
+        }));
+
+        setCoursOptions(
+          (coursData.cours || []).map((c: any) => ({
+            id: c.id_cours,
+            label: `${c.filiere_module?.module?.nom || "Inconnu"} - ${
+              c.enseignant?.utilisateur?.prenom || ""
+            } ${c.enseignant?.utilisateur?.nom || ""} - ${
+              c.filiere_module?.filiere?.niveau || ""
+            } ${c.filiere_module?.filiere?.nom || ""}`,
+          }))
+        );
 
         // Extraction unique des classes
         const uniqueClasses: { [key: number]: Classe } = {};
@@ -151,7 +180,8 @@ const EmploiDuTemps = () => {
                 id_utilisateur: enseignant.utilisateur?.id_utilisateur,
                 nom: enseignant.utilisateur?.nom,
                 prenom: enseignant.utilisateur?.prenom,
-              }
+                telephone: enseignant.utilisateur?.telephone,
+              },
             };
           }
         });
@@ -159,11 +189,9 @@ const EmploiDuTemps = () => {
         setClasses(Object.values(uniqueClasses));
         setModules(Object.values(uniqueModules));
         setEnseignants(Object.values(uniqueEnseignants));
-        
       }
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
@@ -180,21 +208,27 @@ const EmploiDuTemps = () => {
   const formatHeureAffichage = (dateTime: string) => {
     try {
       const date = new Date(dateTime);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
     } catch {
-      return '00:00';
+      return "00:00";
     }
   };
 
   const chargerEmploiDuTemps = (classeSelectionnee: string) => {
     if (!classeSelectionnee) return setEmploiDuTemps(creerTableauVide());
 
-    const [niveau, nomFiliere] = classeSelectionnee.split(' ');
+    const [niveau, nomFiliere] = classeSelectionnee.split(" ");
     const edt = creerTableauVide();
 
     emplois.forEach((emploi) => {
-      if (emploi.cours?.filiere_module?.filiere?.niveau === niveau &&
-          emploi.cours?.filiere_module?.filiere?.nom === nomFiliere) {
+      if (
+        emploi.cours?.filiere_module?.filiere?.niveau === niveau &&
+        emploi.cours?.filiere_module?.filiere?.nom === nomFiliere
+      ) {
         const heureDebut = formatHeureAffichage(emploi.heure_debut);
         const heureFin = formatHeureAffichage(emploi.heure_fin);
         const heureKey = `${heureDebut}-${heureFin}`;
@@ -202,8 +236,11 @@ const EmploiDuTemps = () => {
         if (edt[heureKey]?.[emploi.jour] !== undefined) {
           edt[heureKey][emploi.jour] = {
             matiere: emploi.cours.filiere_module.module.nom,
-            enseignant: `${emploi.cours.enseignant?.utilisateur?.prenom || ''} ${emploi.cours.enseignant?.utilisateur?.nom || ''}`,
-            salle: emploi.salle
+            enseignant: `${
+              emploi.cours.enseignant?.utilisateur?.prenom || ""
+            } ${emploi.cours.enseignant?.utilisateur?.nom || ""}`,
+            salle: emploi.salle,
+            telephone: emploi.cours.enseignant?.utilisateur?.telephone,
           };
         }
       }
@@ -222,14 +259,15 @@ const EmploiDuTemps = () => {
 
     if (seance) {
       // Mode édition
-      const [niveau, nomFiliere] = classe.split(' ');
-      const [heureDebut] = heure.split('-');
-      
-      const emploiComplet = emplois.find(e => 
-        e.jour === jour &&
-        formatHeureAffichage(e.heure_debut) === heureDebut &&
-        e.cours.filiere_module.filiere.niveau === niveau &&
-        e.cours.filiere_module.filiere.nom === nomFiliere
+      const [niveau, nomFiliere] = classe.split(" ");
+      const [heureDebut] = heure.split("-");
+
+      const emploiComplet = emplois.find(
+        (e) =>
+          e.jour === jour &&
+          formatHeureAffichage(e.heure_debut) === heureDebut &&
+          e.cours.filiere_module.filiere.niveau === niveau &&
+          e.cours.filiere_module.filiere.nom === nomFiliere
       );
 
       setFormData({
@@ -238,22 +276,22 @@ const EmploiDuTemps = () => {
         matiere: seance.matiere,
         enseignant: seance.enseignant,
         salle: seance.salle,
-        id_cours: emploiComplet?.cours.id_cours.toString() || '',
-        id_emploi: emploiComplet?.id_emploi || null
+        id_cours: emploiComplet?.cours.id_cours.toString() || "",
+        id_emploi: emploiComplet?.id_emploi || null,
       });
-      setMode('edit');
+      setMode("edit");
     } else {
       // Mode création
       setFormData({
         jour,
         heure,
-        matiere: '',
-        enseignant: '',
-        salle: '',
-        id_cours: '',
-        id_emploi: null
+        matiere: "",
+        enseignant: "",
+        salle: "",
+        id_cours: "",
+        id_emploi: null,
       });
-      setMode('create');
+      setMode("create");
     }
 
     setSelectedCell({ jour, heure });
@@ -262,56 +300,65 @@ const EmploiDuTemps = () => {
 
   const handleAddClick = () => {
     if (!classe) {
-      setError('Veuillez sélectionner une classe');
+      setError("Veuillez sélectionner une classe");
       return;
     }
     setFormData({
-      jour: '',
-      heure: '',
-      matiere: '',
-      enseignant: '',
-      salle: '',
-      id_cours: '',
-      id_emploi: null
+      jour: "",
+      heure: "",
+      matiere: "",
+      enseignant: "",
+      salle: "",
+      id_cours: "",
+      id_emploi: null,
     });
-    setMode('create');
+    setMode("create");
     setSelectedCell(null);
     setShowForm(true);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      if (!formData.jour || !formData.heure || !formData.matiere || !formData.enseignant || !classe) {
-        throw new Error('Tous les champs obligatoires doivent être remplis');
+      if (
+        !formData.jour ||
+        !formData.heure ||
+        !formData.matiere ||
+        !formData.enseignant ||
+        !classe
+      ) {
+        throw new Error("Tous les champs obligatoires doivent être remplis");
       }
 
-      const [heureDebut, heureFin] = formData.heure.split('-');
-      const [niveau, nomFiliere] = classe.split(' ');
+      const [heureDebut, heureFin] = formData.heure.split("-");
+      const [niveau, nomFiliere] = classe.split(" ");
 
       // Trouver le cours correspondant
-      const coursSelectionne = coursOptions.find(c => 
-        c.label.includes(formData.matiere) && 
-        c.label.includes(formData.enseignant)
+      const coursSelectionne = coursOptions.find(
+        (c) =>
+          c.label.includes(formData.matiere) &&
+          c.label.includes(formData.enseignant) &&
+          c.label.includes(classe)
       );
-      
-      if (!coursSelectionne) throw new Error('Cours non trouvé');
+
+      if (!coursSelectionne) throw new Error("Cours non trouvé");
 
       const emploiData = {
         id_cours: coursSelectionne.id,
         jour: formData.jour,
         heure_debut: new Date(`1970-01-01T${heureDebut}:00`).toISOString(),
         heure_fin: new Date(`1970-01-01T${heureFin}:00`).toISOString(),
-        salle: formData.salle
+        salle: formData.salle,
       };
 
       // Mise à jour optimiste de l'état local
@@ -328,71 +375,74 @@ const EmploiDuTemps = () => {
         salle: formData.salle,
         cours: {
           id_cours: coursSelectionne.id,
-          semestre: '',
+          semestre: "",
           filiere_module: {
             filiere: {
               id_filiere,
               niveau,
-              nom: nomFiliere
+              nom: nomFiliere,
             },
             module: {
-              id_module: modules.find((m) => m.nom === formData.matiere)?.id_module ?? 0,
-              nom: formData.matiere
-            }
+              id_module:
+                modules.find((m) => m.nom === formData.matiere)?.id_module ?? 0,
+              nom: formData.matiere,
+            },
           },
           enseignant: {
-            id_enseignant: enseignants.find(
-              (e) =>
-                `${e.utilisateur.prenom} ${e.utilisateur.nom}` === formData.enseignant
-            )?.id_enseignant ?? 0,
+            id_enseignant:
+              enseignants.find(
+                (e) =>
+                  `${e.utilisateur.prenom} ${e.utilisateur.nom}` ===
+                  formData.enseignant
+              )?.id_enseignant ?? 0,
             utilisateur: {
               id_utilisateur:
                 enseignants.find(
                   (e) =>
-                    `${e.utilisateur.prenom} ${e.utilisateur.nom}` === formData.enseignant
+                    `${e.utilisateur.prenom} ${e.utilisateur.nom}` ===
+                    formData.enseignant
                 )?.utilisateur.id_utilisateur ?? 0,
-              nom: formData.enseignant.split(' ')[1] || '',
-              prenom: formData.enseignant.split(' ')[0] || ''
-            }
-          }
-        }
+              nom: formData.enseignant.split(" ")[1] || "",
+              prenom: formData.enseignant.split(" ")[0] || "",
+            },
+          },
+        },
       };
 
-      if (mode === 'edit' && formData.id_emploi) {
-        setEmplois(prev => prev.map(e => 
-          e.id_emploi === formData.id_emploi ? newEmploi : e
-        ));
+      if (mode === "edit" && formData.id_emploi) {
+        setEmplois((prev) =>
+          prev.map((e) => (e.id_emploi === formData.id_emploi ? newEmploi : e))
+        );
       } else {
-        setEmplois(prev => [...prev, newEmploi]);
+        setEmplois((prev) => [...prev, newEmploi]);
       }
 
       let response;
-      if (mode === 'edit' && formData.id_emploi) {
+      if (mode === "edit" && formData.id_emploi) {
         response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emploiData)
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emploiData),
         });
       } else {
-        response = await fetch('/api/emploisDuTemps', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(emploiData)
+        response = await fetch("/api/emploisDuTemps", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(emploiData),
         });
       }
 
-      if (!response.ok) throw new Error('Erreur lors de la requête');
+      if (!response.ok) throw new Error("Erreur lors de la requête");
 
       // Recharger les données
-      const emploisResponse = await fetch('/api/emploisDuTemps');
+      const emploisResponse = await fetch("/api/emploisDuTemps");
       const freshData = await emploisResponse.json();
       setEmplois(freshData.emploisDuTemps || []);
 
       setShowForm(false);
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
-      const emploisResponse = await fetch('/api/emploisDuTemps');
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+      const emploisResponse = await fetch("/api/emploisDuTemps");
       setEmplois(await emploisResponse.json());
     } finally {
       setLoading(false);
@@ -401,45 +451,52 @@ const EmploiDuTemps = () => {
 
   const handleDelete = async () => {
     if (!formData.id_emploi) {
-      setError('ID de séance manquant pour la suppression');
+      setError("ID de séance manquant pour la suppression");
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      setEmplois(prev => prev.filter(e => e.id_emploi !== formData.id_emploi));
+      setEmplois((prev) =>
+        prev.filter((e) => e.id_emploi !== formData.id_emploi)
+      );
 
-      const response = await fetch(`/api/emploisDuTemps/${formData.id_emploi}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await fetch(
+        `/api/emploisDuTemps/${formData.id_emploi}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Échec de la suppression');
+        throw new Error(errorData.message || "Échec de la suppression");
       }
 
       setShowForm(false);
       setFormData({
-        matiere: '',
-        enseignant: '',
-        salle: '',
-        jour: '',
-        heure: '',
-        id_cours: '',
-        id_emploi: null
+        matiere: "",
+        enseignant: "",
+        salle: "",
+        jour: "",
+        heure: "",
+        id_cours: "",
+        id_emploi: null,
       });
-
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression');
-      const emploisResponse = await fetch('/api/emploisDuTemps');
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la suppression"
+      );
+      const emploisResponse = await fetch("/api/emploisDuTemps");
       setEmplois(await emploisResponse.json());
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="p-4">
       <h1 className="text-xl font-bold mb-4">Emploi du Temps</h1>
@@ -483,12 +540,14 @@ const EmploiDuTemps = () => {
       </div>
 
       <div className="overflow-auto">
-        <table className="table-auto border-collapse w-full">
-          <thead>
+        <table className="table-auto border-collapse w-full ">
+          <thead className="bg-blue-500 text-white">
             <tr>
               <th className="border p-2">Heure</th>
               {jours.map((jour) => (
-                <th key={jour} className="border p-2">{jour}</th>
+                <th key={jour} className="border p-2">
+                  {jour}
+                </th>
               ))}
             </tr>
           </thead>
@@ -499,20 +558,26 @@ const EmploiDuTemps = () => {
                 {jours.map((jour) => {
                   const seance = emploiDuTemps[heure]?.[jour];
                   const match = searchTerm
-                    ? seance?.enseignant?.toLowerCase().includes(searchTerm.toLowerCase())
+                    ? seance?.enseignant
+                        ?.toLowerCase()
+                        .includes(searchTerm.toLowerCase())
                     : true;
 
                   return (
-                    <td 
-                      key={jour} 
-                      className="border p-2 text-center text-sm hover:bg-gray-50 cursor-pointer" 
+                    <td
+                      key={jour}
+                      className="border p-2 text-center text-sm hover:bg-gray-50 cursor-pointer"
                       onClick={() => handleCellClick(jour, heure)}
                     >
                       {seance && match ? (
                         <>
                           <div className="font-medium">{seance.matiere}</div>
-                          <div className="text-gray-600 text-xs">{seance.enseignant}</div>
-                          <div className="text-gray-500 text-xs italic">{seance.salle}</div>
+                          <div className="text-gray-600 text-xs">
+                            {seance.enseignant}
+                          </div>
+                          <div className="text-gray-500 text-xs italic">
+                            {seance.telephone}
+                          </div>
                         </>
                       ) : null}
                     </td>
@@ -528,22 +593,27 @@ const EmploiDuTemps = () => {
         <Modal onClose={() => setShowForm(false)}>
           <div className="p-5 bg-white rounded-lg shadow-lg w-[600px] relative">
             <h2 className="text-lg font-bold mb-4">
-              {mode === 'edit' ? "Modifier une séance" : "Ajouter une séance"}
+              {mode === "edit" ? "Modifier une séance" : "Ajouter une séance"}
             </h2>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium mb-1">Classe *</label>
+                <label className="block text-sm font-medium mb-1">
+                  Classe *
+                </label>
                 <select
                   name="classe"
                   value={classe}
                   onChange={(e) => setClasse(e.target.value)}
                   className="w-full p-2 border rounded-lg"
                   required
-                  disabled={mode === 'edit'}
+                  disabled={mode === "edit"}
                 >
                   <option value="">Sélectionner une classe</option>
                   {classes.map((c) => (
-                    <option key={`${c.niveau}-${c.nom}`} value={`${c.niveau} ${c.nom}`}>
+                    <option
+                      key={`${c.niveau}-${c.nom}`}
+                      value={`${c.niveau} ${c.nom}`}
+                    >
                       {c.niveau} {c.nom}
                     </option>
                   ))}
@@ -552,41 +622,49 @@ const EmploiDuTemps = () => {
 
               <div>
                 <label className="block text-sm font-medium mb-1">Jour *</label>
-                <select 
+                <select
                   name="jour"
                   value={formData.jour}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
                   required
-                  disabled={mode === 'edit'}
+                  disabled={mode === "edit"}
                 >
                   <option value="">Sélectionner un jour</option>
-                  {jours.map(j => (
-                    <option key={j} value={j}>{j}</option>
+                  {jours.map((j) => (
+                    <option key={j} value={j}>
+                      {j}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Heure *</label>
-                <select 
+                <label className="block text-sm font-medium mb-1">
+                  Heure *
+                </label>
+                <select
                   name="heure"
                   value={formData.heure}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-lg"
                   required
-                  disabled={mode === 'edit'}
+                  disabled={mode === "edit"}
                 >
                   <option value="">Sélectionner une heure</option>
-                  {heures.map(h => (
-                    <option key={h} value={h}>{h}</option>
+                  {heures.map((h) => (
+                    <option key={h} value={h}>
+                      {h}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Matière *</label>
-                <select 
+                <label className="block text-sm font-medium mb-1">
+                  Matière *
+                </label>
+                <select
                   name="matiere"
                   value={formData.matiere}
                   onChange={handleInputChange}
@@ -603,8 +681,10 @@ const EmploiDuTemps = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Enseignant *</label>
-                <select 
+                <label className="block text-sm font-medium mb-1">
+                  Enseignant *
+                </label>
+                <select
                   name="enseignant"
                   value={formData.enseignant}
                   onChange={handleInputChange}
@@ -613,8 +693,8 @@ const EmploiDuTemps = () => {
                 >
                   <option value="">Sélectionner un enseignant</option>
                   {enseignants?.map((e) => (
-                    <option 
-                      key={e.id_enseignant} 
+                    <option
+                      key={e.id_enseignant}
                       value={`${e.utilisateur.prenom} ${e.utilisateur.nom}`}
                     >
                       {e.utilisateur.prenom} {e.utilisateur.nom}
@@ -641,17 +721,21 @@ const EmploiDuTemps = () => {
                   className="flex-1 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200"
                   disabled={loading}
                 >
-                  {loading ? 'En cours...' : mode === 'edit' ? 'Modifier' : 'Créer'}
+                  {loading
+                    ? "En cours..."
+                    : mode === "edit"
+                    ? "Modifier"
+                    : "Créer"}
                 </button>
 
-                {mode === 'edit' && (
+                {mode === "edit" && (
                   <button
                     type="button"
                     onClick={handleDelete}
                     className="flex-1 p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition duration-200"
                     disabled={loading}
                   >
-                    {loading ? 'En cours...' : 'Supprimer'}
+                    {loading ? "En cours..." : "Supprimer"}
                   </button>
                 )}
               </div>

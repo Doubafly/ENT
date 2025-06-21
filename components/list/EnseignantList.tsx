@@ -5,6 +5,7 @@ import ListCard, { User } from "@/components/card/ListCard";
 import Modal from "@/components/modal/Modal";
 import RegisterFormEnseignant from "../formulaires/RegisterFormEnseignant"; // Formulaire pour enseignant
 import UpdateEnseignantModal from "../formulaires/UpdateEnseignantModal"; // Modal de mise à jour pour enseignant
+import React from "react";
 
 // Composant principal pour afficher la liste des enseignants
 export default function EnseignantList() {
@@ -21,6 +22,7 @@ export default function EnseignantList() {
   const [enseignantToDelete, setEnseignantToDelete] = useState<User | null>(
     null
   );
+    const [moduleFilter, setModuleFilter] = useState("");
 
   const itemsPerPage = 8;
 
@@ -155,6 +157,16 @@ export default function EnseignantList() {
       (classFilter ? enseignant.specialite === classFilter : true)
     );
   });
+  const filteredRows = React.useMemo(() => {
+    return enseignants.filter(row => {
+      const matchesSearch = `${row.prenom} ${row.nom}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesClass = classFilter ? row.classe === classFilter : true;
+      const matchesModule = moduleFilter ? row.module === moduleFilter : true;
+      return matchesSearch && matchesClass && matchesModule;
+    });
+  }, [enseignants, searchTerm, classFilter, moduleFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredEnseignants.length / itemsPerPage);
@@ -181,6 +193,7 @@ export default function EnseignantList() {
           }}
           className="w-1/3 p-3 border rounded-lg text-sm"
         />
+
         <select
           title="filtre"
           value={classFilter}

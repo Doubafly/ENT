@@ -12,12 +12,12 @@ export async function POST(request: NextRequest) {
     if (!id_professeur) missingFields.push("id_professeur");
     if (!id_sessions) missingFields.push("id_sessions");
     if (!semestre) missingFields.push("semestre");
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
-          message: "Tous les champs sont obligatoires"+missingFields.join(", "),
-          
+          message:
+            "Tous les champs sont obligatoires" + missingFields.join(", "),
         },
         { status: 400 }
       );
@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
         id_filiere_module,
         id_sessions,
         semestre,
-        id_professeur,
       },
     });
 
@@ -89,7 +88,6 @@ export async function POST(request: NextRequest) {
         enseignant: {
           include: {
             utilisateur: true,
-
           },
         },
       },
@@ -195,7 +193,7 @@ export async function POST(request: NextRequest) {
 //             id: true,
 //             specialite: true,
 //             utilisateur: {
-//               select: { 
+//               select: {
 //                 nom: true,
 //                 prenom: true,
 //                 email: true,
@@ -203,7 +201,7 @@ export async function POST(request: NextRequest) {
 //             },
 //           },
 //         },
-        
+
 //         sessions: {
 //           select: {
 //             annee_academique: true,
@@ -246,52 +244,6 @@ export async function POST(request: NextRequest) {
 //   }
 // }
 
-// export async function DELETE(request: NextRequest) {
-//   try {
-//     const url = new URL(request.url);
-//     const id = url.pathname.split("/").pop();
-//     const id_cours = parseInt(id || "");
-
-//     if (isNaN(id_cours)) {
-//       return NextResponse.json(
-//         { message: "ID de cours invalide" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // Vérifier l'existence du cours
-//     const coursExists = await prisma.cours.findUnique({
-//       where: { id_cours },
-//     });
-
-//     if (!coursExists) {
-//       return NextResponse.json(
-//         { message: "Le cours spécifié n'existe pas" },
-//         { status: 404 }
-//       );
-//     }
-
-//     // Supprimer le cours
-//     await prisma.cours.delete({
-//       where: { id_cours },
-//     });
-
-//     return NextResponse.json(
-//       { message: "Cours supprimé avec succès" },
-//       { status: 200 }
-//     );
-//   } catch (error) {
-//     console.error("Erreur lors de la suppression du cours:", error);
-
-//     return NextResponse.json(
-//       {
-//         message: "Une erreur est survenue lors de la suppression du cours",
-//         error: error instanceof Error ? error.message : "Erreur inconnue",
-//       },
-//       { status: 500 }
-//     );
-//   }
-// }
 export async function GET() {
   try {
     const cours = await prisma.cours.findMany({
@@ -340,7 +292,7 @@ export async function GET() {
                         id_note: true,
                         note_exam: true,
                         note_class: true,
-                        id_etudiant:true,
+                        id_etudiant: true,
                         commentaire_enseignant: true,
                       },
                     },
@@ -350,6 +302,7 @@ export async function GET() {
                         nom: true,
                         prenom: true,
                         email: true,
+                        sexe: true,
                       },
                     },
                   },
@@ -362,6 +315,26 @@ export async function GET() {
                 nom: true,
               },
             },
+            documents: {
+              select: {
+                id: true,
+                titre: true,
+                description: true,
+                chemin_fichier: true,
+                type_fichier: true,
+                taille_fichier: true,
+                date_upload: true,
+                est_actif: true,
+                id_uploader: true,
+                uploader: {
+                  select: {
+                    id_utilisateur: true,
+                    nom: true,
+                    prenom: true,
+                  },
+                },
+              },
+            },
           },
         },
         enseignant: {
@@ -370,9 +343,12 @@ export async function GET() {
             specialite: true,
             utilisateur: {
               select: {
+                id_utilisateur: true,
                 nom: true,
                 prenom: true,
                 email: true,
+                sexe: true,
+                telephone: true,
               },
             },
           },
@@ -412,7 +388,11 @@ export async function GET() {
             },
           },
         },
+<<<<<<< HEAD
         
+=======
+        emplois_du_temps: true,
+>>>>>>> 9117387b27b8153582e5e13dd181a524950ace3a
       },
     });
 

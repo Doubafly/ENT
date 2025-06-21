@@ -385,12 +385,7 @@ const DocumentsPage = () => {
         <h1 className="text-2xl font-bold text-gray-800">
           Gestion des Documents
         </h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <FiPlus /> Ajouter un document
-        </button>
+        
       </div>
 
       {/* Filtres */}
@@ -552,41 +547,41 @@ const DocumentsPage = () => {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-blue-500 text-white">
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider"
                 >
                   Titre
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider"
                 >
                   Description
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
                   Filière
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
                   Module
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
                 >
                   Enseignant
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider"
                 >
                   Actions
                 </th>

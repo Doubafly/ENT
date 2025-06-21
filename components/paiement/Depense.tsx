@@ -30,7 +30,6 @@ interface Depense {
 type FinanceModePaiement = 'Espèces' | 'Chèque'|'Virement';
 
 const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque','Virement'];
-const SESSION_API_URL = "/api/auth/session";
 
 export default function Depense() {
   const [depenses, setDepenses] = useState<Depense[]>([]);
@@ -50,22 +49,28 @@ export default function Depense() {
   // Vérification de la session et récupération de l'ID utilisateur
   useEffect(() => {
     const checkUserSession = async () => {
-      try {
-        const response = await fetch(SESSION_API_URL, {
-          credentials: "include",
-        });
+     try {
+        // Vérification que nous sommes côté client
+        // if (typeof window === "undefined") return;
 
-        if (!response.ok) throw new Error("Erreur de session");
+        const userDataString = localStorage.getItem("user");
+        if (!userDataString) {
+          throw new Error("Aucune session utilisateur trouvée");
+        }
 
-        const { user } = await response.json();
-        if (user?.id_utilisateur) {
-          setCurrentUserId(user.id_utilisateur);
+        const userData = JSON.parse(userDataString);
+        console.log("Données utilisateur:dxtr", userData);
+        // Vérification plus robuste de la structure des données
+        if (userData?.user?.id) {
+          setCurrentUserId(userData.user.id);
+        } else if (userData?.id) {
+          setCurrentUserId(userData.id);
         } else {
-          throw new Error("Utilisateur non connecté");
+          throw new Error("Données utilisateur incomplètes");
         }
       } catch (err) {
         console.error("Erreur vérification session:", err);
-        setError("Vous devez être connecté pour gérer les dépenses");
+        setError(err instanceof Error ? err.message : "Erreur de session");
       } finally {
         setLoading(prev => ({...prev, session: false}));
       }
@@ -73,6 +78,7 @@ export default function Depense() {
 
     checkUserSession();
   }, []);
+
 
   // Récupérer uniquement les dépenses (type_transaction = "Dépense")
   useEffect(() => {

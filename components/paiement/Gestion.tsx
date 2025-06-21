@@ -48,7 +48,7 @@ const paymentModes: FinanceModePaiement[] = ['Espèces', 'Chèque'];
 const transactionTypes: TransactionType[] = ['Depense', 'Scolarite', 'Inscription', 'Salaire', 'Remboursement', 'Autre'];
 
 const ITEMS_PER_PAGE = 10;
-const SESSION_API_URL = "/api/auth/session";
+// const SESSION_API_URL = "/api/auth/session";
 
 export default function GestionTransactions() {
   // États pour les données
@@ -85,19 +85,25 @@ export default function GestionTransactions() {
   useEffect(() => {
     const checkUserSession = async () => {
       try {
-        const response = await fetch(SESSION_API_URL, {
-          credentials: "include",
-        });
 
-        if (!response.ok) throw new Error("Erreur de session");
+const userDataString = localStorage.getItem("user");
+        if (!userDataString) {
+          throw new Error("Aucune session utilisateur trouvée");
+        }
 
-        const { user } = await response.json();
-        if (user?.id_utilisateur) {
-          setCurrentUserId(user.id_utilisateur);
+        const userData = JSON.parse(userDataString);
+        // console.log("Données utilisateur:", userData);
+        // Vérification plus robuste de la structure des données
+        if (userData?.user?.id) {
+          setCurrentUserId(userData.user.id);
+        } else if (userData?.id) {
+          setCurrentUserId(userData.id);
+        } else {
+          throw new Error("Données utilisateur incomplètes");
         }
       } catch (err) {
         console.error("Erreur vérification session:", err);
-        setError("Vous devez être connecté pour gérer les transactions");
+        setError(err instanceof Error ? err.message : "Erreur de session");
       } finally {
         setLoading(prev => ({...prev, session: false}));
       }

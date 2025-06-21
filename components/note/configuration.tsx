@@ -712,7 +712,7 @@ setFiliereModule((prev) => {
 
       <TableContainer component={Paper}>
         <Table>
-          <TableHead>
+          <TableHead className="bg-blue-500 text-white">
             <TableRow>
               <TableCell>Module</TableCell>
               <TableCell>Code</TableCell>

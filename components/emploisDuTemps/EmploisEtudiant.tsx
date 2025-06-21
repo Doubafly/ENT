@@ -208,16 +208,45 @@ const EmploiDuTempsEtudiant = () => {
     <h1 className="text-3xl font-extrabold mb-8 text-center text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide">
       Mon Emploi du Temps {classeEtudiant && `- ${classeEtudiant}`}
     </h1>
-
-    <div className="overflow-x-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6">
-      <table className="min-w-full table-fixed text-gray-800 text-sm sm:text-base">
-        <thead>
-          <tr className="bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-900 text-md uppercase tracking-wider">
-            <th className="px-4 py-4 text-left border-r border-indigo-300 w-24">Heure</th>
-            {jours.map((jour) => (
-              <th key={jour} className="px-4 py-4 text-center border-r border-indigo-300 min-w-[120px]">
-                {jour}
-              </th>
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full">
+          <thead className="bg-bleu-500 text-white">
+            <tr>
+              <th className="p-3 text-left min-w-[120px]">Heure</th>
+              {jours.map((jour) => (
+                <th key={jour} className="p-3 text-center min-w-[150px]">
+                  {jour}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {heures.map((heure) => (
+              <tr key={heure} className="border-t hover:bg-gray-50">
+                <td className="p-3 font-medium">{heure}</td>
+                {jours.map((jour) => {
+                  const seance = emploiDuTemps[heure]?.[jour];
+                  return (
+                    <td key={jour} className="p-3">
+                      {seance ? (
+                        <div className="flex flex-col items-center text-center">
+                          <span className="font-medium text-gray-800">
+                            {seance.matiere}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {seance.enseignant}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {seance.salle}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
             ))}
           </tr>
         </thead>

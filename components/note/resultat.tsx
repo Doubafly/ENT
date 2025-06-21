@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Imprimer from "../imprimerBulletin/Imprimer";
 import Image from "next/image";
-import {  FaPrint } from "react-icons/fa";
+import {  FaExclamationTriangle, FaPrint } from "react-icons/fa";
 import { Key } from "lucide-react";
 
 interface Student {
@@ -69,8 +69,6 @@ let resultat;
       return item.id == id;
     });
     setImprimeData([resultat[0]]);
-    // console.log(resultat);
-    // setfilterClasse(resultat[0])
   }
 
   return <div>
@@ -119,16 +117,6 @@ let resultat;
                         width={20}
                         height={20}
                       />
-                    </button>
-                    <button
-                      // onClick={() => {
-                      //   handleClassChange(classe.id);
-                      //   setShowModal(true);
-                      // }}
-                      className="text-blue-500 hover:text-blue-700 transition duration-200"
-                      title="IMPRIMER"
-                    >
-                     <FaPrint />
                     </button>
                   </td>
                 </tr>
@@ -182,7 +170,7 @@ let resultat;
                   <div className="mt-4 space-y-4">
                     {filterClasse?.semestres?.length === 0 && (
                       <div className="text-gray-500 text-center py-4">
-                        Aucun enseignant inscrit dans cette classe.
+                        pas de semestre
                       </div>
                     )}
                       <table className="w-full border-collapse bg-white shadow-lg rounded-lg overflow-hidden">

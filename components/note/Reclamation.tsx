@@ -373,7 +373,7 @@ const Reclamation: React.FC<NoteEntryProps> = ({ classes, onrecharge }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
                     <FiEdit className="mr-1" />
                     Votre réponse
                   </label>

@@ -219,14 +219,14 @@ const EmploiDuTempsEnseignant = () => {
 
   return (
   <div className="p-4 max-w-7xl mx-auto">
-    <h1 className="text-3xl font-bold mb-6 text-center text-blue-800 underline decoration-blue-300 underline-offset-8">
-  Emploi du Temps de la Semaine
-</h1>
+    {/* Titre + Sélecteur en ligne */}
+    <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+  <h1 className="text-2xl sm:text-3xl font-extrabold text-indigo-800 underline decoration-indigo-300 underline-offset-8 tracking-wide text-center sm:text-left flex-1 text-wrap">
+    Emploi du Temps de la Semaine {classeSelectionnee && `- ${classeSelectionnee}`}
+  </h1>
 
-
-    <div className="mb-4">
   <select
-    className="p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    className="w-full sm:w-auto p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
     value={classeSelectionnee}
     onChange={(e) => setClasseSelectionnee(e.target.value)}
   >
@@ -240,49 +240,48 @@ const EmploiDuTempsEnseignant = () => {
 </div>
 
 
-    <div className="overflow-x-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
-  <table className="min-w-full table-auto text-base text-gray-700">
-    <thead className="bg-gradient-to-r from-blue-100 to-blue-200 text-gray-800 text-md uppercase">
-      <tr>
-        <th className="px-6 py-4 text-left border-r border-gray-300">Heure</th>
-        {jours.map((jour) => (
-          <th key={jour} className="px-6 py-4 text-center border-r border-gray-300">
-            {jour}
-          </th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {heures.map((heure) => (
-        <tr key={heure} className="border-t border-gray-200 hover:bg-gray-50 transition">
-          <td className="px-6 py-4 font-bold text-blue-600 bg-gray-50 border-r border-gray-200 text-lg">
-            {heure}
-          </td>
-          {jours.map((jour) => {
-            const seance = emploiDuTemps[heure]?.[jour];
-            return (
-              <td key={jour} className="px-6 py-4 text-center align-top border-r border-gray-100">
-                {seance ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 shadow-sm hover:shadow-lg transition duration-200 ease-in-out">
-                    <div className="text-blue-900 font-semibold text-lg mb-1">
-                      {seance.matiere}
-                    </div>
-                    <div className="text-sm text-gray-700">{seance.enseignant}</div>
-                    <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
-                  </div>
-                ) : (
-                  <div className="text-gray-300 text-sm">–</div>
-                )}
+    {/* Tableau emploi du temps (identique) */}
+    <div className="overflow-x-auto bg-white rounded-3xl shadow-2xl border border-gray-100 p-4 sm:p-6">
+      <table className="min-w-full table-fixed text-gray-800 text-sm sm:text-base">
+        <thead>
+          <tr className="bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-900 text-md uppercase tracking-wider">
+            <th className="px-4 py-4 text-left border-r border-indigo-300 w-24">Heure</th>
+            {jours.map((jour) => (
+              <th key={jour} className="px-4 py-4 text-center border-r border-indigo-300 min-w-[120px]">
+                {jour}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {heures.map((heure) => (
+            <tr key={heure} className="border-t border-gray-200 hover:bg-indigo-50 transition duration-300">
+              <td className="px-4 py-4 font-semibold text-indigo-600 bg-gray-50 border-r border-gray-200 text-md whitespace-nowrap">
+                {heure}
               </td>
-            );
-          })}
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
-
-
+              {jours.map((jour) => {
+                const seance = emploiDuTemps[heure]?.[jour];
+                return (
+                  <td key={jour} className="px-2 sm:px-4 py-3 text-center align-top border-r border-gray-100">
+                    {seance ? (
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-2xl px-3 py-2 shadow hover:shadow-md transition-all duration-200 ease-in-out">
+                        <div className="text-indigo-900 font-bold text-sm sm:text-base mb-1">
+                          {seance.matiere}
+                        </div>
+                        <div className="text-sm text-gray-700">{seance.enseignant}</div>
+                        <div className="text-xs text-gray-500 italic mt-1">{seance.salle}</div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-300 text-sm">–</div>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   </div>
 );
 

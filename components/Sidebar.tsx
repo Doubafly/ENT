@@ -25,16 +25,16 @@ const Sidebar = ({ user }: UserProfileProps) => {
   const pathname = usePathname();
   return (
     <section className="sidebar">
-      <nav className="flex flex-col gap-2 h-full mb-3">
-        <Link href="/" className="mb-6 cursor-pointer items-center gap-2">
-          <Image
-            src="/img/logoS.png"
-            alt="logo"
-            width={50}
-            height={50}
-            className="size-[30px] max-xl:size-20"
-          />
-          <h1 className="sidebar-logo">TECHNOLAB ISTA </h1>
+      <nav className="flex flex-col gap-2 h-full ">
+        <Link href="/" className="cursor-pointer items-center gap-2">
+          <h1 className="sidebar-logo">
+            <Image
+              src="/img/logoS.png"
+              alt="logo"
+              width={200} // Augmenter la largeur
+              height={200} // Augmenter la hauteur
+            />
+          </h1>
         </Link>
         <div className="flex flex-col gap-2 flex-grow">
           {links
